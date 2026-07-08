@@ -1,0 +1,13 @@
+ktor:
+  deployment:
+    port: 8080
+  application:
+    modules:
+      - com.zula.HttpKt.configureHttp
+      - com.zula.SerializationKt.configureSerialization
+      - com.zula.SecurityKt.configureSecurity
+      - com.zula.SseKt.configureSse
+      - com.zula.StatusPagesKt.configureStatusPages
+      - com.zula.KoinKt.configureKoin
+      - com.zula.RabbitmqKt.configureRabbitmq
+      - com.zula.RoutingKt.configureRouting
