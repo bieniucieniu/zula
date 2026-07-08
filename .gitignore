@@ -1,1 +1,5 @@
 /.gradle
+node_modules/
+apps/web/dist/
+/build
+/server/build
