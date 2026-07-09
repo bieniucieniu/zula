@@ -1,7 +1,0 @@
-{
-  "name": "zula",
-  "private": true,
-  "workspaces": [
-    "apps/*"
-  ]
-}
