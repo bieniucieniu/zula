@@ -19,14 +19,15 @@ zula/                              # root Gradle project (rootProject.name = "zu
     └── src/
         ├── main/
         │   ├── kotlin/            # all backend Kotlin
-        │   │   ├── main.kt        # today: flat monolith (Routing.kt, Koin.kt, …)
-        │   │   ├── core/          # (planned) infrastructure packages
+        │   │   ├── main.kt        # JVM entry only
+        │   │   ├── app/           # composition root (Koin, route mounting)
+        │   │   ├── core/          # infrastructure packages
         │   │   │   ├── database/  # SQLDelight .sq, HikariCP, migrations
         │   │   │   ├── security/  # OAuth2, JWT validation
         │   │   │   ├── openapi/   # API specs & Swagger UI
         │   │   │   ├── rabbitmq/  # AMQP connection & channel manager
         │   │   │   └── contracts/ # Cross-feature Koin interfaces
-        │   │   └── features/      # (planned) domain packages
+        │   │   └── features/      # domain packages
         │   │       ├── auth/
         │   │       ├── user/
         │   │       ├── feed/
@@ -62,9 +63,9 @@ Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, 
 
 ## Module file breakdown
 
-### 1. `:server` (composition root)
+### 1. `app` (composition root)
 
-**`main.kt` / `Application.kt`** — `fun main(...)` entry. Glue that:
+**`main.kt`** — JVM entry (`com.zula`). **`app/Koin.kt`** + **`app/Routing.kt`** — glue that:
 
 - loads Koin modules (`core/*` + `features/*` packages)
 - configures content negotiation, status pages, security
@@ -214,7 +215,7 @@ GET /api/v1/reviews/seller/{id}    → reviews tab (user)
 
 ---
 
-## Koin wiring in `:server`
+## Koin wiring in `app`
 
 Current (flat `server/src/main/kotlin/`; target: `core/*` + `features/*` packages):
 

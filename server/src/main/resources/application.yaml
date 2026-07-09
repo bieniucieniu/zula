@@ -3,11 +3,13 @@ ktor:
     port: 8080
   application:
     modules:
-      - com.zula.HttpKt.configureHttp
-      - com.zula.SerializationKt.configureSerialization
-      - com.zula.SecurityKt.configureSecurity
-      - com.zula.SseKt.configureSse
-      - com.zula.StatusPagesKt.configureStatusPages
-      - com.zula.KoinKt.configureKoin
-      - com.zula.RabbitmqKt.configureRabbitmq
-      - com.zula.RoutingKt.configureRouting
+      - com.zula.core.http.HttpKt.configureHttp
+      - com.zula.core.http.SerializationKt.configureSerialization
+      - com.zula.core.security.SecurityKt.configureSecurity
+      - com.zula.core.http.SseKt.configureSse
+      - com.zula.core.http.StatusPagesKt.configureStatusPages
+      - com.zula.core.database.DatabaseKt.configureDatabase
+      - com.zula.app.KoinKt.configureKoin
+      - com.zula.core.rabbitmq.RabbitmqKt.configureRabbitmq
+      - com.zula.core.openapi.OpenApiKt.configureOpenApi
+      - com.zula.app.RoutingKt.configureRouting

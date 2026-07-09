@@ -1,4 +1,4 @@
-package com.zula
+package com.zula.core.http
 
 import io.ktor.http.*
 import io.ktor.server.application.*

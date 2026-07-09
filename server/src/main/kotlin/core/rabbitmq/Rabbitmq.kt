@@ -1,4 +1,4 @@
-package com.zula
+package com.zula.core.rabbitmq
 
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.RabbitMQ
 import io.github.damir.denis.tudor.ktor.server.rabbitmq.dsl.*
@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import org.koin.dsl.module
 
 fun Application.configureRabbitmq() {
     val connectionUri: String = propertyOrNull("rabbitmq.uri") ?: run {
@@ -27,7 +28,7 @@ fun Application.configureRabbitmq() {
         defaultConnectionName = connectionName
         dispatcherThreadPollSize = 4
         tlsEnabled = false
-        scope = rabbitMQScope // custom scope, default is the one provided by Ktor
+        scope = rabbitMQScope
     }
 
     rabbitmq {
@@ -59,7 +60,7 @@ fun Application.configureRabbitmq() {
                 queue = "test-queue"
                 arguments = mapOf(
                     "x-dead-letter-exchange" to "dlx",
-                    "x-dead-letter-routing-key" to "dlq-dlx"
+                    "x-dead-letter-routing-key" to "dlq-dlx",
                 )
             }
         }
@@ -90,20 +91,19 @@ fun Application.configureRabbitmq() {
                 dispatcher = Dispatchers.rabbitMQ
                 coroutinePollSize = 100
 
-                // If an exception is not properly handled in your business logic,
-                // it will be caught by the default Ktor coroutine scope.
-                // By defining your own coroutine scope, you gain more flexibility in handling exceptions.
                 deliverCallback<String> { message ->
                     log.info("Received message: $message")
                     error("Error during message processing: $message")
                 }
 
-                // Define a callback to handle deserialization failures.
-                // For example, you could redirect such messages to a dead-letter queue.
                 deliverFailureCallback { message ->
                     log.info("Received undeliverable message (deserialization failed): ${message.body.toString(Charsets.UTF_8)}")
                 }
             }
         }
     }
+}
+
+val rabbitmqModule = module {
+    // Shared ConnectionFactory / channel pool when extracted from plugin install
 }
