@@ -1,0 +1,128 @@
+# Guide: Validation Module (Hand-to-Hand)
+
+**PIN/QR verification** at meetup/handoff. Success updates **trust scores** and unlocks **peer ratings**.
+
+**Status:** Doc complete · **Backend:** ⬜ · **Service:** `ValidationService` (planned)
+
+**Depends on:** [trade_module.md](./trade_module.md) · **Unblocks:** [user_module.md](./user_module.md) public ratings (Wave 3.5)
+
+**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 3.4 (`validation-A`, `validation-B`)
+
+**Related:** [trust_events.md](./trust_events.md) · [auth_and_permissions.md](./auth_and_permissions.md)
+
+---
+
+## Goals
+
+| Goal | Detail |
+|------|--------|
+| **One-time codes** | Short-lived PIN/QR bound to `trade_id` |
+| **Dual confirm** | Both parties verify before complete |
+| **Trust delta** | Ledger + cache via UserService |
+| **Rating unlock** | `RecordPeerRating` allowed after validation |
+| **No secret leakage** | Store `code_hash` only |
+
+---
+
+## Architecture
+
+```mermaid
+sequenceDiagram
+    participant A as Party A
+    participant V as ValidationService
+    participant T as TradeService
+    participant U as UserService
+
+    A->>V: GenerateHandoffCode
+    V-->>A: QR / PIN (hashed at rest)
+    A->>V: VerifyHandoff (both parties)
+    V->>T: Mark trade completed
+    V->>U: AddTrustLedgerEntry (×2)
+    Note over U: TRADE_COMPLETED event
+```
+
+---
+
+## Schema
+
+| Table | Purpose |
+|-------|---------|
+| `validation_sessions` | `trade_id`, `code_hash`, `expires_at`, `status` |
+
+**Next migration:** `000007_validation.up.sql` — [schema.md](./schema.md#validation-module-planned--wave-3)
+
+---
+
+## Proto / RPC surface
+
+| RPC | Auth |
+|-----|------|
+| `GenerateHandoffCode` | Auth (participant) |
+| `VerifyHandoff` | Auth (participant) |
+
+---
+
+## Auth policy
+
+Trade participants only. [auth_and_permissions.md](./auth_and_permissions.md)
+
+---
+
+## Implementation phases
+
+### Phase validation-A — Code generation
+
+- [ ] `validation_sessions` table
+- [ ] `GenerateHandoffCode` RPC
+- [ ] QR payload format: `trade_id + nonce + HMAC`
+- [ ] Tests: `apps/backend/tests/validation/`
+
+### Phase validation-B — Verify & complete
+
+- [ ] `VerifyHandoff` — **MVP policy:** single device dual entry OR both scan (pick one in PR)
+- [ ] On success: trade → completed, trust ledger for both users
+- [ ] Gate `RecordPeerRating` on validation success
+
+### Phase validation-C — Abuse controls
+
+- [ ] Rate limits, max attempts
+- [ ] Admin override hook for moderation
+
+---
+
+## Verification
+
+```bash
+devenv test
+cd apps/backend && go test ./tests/validation/...
+# E2E: trade flow → trust score change (see WALKTHROUGH.md)
+```
+
+---
+
+## File checklist
+
+| Path | Purpose |
+|------|---------|
+| `apps/backend/db/migration/000007_validation.up.sql` | Sessions |
+| `apps/backend/internal/apitypes/` | RPCs |
+| `apps/backend/internal/service/validation.go` | Handlers |
+| `docs/validation_module.md` | This guide |
+
+---
+
+## Open questions
+
+| Question | MVP default |
+|----------|-------------|
+| Single-device vs dual-device verify | **Dual scan** — each party scans other's QR |
+| Code length | 6-digit PIN + signed QR payload |
+| Failed validation trust hit | `VALIDATION_FAILED` −5 per [trust_events.md](./trust_events.md) |
+
+---
+
+## Related documentation
+
+- [trade_module.md](./trade_module.md) — lifecycle
+- [user_module.md](./user_module.md) — ledger writers
+- [moderation_module.md](./moderation_module.md) — disputes
