@@ -4,62 +4,85 @@ High-level service boundaries, **Ktor module layout**, and who owns what. Route 
 
 ---
 
-## Ktor project layout
+## Gradle project layout
 
-Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, and RabbitMQ**.
+Gradle **root project** at repo root; backend is a single **`:server`** subproject. Logical modules are **packages under `server/src/main/kotlin/`**.
 
 ```text
-zula/
+zula/                              # root Gradle project (rootProject.name = "zula")
+├── build.gradle.kts               # shared plugins (apply false)
+├── settings.gradle.kts            # include(":server")
+├── gradle/libs.versions.toml      # version catalog + Ktor BOM
 │
-├── app/                        # Entry point & system orchestrator
-│   └── src/main/kotlin/.../Application.kt
-│       # Wires Koin modules, starts engine, initializes listeners
-│
-├── core/                       # Shared framework & infrastructure
-│   ├── database/               # SQLDelight .sq schemas, HikariCP pool, migrations
-│   ├── security/               # OAuth2 provider configs, JWT validation
-│   ├── openapi/                # API contract specs & Swagger UI setup
-│   └── rabbitmq/               # Global AMQP connection & channel manager
-│
-└── features/                   # Self-contained domain submodules
-    ├── auth/                   # OAuth2 callback endpoints, session identification
-    ├── user/                   # Profiles, trust, blocks, portfolio
-    ├── feed/                   # Listings, traits linkage, ranking
-    ├── trade/                  # Trade lifecycle, templates
-    ├── chat/                   # Rooms, messages, WS fan-out
-    ├── media/                  # Presigned uploads, object validation
-    ├── geolocation/            # Fingerprint ingest → location_tag
-    ├── validation/             # PIN/QR handoff verify
-    └── moderation/             # Reports, admin actions
+└── server/                        # :server — Ktor entry & composition root
+    ├── build.gradle.kts
+    └── src/
+        ├── main/
+        │   ├── kotlin/            # all backend Kotlin
+        │   │   ├── main.kt        # today: flat monolith (Routing.kt, Koin.kt, …)
+        │   │   ├── core/          # (planned) infrastructure packages
+        │   │   │   ├── database/  # SQLDelight .sq, HikariCP, migrations
+        │   │   │   ├── security/  # OAuth2, JWT validation
+        │   │   │   ├── openapi/   # API specs & Swagger UI
+        │   │   │   ├── rabbitmq/  # AMQP connection & channel manager
+        │   │   │   └── contracts/ # Cross-feature Koin interfaces
+        │   │   └── features/      # (planned) domain packages
+        │   │       ├── auth/
+        │   │       ├── user/
+        │   │       ├── feed/
+        │   │       ├── trade/
+        │   │       ├── chat/
+        │   │       ├── media/
+        │   │       ├── geolocation/
+        │   │       ├── validation/
+        │   │       └── moderation/
+        │   └── resources/
+        │       └── application.yaml
+        └── test/kotlin/
 ```
 
-> **Migration note:** the repo currently ships a single `:server` module. New work should extract into `app`, `core:*`, and `features:*` Gradle subprojects following this layout.
+Common tasks (from repo root):
+
+| Task | Description |
+|------|-------------|
+| `./gradlew :server:run` | Run API on port 8080 |
+| `./gradlew :server:build` | Build server JAR |
+| `./gradlew :server:test` | Server tests |
+| `./gradlew test` | Same as `:server:test` today (only backend subproject) |
+
+> **Current state:** flat sources in `server/src/main/kotlin/`. New work should move into `core/*` and `features/*` packages under that tree; `:server` stays one Gradle module.
+
+---
+
+## Ktor project layout
+
+Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, and RabbitMQ**. Package layout under `server/src/main/kotlin/` (`core/*`, `features/*`).
 
 ---
 
 ## Module file breakdown
 
-### 1. `app` (composition root)
+### 1. `:server` (composition root)
 
-**`Application.kt`** — `fun main(...)` entry. Glue that:
+**`main.kt` / `Application.kt`** — `fun main(...)` entry. Glue that:
 
-- loads Koin modules (`core:*` + `features:*`)
+- loads Koin modules (`core/*` + `features/*` packages)
 - configures content negotiation, status pages, security
 - starts background RabbitMQ consumers
 - mounts global + feature routes
 
 `application.yaml` lists `configure*` modules in boot order (HTTP → serialization → security → Koin → RabbitMQ → routing).
 
-### 2. `core:*` (infrastructure)
+### 2. `core/*` (infrastructure)
 
-| Module | Owns |
-|--------|------|
-| **`core:database`** | `.sq` schemas; SQLDelight-generated DAOs; HikariCP factory; safe migration runner at startup |
-| **`core:security`** | OAuth2 client configs, JWT issuer/validator, Ktor `Authentication` installs |
-| **`core:openapi`** | OpenAPI YAML, route metadata, Swagger UI at `/swagger` |
-| **`core:rabbitmq`** | Single `ConnectionFactory` + channel pool; all features borrow channels from here |
+| Package | Owns |
+|---------|------|
+| **`core/database`** | `.sq` schemas; SQLDelight-generated DAOs; HikariCP factory; safe migration runner at startup |
+| **`core/security`** | OAuth2 client configs, JWT issuer/validator, Ktor `Authentication` installs |
+| **`core/openapi`** | OpenAPI YAML, route metadata, Swagger UI at `/swagger` |
+| **`core/rabbitmq`** | Single `ConnectionFactory` + channel pool; all features borrow channels from here |
 
-### 3. `features:*` (domain silos)
+### 3. `features/*` (domain silos)
 
 Each feature is three layers:
 
@@ -69,7 +92,7 @@ Each feature is three layers:
 | **Service** | `*Service.kt` | Pure business logic; transaction wrappers; coordinates DB + MQ |
 | **Integration** | `*Consumer.kt` / `*Publisher.kt` | RabbitMQ listeners on `Dispatchers.IO`; outbound event publishing |
 
-Example (`features/feed/`):
+Example (`server/src/main/kotlin/features/feed/`):
 
 ```text
 FeedRouting.kt      →  POST /api/v1/feed/items, GET /api/v1/feed/for-you
@@ -90,8 +113,8 @@ flowchart TB
         ios[iOS SwiftUI]
     end
 
-    subgraph app [app — composition root]
-        ktor[Ktor engine + Application.kt]
+    subgraph server [":server — composition root"]
+        ktor[Ktor engine + main.kt]
     end
 
     subgraph core [core — infrastructure]
@@ -149,18 +172,18 @@ flowchart TB
 
 | User-facing area | Module doc | Primary feature |
 |------------------|------------|-----------------|
-| Sign in, sessions | [user_module.md](./user_module.md) | `features:auth` |
-| Trust & ratings | user + [trust_events.md](./trust_events.md) | `features:user` |
-| Public profile header | [seller_profile_module.md](./seller_profile_module.md) | `features:user` |
-| README, portfolio, pins | [profile_portfolio_module.md](./profile_portfolio_module.md) | `features:user` |
-| Marketplace feed | [feed_module.md](./feed_module.md) | `features:feed` |
-| Categories | [traits_module.md](./traits_module.md) | `features:feed` (SQL + filters) |
-| Uploads & AI tags | [media_module.md](./media_module.md) | `features:media` |
-| Travel tags | [geolocation_module.md](./geolocation_module.md) | `features:geolocation` |
-| Barter | [trade_module.md](./trade_module.md) | `features:trade` |
-| Meetup verify | [validation_module.md](./validation_module.md) | `features:validation` |
-| Trade chat | [chat_module.md](./chat_module.md) | `features:chat` |
-| Reports & admin | [moderation_module.md](./moderation_module.md) | `features:moderation` |
+| Sign in, sessions | [user_module.md](./user_module.md) | `features/auth` |
+| Trust & ratings | user + [trust_events.md](./trust_events.md) | `features/user` |
+| Public profile header | [seller_profile_module.md](./seller_profile_module.md) | `features/user` |
+| README, portfolio, pins | [profile_portfolio_module.md](./profile_portfolio_module.md) | `features/user` |
+| Marketplace feed | [feed_module.md](./feed_module.md) | `features/feed` |
+| Categories | [traits_module.md](./traits_module.md) | `features/feed` (SQL + filters) |
+| Uploads & AI tags | [media_module.md](./media_module.md) | `features/media` |
+| Travel tags | [geolocation_module.md](./geolocation_module.md) | `features/geolocation` |
+| Barter | [trade_module.md](./trade_module.md) | `features/trade` |
+| Meetup verify | [validation_module.md](./validation_module.md) | `features/validation` |
+| Trade chat | [chat_module.md](./chat_module.md) | `features/chat` |
+| Reports & admin | [moderation_module.md](./moderation_module.md) | `features/moderation` |
 
 ---
 
@@ -187,17 +210,17 @@ GET /api/v1/reviews/seller/{id}    → reviews tab (user)
 | **Markdown bodies** | `documents` table (user helpers) | Feed/trade store `body_document_id` FK |
 | **User blocks** | user feature RPCs | Moderation adds platform actions; chat/feed respect blocks |
 | **Trust ledger writes** | user internal API | Trade/validation call in same transaction |
-| **Pagination cursors** | Shared DTOs in `core:openapi` | See [conventions.md](./conventions.md) |
+| **Pagination cursors** | Shared DTOs in `core/openapi` | See [conventions.md](./conventions.md) |
 
 ---
 
-## Koin wiring in `app`
+## Koin wiring in `:server`
 
-Current (monolithic `:server`, target modular `app`):
+Current (flat `server/src/main/kotlin/`; target: `core/*` + `features/*` packages):
 
-- `core:database`, `core:security`, `core:rabbitmq` modules
-- `features:auth`, `features:user` modules
-- **Cross-feature contracts** — Koin interfaces in `core/contracts` (or `app/di/contracts.kt`)
+- `core/database`, `core/security`, `core/rabbitmq` Koin modules
+- `features/auth`, `features/user` Koin modules
+- **Cross-feature contracts** — Koin interfaces in `core/contracts`
 
 ```kotlin
 // Injected into feature services — do not import sibling feature packages directly
