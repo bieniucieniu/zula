@@ -2,7 +2,7 @@
 
 **Report user/content**, admin review queue, and enforcement — beyond user-initiated **BlockUser** (UserService).
 
-**Status:** Doc complete · **Backend:** ⬜ (blocks only) · **Service:** `ModerationService` (planned)
+**Status:** Doc complete · **Backend:** ⬜ (blocks only) · **Feature:** `features:moderation`
 
 **Depends on:** [user_module.md](./user_module.md), [feed_module.md](./feed_module.md), [chat_module.md](./chat_module.md) · **Unblocks:** platform safety at scale
 
@@ -41,6 +41,16 @@ Admin ──► ListPendingReports ──► ResolveReport
 
 **Ownership split:** [user_module.md](./user_module.md) — peer blocks. This module — platform reports and admin actions.
 
+Feature layout:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Routing | `ModerationRouting.kt` | HTTP paths, OpenAPI metadata |
+| Service | `ModerationService.kt` | Reports, admin actions, audit log |
+| Integration | `ModerationPublisher.kt` | Content-hide / trust events (planned) |
+
+Register in Koin (`moderationModule`) and mount routes from `Application.kt` via `configureModerationRouting()`. Admin routes use the same JWT + allowlisted Google ID check as `UpdateImplicitTrust` ([auth_and_permissions.md](./auth_and_permissions.md)).
+
 ---
 
 ## Schema
@@ -51,14 +61,14 @@ Admin ──► ListPendingReports ──► ResolveReport
 | `content_reports` | Feed/chat targets |
 | `moderation_actions` | Admin audit log |
 
-**Next migration:** `000008_moderation.up.sql` — [schema.md](./schema.md#moderation-module-planned--wave-5)
+**Next migration:** `000008_moderation.sql` — [schema.md](./schema.md#moderation-module-planned--wave-5)
 
 ---
 
-## Proto / RPC surface
+## REST / OpenAPI surface
 
-| RPC | Auth |
-|-----|------|
+| Operation | Auth |
+|-----------|------|
 | `ReportUser` | Auth |
 | `ReportFeedItem` | Auth |
 | `ListPendingReports` | Admin |
@@ -70,7 +80,7 @@ Admin pattern matches `UpdateImplicitTrust` (env allowlist). [api_index.md](./ap
 
 ## Auth policy
 
-Reporters cannot target self. Admin RPCs require allowlisted Google ID. [auth_and_permissions.md](./auth_and_permissions.md)
+Reporters cannot target self. Admin routes require allowlisted Google ID via Ktor `Authentication`. [auth_and_permissions.md](./auth_and_permissions.md)
 
 ---
 
@@ -81,7 +91,8 @@ Reporters cannot target self. Admin RPCs require allowlisted Google ID. [auth_an
 - [ ] `user_reports`, `content_reports`
 - [ ] `ReportUser`, `ReportFeedItem`
 - [ ] Dedupe: one open report per (reporter, target) per 24h
-- [ ] Tests: `apps/backend/tests/moderation/` — cannot report self
+- [ ] Koin: `moderationModule` + route mount in `Application.kt`
+- [ ] Tests: `features/moderation/src/test/kotlin/` — cannot report self
 
 ### Phase mod-B — Admin review
 
@@ -92,15 +103,16 @@ Reporters cannot target self. Admin RPCs require allowlisted Google ID. [auth_an
 ### Phase mod-C — Automation (later)
 
 - [ ] Auto-hide after N reports
-- [ ] Trust penalties via [trust_events.md](./trust_events.md)
+- [ ] Trust penalties via [trust_events.md](./trust_events.md) (`TrustLedgerWriter`)
 
 ---
 
 ## Verification
 
 ```bash
-devenv test
-cd apps/backend && go test ./tests/moderation/...
+./gradlew :core:database:generateSqlDelightInterface
+./gradlew :features:moderation:test
+./gradlew test
 ```
 
 ---
@@ -109,9 +121,12 @@ cd apps/backend && go test ./tests/moderation/...
 
 | Path | Purpose |
 |------|---------|
-| `apps/backend/db/migration/000008_moderation.up.sql` | Schema |
-| `apps/backend/internal/apitypes/` | RPCs |
-| `apps/backend/internal/service/moderation.go` | Handlers |
+| `core/database/src/main/resources/db/migration/000008_moderation.sql` | Schema |
+| `core/database/src/main/sqldelight/moderation.sq` | SQLDelight queries |
+| `core/openapi/src/main/kotlin/dto/` | OpenAPI DTOs |
+| `features/moderation/src/main/kotlin/.../ModerationRouting.kt` | HTTP routes |
+| `features/moderation/src/main/kotlin/.../ModerationService.kt` | Business logic |
+| `features/moderation/src/test/kotlin/...` | Tests |
 | `docs/moderation_module.md` | This guide |
 
 ---

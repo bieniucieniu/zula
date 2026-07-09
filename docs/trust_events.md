@@ -31,7 +31,7 @@ Exact deltas are configured in service code — this table is the **naming contr
 | **Explicit rating** | `user_ratings` | Time-decayed average; lazy refresh on profile read (1h TTL) |
 | **Implicit trust** | `user_trust_ledger` sum + base 100 | Lazy refresh on profile read; immediate cache bump on write |
 
-Peer ratings after trades: internal `RecordPeerRating` (not public gRPC until Wave 3.5).
+Peer ratings after trades: internal `recordPeerRating` (not public REST until Wave 3.5).
 
 ---
 

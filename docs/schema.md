@@ -1,9 +1,9 @@
 # Zula database schema
 
-**Canonical DDL** lives in `apps/backend/db/migration/`. This document is the index by module — update it when adding migrations.
+**Canonical DDL** lives in `core/database/src/main/resources/db/migration/`. SQLDelight `.sq` query files live in `core/database/src/main/sqldelight/`. This document is the index by module — update it when adding migrations.
 
-**Baseline migration:** `000001_init.up.sql`  
-**Next planned:** `000002_feed.up.sql` (traits + feed — see [implementation_plan.md](./implementation_plan.md))
+**Baseline migration:** `000001_init.sql`  
+**Next planned:** `000002_feed.sql` (traits + feed — see [implementation_plan.md](./implementation_plan.md))
 
 ---
 

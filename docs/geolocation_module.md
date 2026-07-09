@@ -2,7 +2,7 @@
 
 **Coarse travel/location tags** from network fingerprint shifts — **no continuous GPS** on server.
 
-**Status:** Doc complete · **Backend:** ⬜ · **Service:** `GeolocationService` (planned)
+**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:geolocation`
 
 **Depends on:** [user_module.md](./user_module.md) (`location_tag` column exists) · **Unblocks:** trip feed context (feed Wave 2)
 
@@ -37,6 +37,16 @@ sequenceDiagram
     G->>DB: UPDATE user_profiles.location_tag
 ```
 
+Feature layout:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Routing | `GeolocationRouting.kt` | HTTP paths, OpenAPI metadata |
+| Service | `GeolocationService.kt` | Ingest, resolver, profile tag updates |
+| Integration | — | No MQ in MVP |
+
+Register in Koin (`geolocationModule`) and mount routes from `Application.kt` via `configureGeolocationRouting()`.
+
 ---
 
 ## Schema
@@ -47,14 +57,14 @@ sequenceDiagram
 
 Writes to existing `user_profiles.location_tag`. Optional `feed_items.origin_location_tag` at post time.
 
-**Next migration:** `000004_geolocation.up.sql` — [schema.md](./schema.md#geolocation-module-planned--wave-2)
+**Next migration:** `000004_geolocation.sql` — [schema.md](./schema.md#geolocation-module-planned--wave-2)
 
 ---
 
-## Proto / RPC surface
+## REST / OpenAPI surface
 
-| RPC | Auth |
-|-----|------|
+| Operation | Auth |
+|-----------|------|
 | `ReportNetworkFingerprint` | Auth, rate limited |
 
 ---
@@ -70,10 +80,11 @@ Authenticated users only; rate limited per user/IP. [auth_and_permissions.md](./
 ### Phase geo-A — Ingest & profile tag
 
 - [ ] `network_fingerprint_events` table
-- [ ] `ReportNetworkFingerprint` RPC
+- [ ] `ReportNetworkFingerprint` REST route
 - [ ] Resolver stub (rule table or external API interface)
 - [ ] Update `location_tag` on significant change
-- [ ] Tests: `apps/backend/tests/geolocation/`
+- [ ] Koin: `geolocationModule` + route mount in `Application.kt`
+- [ ] Tests: `features/geolocation/src/test/kotlin/`
 
 ### Phase geo-B — Feed integration
 
@@ -90,8 +101,9 @@ Authenticated users only; rate limited per user/IP. [auth_and_permissions.md](./
 ## Verification
 
 ```bash
-devenv test
-cd apps/backend && go test ./tests/geolocation/...
+./gradlew :core:database:generateSqlDelightInterface
+./gradlew :features:geolocation:test
+./gradlew test
 ```
 
 ---
@@ -100,9 +112,12 @@ cd apps/backend && go test ./tests/geolocation/...
 
 | Path | Purpose |
 |------|---------|
-| `apps/backend/db/migration/000004_geolocation.up.sql` | Events table |
-| `apps/backend/internal/apitypes/` | Report RPC |
-| `apps/backend/internal/service/geolocation.go` | Ingest + resolve |
+| `core/database/src/main/resources/db/migration/000004_geolocation.sql` | Events table |
+| `core/database/src/main/sqldelight/geolocation.sq` | SQLDelight queries |
+| `core/openapi/src/main/kotlin/dto/` | OpenAPI DTOs |
+| `features/geolocation/src/main/kotlin/.../GeolocationRouting.kt` | HTTP routes |
+| `features/geolocation/src/main/kotlin/.../GeolocationService.kt` | Ingest + resolve |
+| `features/geolocation/src/test/kotlin/...` | Tests |
 | `docs/geolocation_module.md` | This guide |
 
 ---
@@ -112,7 +127,7 @@ cd apps/backend && go test ./tests/geolocation/...
 | Question | MVP default |
 |----------|-------------|
 | Resolver accuracy | City-level string; no lat/long storage |
-| Web vs mobile fingerprints | Same RPC; different client payload shapes |
+| Web vs mobile fingerprints | Same REST route; different client payload shapes |
 | Opt-out default | Opt-in to fingerprint reporting in client settings |
 
 ---

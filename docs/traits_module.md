@@ -1,8 +1,8 @@
 # Guide: Traits Module
 
-Shared **traits tree** for categorizing feed items (goods, services, travel). Schema ships inside the feed migration; trait **RPCs** are owned by FeedService.
+Shared **traits tree** for categorizing feed items (goods, services, travel). Schema ships inside the feed migration; trait **REST routes** are owned by FeedService in `features:feed`.
 
-**Status:** Doc complete · **Backend:** ⬜ · **Service:** FeedService (SQL + filters)
+**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:feed` (traits schema & SQL; no standalone `features:traits` module)
 
 **Depends on:** — · **Unblocks:** [feed_module.md](./feed_module.md) feed-A
 
@@ -33,7 +33,15 @@ traits (tree)
               └── ListFeedByTrait / ranking features (FeedService)
 ```
 
-**Ownership:** Traits **schema** is documented here; **writes and RPCs** live in [feed_module.md](./feed_module.md). Do not add a standalone TraitsService for MVP.
+**Ownership:** Traits **schema** is documented here; **writes and REST routes** live in [feed_module.md](./feed_module.md). Do not add a standalone TraitsService for MVP.
+
+Feature layout (implemented in `features:feed`):
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Routing | `FeedRouting.kt` | Trait list/filter endpoints (feed-owned) |
+| Service | `FeedService.kt` | Trait SQL, subtree filters, seed reads |
+| Integration | — | No MQ for traits MVP |
 
 ---
 
@@ -44,13 +52,13 @@ traits (tree)
 | `traits` | Category tree |
 | `feed_item_traits` | M:N item ↔ trait |
 
-**Next migration:** `000002_feed.up.sql` (combined with feed). See [schema.md](./schema.md#traits-module-planned--wave-1).
+**Next migration:** `000002_feed.sql` (combined with feed). See [schema.md](./schema.md#traits-module-planned--wave-1).
 
 ---
 
-## Proto / RPC surface
+## REST / OpenAPI surface
 
-No standalone service in MVP. Future feed RPCs: `FollowTrait`, `UnfollowTrait` — [api_index.md](./api_index.md).
+No standalone service in MVP. Future feed routes: `FollowTrait`, `UnfollowTrait` — [api_index.md](./api_index.md).
 
 ---
 
@@ -64,10 +72,10 @@ Trait reads are public via feed list endpoints. Follow mutations require auth. F
 
 ### Phase traits-A — Schema & seed
 
-- [ ] `traits` + `feed_item_traits` in `000002_feed.up.sql`
-- [ ] Seed in `apps/backend/db/seed.sql`
-- [ ] SQLC: `GetTrait`, `ListTraitsByParent`, `ListTraitsForFeedItems`
-- [ ] Tests: `apps/backend/tests/traits/` — seed integrity, no orphan `parent_id`
+- [ ] `traits` + `feed_item_traits` in `000002_feed.sql`
+- [ ] Seed in `core/database/src/main/resources/db/seed.sql`
+- [ ] SQLDelight: `GetTrait`, `ListTraitsByParent`, `ListTraitsForFeedItems`
+- [ ] Tests: `features/feed/src/test/kotlin/.../traits/` — seed integrity, no orphan `parent_id`
 
 ### Phase traits-B — Follow & interest (feed-owned)
 
@@ -84,9 +92,10 @@ Trait reads are public via feed list endpoints. Follow mutations require auth. F
 ## Verification
 
 ```bash
-devenv test
+./gradlew :core:database:generateSqlDelightInterface
 db-seed
-cd apps/backend && go test ./tests/traits/...
+./gradlew :features:feed:test
+./gradlew test
 ```
 
 ---
@@ -95,9 +104,12 @@ cd apps/backend && go test ./tests/traits/...
 
 | Path | Purpose |
 |------|---------|
-| `apps/backend/db/migration/000002_feed.up.sql` | traits + feed tables |
-| `apps/backend/db/query/traits.sql` | SQLC |
-| `apps/backend/db/seed.sql` | Trait tree |
+| `core/database/src/main/resources/db/migration/000002_feed.sql` | traits + feed tables |
+| `core/database/src/main/sqldelight/traits.sq` | SQLDelight |
+| `core/database/src/main/resources/db/seed.sql` | Trait tree |
+| `features/feed/src/main/kotlin/.../FeedRouting.kt` | Trait list/filter routes |
+| `features/feed/src/main/kotlin/.../FeedService.kt` | Trait SQL + filters |
+| `features/feed/src/test/kotlin/.../traits/` | Trait seed/filter tests |
 | `docs/traits_module.md` | This guide |
 
 ---

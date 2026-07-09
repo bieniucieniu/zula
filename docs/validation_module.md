@@ -2,7 +2,7 @@
 
 **PIN/QR verification** at meetup/handoff. Success updates **trust scores** and unlocks **peer ratings**.
 
-**Status:** Doc complete · **Backend:** ⬜ · **Service:** `ValidationService` (planned)
+**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:validation`
 
 **Depends on:** [trade_module.md](./trade_module.md) · **Unblocks:** [user_module.md](./user_module.md) public ratings (Wave 3.5)
 
@@ -41,6 +41,16 @@ sequenceDiagram
     Note over U: TRADE_COMPLETED event
 ```
 
+Feature layout:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Routing | `ValidationRouting.kt` | HTTP paths, OpenAPI metadata |
+| Service | `ValidationService.kt` | Code generation, verify, trust coordination |
+| Integration | — | Trust writes via Koin `TrustLedgerWriter` (no MQ in MVP) |
+
+Register in Koin (`validationModule`) and mount routes from `Application.kt` via `configureValidationRouting()`.
+
 ---
 
 ## Schema
@@ -49,16 +59,18 @@ sequenceDiagram
 |-------|---------|
 | `validation_sessions` | `trade_id`, `code_hash`, `expires_at`, `status` |
 
-**Next migration:** `000007_validation.up.sql` — [schema.md](./schema.md#validation-module-planned--wave-3)
+**Next migration:** `000007_validation.sql` — [schema.md](./schema.md#validation-module-planned--wave-3)
 
 ---
 
-## Proto / RPC surface
+## REST / OpenAPI surface
 
-| RPC | Auth |
-|-----|------|
+| Operation | Auth |
+|-----------|------|
 | `GenerateHandoffCode` | Auth (participant) |
 | `VerifyHandoff` | Auth (participant) |
+
+Link: [api_index.md](./api_index.md)
 
 ---
 
@@ -73,14 +85,15 @@ Trade participants only. [auth_and_permissions.md](./auth_and_permissions.md)
 ### Phase validation-A — Code generation
 
 - [ ] `validation_sessions` table
-- [ ] `GenerateHandoffCode` RPC
+- [ ] `GenerateHandoffCode` REST route
 - [ ] QR payload format: `trade_id + nonce + HMAC`
-- [ ] Tests: `apps/backend/tests/validation/`
+- [ ] Koin: `validationModule` + route mount in `Application.kt`
+- [ ] Tests: `features/validation/src/test/kotlin/`
 
 ### Phase validation-B — Verify & complete
 
 - [ ] `VerifyHandoff` — **MVP policy:** single device dual entry OR both scan (pick one in PR)
-- [ ] On success: trade → completed, trust ledger for both users
+- [ ] On success: trade → completed, trust ledger for both users (via `TrustLedgerWriter`)
 - [ ] Gate `RecordPeerRating` on validation success
 
 ### Phase validation-C — Abuse controls
@@ -93,9 +106,10 @@ Trade participants only. [auth_and_permissions.md](./auth_and_permissions.md)
 ## Verification
 
 ```bash
-devenv test
-cd apps/backend && go test ./tests/validation/...
-# E2E: trade flow → trust score change (see WALKTHROUGH.md)
+./gradlew :core:database:generateSqlDelightInterface
+./gradlew :features:validation:test
+./gradlew test
+# E2E: trade flow → trust score change (see README.md)
 ```
 
 ---
@@ -104,9 +118,12 @@ cd apps/backend && go test ./tests/validation/...
 
 | Path | Purpose |
 |------|---------|
-| `apps/backend/db/migration/000007_validation.up.sql` | Sessions |
-| `apps/backend/internal/apitypes/` | RPCs |
-| `apps/backend/internal/service/validation.go` | Handlers |
+| `core/database/src/main/resources/db/migration/000007_validation.sql` | Sessions |
+| `core/database/src/main/sqldelight/validation.sq` | SQLDelight queries |
+| `core/openapi/src/main/kotlin/dto/` | OpenAPI DTOs |
+| `features/validation/src/main/kotlin/.../ValidationRouting.kt` | HTTP routes |
+| `features/validation/src/main/kotlin/.../ValidationService.kt` | Business logic |
+| `features/validation/src/test/kotlin/...` | Tests |
 | `docs/validation_module.md` | This guide |
 
 ---

@@ -1,10 +1,10 @@
 # REST API index
 
-Quick reference for HTTP routes under `/api/v1`. OpenAPI spec: [packages/openapi/openapi3.yaml](../packages/openapi/openapi3.yaml). Auth: [auth_and_permissions.md](./auth_and_permissions.md).
+Quick reference for HTTP routes under `/api/v1`. OpenAPI spec: `core/openapi/src/main/resources/openapi.yaml`. Auth: [auth_and_permissions.md](./auth_and_permissions.md).
 
 > Legacy RPC names below map to REST paths; prefer the OpenAPI spec for client generation.
 
-Request/response shapes: `apps/backend/internal/apitypes/` (also in OpenAPI spec).
+Request/response shapes: `core/openapi/` DTOs (also in OpenAPI spec).
 
 **Legend:** ✅ implemented · 🔜 planned
 

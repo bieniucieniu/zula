@@ -1,6 +1,6 @@
 # Module documentation template
 
-Use this structure for every `docs/*_module.md`. Short modules may omit deep SQL/proto sections but **must keep the same headings** (mark N/A where empty).
+Use this structure for every `docs/*_module.md`. Short modules may omit deep SQL/OpenAPI sections but **must keep the same headings** (mark N/A where empty).
 
 ---
 
@@ -9,7 +9,7 @@ Use this structure for every `docs/*_module.md`. Short modules may omit deep SQL
 
 One-line purpose.
 
-**Status:** {Doc: complete | draft} · **Backend:** {none | partial | MVP | done} · **Service:** `{ServiceName}`
+**Status:** {Doc: complete | draft} · **Backend:** {none | partial | MVP | done} · **Feature:** `features:{name}`
 
 **Depends on:** [module](./other_module.md) · **Unblocks:** [module](./other_module.md)
 
@@ -33,30 +33,38 @@ One-line purpose.
 (diagram or mermaid)
 ```
 
+Feature layout:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Routing | `{Name}Routing.kt` | HTTP paths, OpenAPI metadata |
+| Service | `{Name}Service.kt` | Business logic, transactions |
+| Integration | `{Name}Consumer.kt` / `{Name}Publisher.kt` | RabbitMQ boundaries |
+
 ---
 
 ## Schema
 
-Tables owned by this module. **Canonical DDL:** [schema.md](./schema.md#{anchor}) — do not duplicate full `CREATE TABLE` here unless teaching “from zero”.
+Tables owned by this module. **Canonical DDL:** [schema.md](./schema.md#{anchor}) — SQLDelight `.sq` in `core/database/`.
 
 | Table | Purpose |
 |-------|---------|
 | … | … |
 
-**Next migration:** `00000N_*.up.sql` (if not yet shipped)
+**Next migration:** `00000N_*.sql` (if not yet shipped)
 
 ---
 
-## Proto / RPC surface
+## REST / OpenAPI surface
 
-Link: [api_index.md](./api_index.md). Summarize only module-specific messages.
+Link: [api_index.md](./api_index.md). Summarize only module-specific routes and DTOs.
 
 ---
 
 ## Auth policy
 
-| RPC | Auth | Notes |
-|-----|------|-------|
+| Route | Auth | Notes |
+|-------|------|-------|
 | … | public / auth / admin | … |
 
 Full matrix: [auth_and_permissions.md](./auth_and_permissions.md)
@@ -80,11 +88,9 @@ Move completed phases here with `[x]` and date.
 ## Verification
 
 ```bash
-# devenv shell
-gen-openapi
-cd apps/backend && sqlc generate
-devenv test
-cd apps/backend && go test ./tests/{area}/...
+./gradlew :core:database:generateSqlDelightInterface
+./gradlew :features:{name}:test
+./gradlew test
 ```
 
 ---
@@ -93,7 +99,12 @@ cd apps/backend && go test ./tests/{area}/...
 
 | Path | Purpose |
 |------|---------|
-| … | … |
+| `features/{name}/src/main/kotlin/.../{Name}Routing.kt` | HTTP routes |
+| `features/{name}/src/main/kotlin/.../{Name}Service.kt` | Business logic |
+| `features/{name}/src/main/kotlin/.../{Name}Publisher.kt` | MQ publish (if any) |
+| `features/{name}/src/main/kotlin/.../{Name}Consumer.kt` | MQ consume (if any) |
+| `core/database/src/main/sqldelight/.../*.sq` | SQLDelight queries |
+| `features/{name}/src/test/kotlin/...` | Tests |
 
 ---
 
@@ -118,7 +129,7 @@ cd apps/backend && go test ./tests/{area}/...
 |---------|---------|
 | ⬜ none | No production code |
 | 🔶 partial | Some phases shipped; see module phases |
-| ✅ MVP | Core RPCs usable; later phases deferred |
+| ✅ MVP | Core routes usable; later phases deferred |
 | ✅ done | All planned phases for current wave |
 
 Update status in **this file**, **`docs/README.md`**, and **`implementation_plan.md`** when merging backend work.

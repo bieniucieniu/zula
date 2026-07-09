@@ -2,7 +2,7 @@
 
 **Trade templates** for direct swaps and cash meetups. No in-app payments — coordination and state only.
 
-**Status:** Doc complete · **Backend:** ⬜ · **Service:** `TradeService` (planned)
+**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:trade`
 
 **Depends on:** [feed_module.md](./feed_module.md), [user_module.md](./user_module.md) · **Unblocks:** [validation](./validation_module.md), [chat](./chat_module.md), [profile_portfolio](./profile_portfolio_module.md) portfolio-E
 
@@ -43,6 +43,16 @@ stateDiagram-v2
 
 Feed item status coupling: `active` → `in_trade` → `fulfilled` or back to `active` on cancel.
 
+Feature layout:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Routing | `TradeRouting.kt` | HTTP paths, OpenAPI metadata |
+| Service | `TradeService.kt` | State machine, feed linkage, meetup scheduling |
+| Integration | `TradePublisher.kt` / `TradeConsumer.kt` | Room creation events, expiry jobs (planned) |
+
+Register in Koin (`tradeModule`) and mount routes from `Application.kt` via `configureTradeRouting()`.
+
 ---
 
 ## Schema
@@ -54,14 +64,14 @@ Feed item status coupling: `active` → `in_trade` → `fulfilled` or back to `a
 | `trade_items` | Linked feed items / sides |
 | `trade_public_disclosures` | Opt-in public summaries |
 
-**Next migration:** `000005_trades.up.sql` — [schema.md](./schema.md#trade-module-planned--wave-3)
+**Next migration:** `000005_trades.sql` — [schema.md](./schema.md#trade-module-planned--wave-3)
 
 ---
 
-## Proto / RPC surface
+## REST / OpenAPI surface
 
-| RPC | Auth |
-|-----|------|
+| Operation | Auth |
+|-----------|------|
 | `CreateTrade` | Auth |
 | `AcceptTrade` / `CancelTrade` | Auth |
 | `GetTrade` | Auth (participants) |
@@ -79,17 +89,18 @@ Participants only for read/write. [auth_and_permissions.md](./auth_and_permissio
 
 ## Implementation phases
 
-### Phase trade-A — Schema & core RPCs
+### Phase trade-A — Schema & core routes
 
 - [ ] Migration + `TradeService`
 - [ ] `CreateTrade`, `AcceptTrade`, `CancelTrade`, `GetTrade`
-- [ ] Tests: invalid transitions rejected — `apps/backend/tests/trade/`
+- [ ] Koin: `tradeModule` + route mount in `Application.kt`
+- [ ] Tests: invalid transitions rejected — `features/trade/src/test/kotlin/`
 
 ### Phase trade-B — Templates & scheduling
 
 - [ ] Template validation (swap vs meetup)
 - [ ] `ProposeMeetup`, `ConfirmMeetup`
-- [ ] Expiry job for stale proposals
+- [ ] Expiry job for stale proposals (RabbitMQ consumer or scheduled task)
 
 ### Phase trade-C — Feed linkage
 
@@ -106,9 +117,10 @@ Participants only for read/write. [auth_and_permissions.md](./auth_and_permissio
 ## Verification
 
 ```bash
-gen-openapi
-devenv test
-cd apps/backend && go test ./tests/trade/...
+./gradlew :core:database:generateSqlDelightInterface
+./gradlew :core:openapi:build
+./gradlew :features:trade:test
+./gradlew test
 ```
 
 ---
@@ -117,9 +129,13 @@ cd apps/backend && go test ./tests/trade/...
 
 | Path | Purpose |
 |------|---------|
-| `apps/backend/db/migration/000005_trades.up.sql` | Schema |
-| `apps/backend/internal/apitypes/` | API |
-| `apps/backend/internal/service/trade.go` | State machine |
+| `core/database/src/main/resources/db/migration/000005_trades.sql` | Schema |
+| `core/database/src/main/sqldelight/trade.sq` | SQLDelight queries |
+| `core/openapi/src/main/kotlin/dto/` | OpenAPI DTOs |
+| `features/trade/src/main/kotlin/.../TradeRouting.kt` | HTTP routes |
+| `features/trade/src/main/kotlin/.../TradeService.kt` | State machine |
+| `features/trade/src/main/kotlin/.../TradePublisher.kt` | MQ publish (if any) |
+| `features/trade/src/test/kotlin/...` | Tests |
 | `docs/trade_module.md` | This guide |
 
 ---
