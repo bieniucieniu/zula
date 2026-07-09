@@ -15,7 +15,7 @@ Master rollout plan for modules **not yet implemented** in the backend, plus **r
 | [profile_portfolio](./profile_portfolio_module.md) | Full | ✅ A–B | Activity/feed body blocked on feed |
 | [feed](./feed_module.md) | Full | ⬜ | **Critical path** |
 | [traits](./traits_module.md) | Plan | ⬜ | Can ship inside feed Phase A |
-| [media](./media_module.md) | Plan | ⬜ | MinIO in devenv only |
+| [media](./media_module.md) | Plan | ⬜ | MinIO in local dev only |
 | [geolocation](./geolocation_module.md) | Plan | ⬜ | `location_tag` column exists |
 | [trade](./trade_module.md) | Plan | ⬜ | — |
 | [validation](./validation_module.md) | Plan | ⬜ | Trust ledger exists |
@@ -79,12 +79,12 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 
 | Step | Module | Deliverable | Doc |
 |------|--------|-------------|-----|
-| 1.1 | **traits** | `traits` table, seed tree, SQLC, no standalone RPC yet | [traits_module.md](./traits_module.md) |
+| 1.1 | **traits** | `traits` table, seed tree, SQLDelight, no standalone route yet | [traits_module.md](./traits_module.md) |
 | 1.2 | **feed** Phase A–C | Schema, `FeedService`, `CreateFeedItem`, `ListForYouFeed`, blocks filter | [feed_module.md](./feed_module.md) |
 | 1.3 | **feed** Phase D | `ListFeedByAuthor`, `ListFeedByTrait` | feed |
 | 1.4 | **seller_profile** Phase C | Wire seller listings tab; sync `seller_activity_stats` | [seller_profile_module.md](./seller_profile_module.md) |
 
-**Exit criteria:** Seller page = profile header + author feed; seed data browsable via gRPC.
+**Exit criteria:** Seller page = profile header + author feed; seed data browsable via REST.
 
 ---
 
@@ -144,18 +144,18 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 
 ## Migration numbering (next files)
 
-All shipped schema lives in **`000001_init.up.sql`** (users, profiles, trust, blocks, documents, portfolio).  
-**Next migration:** `000002_feed.up.sql` — **combine traits + feed** for Wave 1 (single file unless size forces a split).
+All shipped schema lives in **`000001_init.sql`** (users, profiles, trust, blocks, documents, portfolio).  
+**Next migration:** `000002_feed.sql` — **combine traits + feed** for Wave 1 (single file unless size forces a split).
 
 | File | Wave | Module(s) |
 |------|------|-----------|
-| `000002_feed.up.sql` | 1 | traits + feed |
-| `000003_media.up.sql` | 2 | media (or merge into feed if tables already stubbed) |
-| `000004_geolocation.up.sql` | 2 | geolocation |
-| `000005_trades.up.sql` | 3 | trade |
-| `000006_chat.up.sql` | 3 | chat |
-| `000007_validation.up.sql` | 3 | validation |
-| `000008_moderation.up.sql` | 5 | moderation |
+| `000002_feed.sql` | 1 | traits + feed |
+| `000003_media.sql` | 2 | media (or merge into feed if tables already stubbed) |
+| `000004_geolocation.sql` | 2 | geolocation |
+| `000005_trades.sql` | 3 | trade |
+| `000006_chat.sql` | 3 | chat |
+| `000007_validation.sql` | 3 | validation |
+| `000008_moderation.sql` | 5 | moderation |
 
 Canonical table index: [schema.md](./schema.md). Renumber before merge if plans change.
 
@@ -170,9 +170,9 @@ Quick checklist:
 1. **Thin clients** — validation, state machines, and SQL on backend only.
 2. **Keyset pagination** — shared cursors in [api_index.md](./api_index.md).
 3. **Markdown** — `documents.source` only; see [profile_portfolio_module.md](./profile_portfolio_module.md).
-4. **Tests** — `apps/backend/tests/{area}/`, never `internal/*_test.go`.
-5. **Proto** — `gen-openapi` + `gen-openapi`; regenerate clients with `gen-api*` — [apps/backend/internal/apitypes/
-6. **Verify** — `devenv test` before marking a wave done.
+4. **Tests** — `features/{name}/src/test/kotlin/`, never colocated with production sources.
+5. **OpenAPI** — update `core/openapi/`; regenerate web client with `gen-api` when routes change.
+6. **Verify** — `./gradlew test` before marking a wave done.
 7. **Docs** — update module status + [docs/README.md](./README.md) when shipping phases.
 
 ---
@@ -211,15 +211,15 @@ Optimize for user-visible outcomes:
 | 4 | Public history | `portfolio-D`, `trade-D` |
 | 5 | Safety | `mod-A`, `mod-B` |
 
-### 2. Use `app.ModuleAPI` for cross-module calls
+### 2. Use Koin contract interfaces for cross-feature calls
 
-See [architecture.md](./architecture.md#internal-module-api-cross-service). Feed/trade/validation must not import UserService directly.
+See [architecture.md](./architecture.md#cross-feature-internal-api). Feed/trade/validation must not import sibling `*Service.kt` directly.
 
 ### 3. Definition of done (per phase)
 
 A phase is **done** only when:
 
-1. Backend tests pass (`go test ./tests/...`, `devenv test`)
+1. Backend tests pass (`./gradlew test`)
 2. Module doc + [docs/README.md](./README.md) status updated
 3. **At least web** calls new RPCs in a minimal screen *(when RPC is user-facing)*
 4. Projection registry updated if denormalized tables change
@@ -235,7 +235,7 @@ A phase is **done** only when:
 
 ### 5. Wave 1 integration test
 
-Golden path test (skipped until feed ships): `apps/backend/tests/integration/wave1_seller_page_test.go`
+Golden path test (skipped until feed ships): `app/src/test/kotlin/.../Wave1SellerPageTest.kt`
 
 ---
 
@@ -255,4 +255,4 @@ Golden path test (skipped until feed ships): `apps/backend/tests/integration/wav
 | Chat | [chat_module.md](./chat_module.md) | |
 | Moderation | [moderation_module.md](./moderation_module.md) | |
 | Clients | [clients.md](./clients.md) | [api_index.md](./api_index.md) |
-| Onboarding | [WALKTHROUGH.md](../WALKTHROUGH.md) | [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md) |
+| Onboarding | [README.md](../README.md) | [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md) |

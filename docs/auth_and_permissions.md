@@ -1,6 +1,6 @@
 # Auth and permissions
 
-REST auth is enforced in HTTP middleware (`apps/backend/internal/api/`). Routes **not** listed as public require a valid Bearer JWT in the `Authorization` header.
+REST auth is enforced by Ktor `Authentication` plugin (`core:security`). Routes **not** listed as public require a valid Bearer JWT in the `Authorization` header.
 
 WebSocket chat (planned) uses the same JWT at connect time.
 
@@ -63,7 +63,7 @@ WebSocket chat (planned) uses the same JWT at connect time.
 
 **Policy: strict hide** — authenticated viewer blocked either direction → `NotFound` on all public profile reads.
 
-Central helper: `enforcePublicTargetAccess` in UserService; feed/chat use `app.ModuleAPI.Blocks.ResolveViewerBlock`.
+Central helper: `enforcePublicTargetAccess` in `UserService`; feed/chat inject `BlockResolver` via Koin.
 
 | RPC | When blocked (authenticated viewer) |
 |-----|--------------------------------------|

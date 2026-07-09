@@ -2,7 +2,7 @@
 
 **MinIO/S3 uploads**, object key validation, and **async AI tagging** (vector embeddings on images/video).
 
-**Status:** Doc complete · **Backend:** ⬜ · **Service:** `MediaService` (planned)
+**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:media`
 
 **Depends on:** [feed_module.md](./feed_module.md) feed-A · **Unblocks:** feed-E, [seller_profile](./seller_profile_module.md) seller-D, portfolio covers
 
@@ -16,7 +16,7 @@
 
 | Goal | Detail |
 |------|--------|
-| **Presigned uploads** | Clients PUT bytes to MinIO; backend never streams bodies over gRPC |
+| **Presigned uploads** | Clients PUT bytes to MinIO; backend never streams bodies over REST |
 | **Object keys** | `feed_item_media`, portfolio `cover_object_key`, avatars |
 | **Async embeddings** | Worker writes `feed_item_media.embedding` |
 | **Validation** | Allowed bucket/prefix only on write |
@@ -34,7 +34,17 @@ Client                    MediaService              MinIO
   └── async worker ◄──────── embedding job ◄── feed_item_media row
 ```
 
-**Ownership:** MediaService issues presigned URLs and validates keys. FeedService/UserService **store** key strings only. Avatar upload RPC may live on MediaService with UserService updating `avatar_url` after validation.
+**Ownership:** MediaService issues presigned URLs and validates keys. FeedService/UserService **store** key strings only. Avatar upload route may live on MediaService with UserService updating `avatar_url` after validation.
+
+Feature layout:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Routing | `MediaRouting.kt` | HTTP paths, OpenAPI metadata |
+| Service | `MediaService.kt` | Presign, key validation, embedding coordination |
+| Integration | `MediaConsumer.kt` / `MediaPublisher.kt` | Async embedding jobs via RabbitMQ |
+
+Register in Koin (`mediaModule`) and mount routes from `Application.kt` via `configureMediaRouting()`.
 
 ---
 
@@ -42,14 +52,14 @@ Client                    MediaService              MinIO
 
 Uses `feed_item_media` (feed migration) and existing `cover_object_key` / `avatar_url` columns. See [schema.md](./schema.md#media-module-planned--wave-2).
 
-**Next migration:** `000003_media.up.sql` only if tables not merged into `000002_feed.up.sql`.
+**Next migration:** `000003_media.sql` only if tables not merged into `000002_feed.sql`.
 
 ---
 
-## Proto / RPC surface
+## REST / OpenAPI surface
 
-| RPC | Auth |
-|-----|------|
+| Operation | Auth |
+|-----------|------|
 | `RequestUpload` | Auth |
 | `RequestAvatarUpload` | Auth |
 
@@ -59,7 +69,7 @@ Uses `feed_item_media` (feed migration) and existing `cover_object_key` / `avata
 
 ## Auth policy
 
-All upload RPCs require authenticated user; object keys scoped to `user_id` prefix. [auth_and_permissions.md](./auth_and_permissions.md)
+All upload routes require authenticated user; object keys scoped to `user_id` prefix. [auth_and_permissions.md](./auth_and_permissions.md)
 
 ---
 
@@ -67,10 +77,10 @@ All upload RPCs require authenticated user; object keys scoped to `user_id` pref
 
 ### Phase media-A — Upload plumbing
 
-- [ ] `MediaService` registered in `app.go`
+- [ ] `mediaModule` in Koin; mount routes via `configureMediaRouting()` in `Application.kt`
 - [ ] `RequestUpload` → presigned PUT + `object_key` + expiry
-- [ ] Env: `S3_*` from devenv → Go client
-- [ ] Tests: `apps/backend/tests/media/` — mock MinIO, reject bad prefix
+- [ ] Env: `S3_*` from local/docker config → MinIO client in `core/storage`
+- [ ] Tests: `features/media/src/test/kotlin/` — mock MinIO, reject bad prefix
 
 ### Phase media-B — Feed & profile integration
 
@@ -80,7 +90,7 @@ All upload RPCs require authenticated user; object keys scoped to `user_id` pref
 
 ### Phase media-C — Async embeddings
 
-- [ ] Worker + `vector(768)` column
+- [ ] `MediaConsumer` + `vector(768)` column
 - [ ] Stub embed client for CI
 - [ ] Optional blend into feed ranking (feed-E)
 
@@ -94,8 +104,9 @@ All upload RPCs require authenticated user; object keys scoped to `user_id` pref
 ## Verification
 
 ```bash
-devenv test
-cd apps/backend && go test ./tests/media/...
+./gradlew :core:database:generateSqlDelightInterface
+./gradlew :features:media:test
+./gradlew test
 # manual: presigned PUT → CreateFeedItem with key → object readable
 ```
 
@@ -105,9 +116,13 @@ cd apps/backend && go test ./tests/media/...
 
 | Path | Purpose |
 |------|---------|
-| `apps/backend/internal/apitypes/` | Upload RPCs |
-| `apps/backend/internal/service/media.go` | Presign + validation |
-| `apps/backend/internal/lib/storage/` | MinIO client |
+| `core/openapi/src/main/kotlin/dto/` | OpenAPI DTOs |
+| `features/media/src/main/kotlin/.../MediaRouting.kt` | HTTP routes |
+| `features/media/src/main/kotlin/.../MediaService.kt` | Presign + validation |
+| `features/media/src/main/kotlin/.../MediaConsumer.kt` | Embedding worker |
+| `features/media/src/main/kotlin/.../MediaPublisher.kt` | MQ publish (if any) |
+| `core/storage/` | MinIO client |
+| `features/media/src/test/kotlin/...` | Tests |
 | `docs/media_module.md` | This guide |
 
 ---
@@ -116,7 +131,7 @@ cd apps/backend && go test ./tests/media/...
 
 | Question | MVP default |
 |----------|-------------|
-| Separate bucket per env | Single MinIO bucket in devenv |
+| Separate bucket per env | Single MinIO bucket in local dev |
 | Max upload size | Enforced at presign + reverse proxy |
 | Video embeddings | Images first; video deferred |
 

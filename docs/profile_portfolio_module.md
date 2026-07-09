@@ -2,7 +2,7 @@
 
 GitHub-style profiles: README, pinned work, portfolio, public activity, and app-wide markdown documents.
 
-**Status:** Doc complete · **Backend:** 🔶 partial (portfolio-A, portfolio-B) · **Service:** `UserService`
+**Status:** Doc complete · **Backend:** 🔶 partial (portfolio-A, portfolio-B) · **Feature:** `features:user`
 
 **Depends on:** [user_module.md](./user_module.md), [seller_profile_module.md](./seller_profile_module.md) · **Unblocks:** rich feed bodies (portfolio-C)
 
@@ -34,8 +34,8 @@ In Zula there is no separate seller account: any user can buy, sell, or barter. 
 |--------|------|
 | Profile README | `user_profile_readme` → `documents` |
 | Pinned repositories | `user_profile_pins` → `user_portfolio_items` |
-| Repository list | Portfolio grid + `ListFeedByAuthor` (active listings) |
-| Contribution graph | `ListPublicActivity` (fulfilled items, public deals) |
+| Repository list | Portfolio grid + `GET /api/v1/feed/by-author/{id}` (active listings) |
+| Contribution graph | `GET /api/v1/activity/public` (fulfilled items, public deals) |
 | Stars / reputation | `user_stats` + `user_ratings` (existing) |
 | Short name / bio line | `seller_headline` + short `bio` on `user_profiles` |
 
@@ -48,27 +48,35 @@ In Zula there is no separate seller account: any user can buy, sell, or barter. 
 ```text
 Client (profile page)
    │
-   ├─ GetSellerProfile
+   ├─ GET /api/v1/sellers/{idOrUsername}
    │     ├─ header: user_profiles + user_stats
    │     ├─ readme: documents (source markdown)
    │     └─ pins[]: user_profile_pins → user_portfolio_items
    │
-   ├─ ListPortfolioItems(user_id, cursor)
-   ├─ ListPublicActivity(user_id, cursor)     -- auto history
-   ├─ ListFeedByAuthor(user_id, cursor)       -- active listings (FeedService)
-   └─ ListSellerReviews(user_id, cursor)
+   ├─ GET /api/v1/portfolio?user_id=
+   ├─ GET /api/v1/activity/public?user_id=
+   ├─ GET /api/v1/feed/by-author/{id}       -- active listings (features:feed)
+   └─ GET /api/v1/reviews/seller/{userId}
 
 Owner editing
-   ├─ UpdateMyProfile          -- short fields
-   ├─ UpdateProfileReadme      -- documents
-   ├─ UpsertPortfolioItem
-   ├─ PinPortfolioItem / UnpinPortfolioItem
-   └─ ReorderPortfolioPins
+   ├─ PATCH /api/v1/users/me/profile       -- short fields
+   ├─ PUT /api/v1/users/me/readme          -- documents
+   ├─ POST /api/v1/portfolio/items
+   ├─ POST /api/v1/portfolio/pins / DELETE …
+   └─ PUT /api/v1/portfolio/pins/reorder
 
 App-wide long text
    └─ documents table referenced by:
          profile readme, feed_items.body, portfolio case studies, trade notes
 ```
+
+Feature layout:
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Routing | `features/user/.../UserRouting.kt` | Portfolio/readme/activity routes |
+| Service | `features/user/.../UserService.kt` | Document helpers, pin limits, validation |
+| DI | `features/user/.../UserModule.kt` | Koin wiring |
 
 ---
 
@@ -78,7 +86,7 @@ Long text appears in profiles, feed posts, portfolio case studies, and trade sum
 
 ### 1.1 Schema
 
-Tables are in **`000001_init.up.sql`**. Canonical reference: [schema.md](./schema.md#profile--portfolio-module).
+Tables are in **`000001_init.sql`**. Canonical reference: [schema.md](./schema.md#profile--portfolio-module).
 
 ```sql
 -- excerpt — see migration for full DDL
@@ -109,7 +117,7 @@ CREATE TABLE documents (
 
 - Backend never converts markdown to HTML or any other presentation format.
 - Each client owns its parser, preview, and embed resolution (`listing_embed`, `@user`, images).
-- List/card UIs truncate `source_markdown` locally when a short preview is needed.
+- List/card UIs truncate `sourceMarkdown` locally when a short preview is needed.
 
 ### 1.4 URL validation (backend)
 
@@ -202,12 +210,12 @@ CREATE INDEX user_profile_pins_order_idx
     ON user_profile_pins (user_id, sort_order);
 ```
 
-Enforce **max 6 pins** in `PinPortfolioItem` service logic.
+Enforce **max 6 pins** in `pinPortfolioItem` service logic.
 
 ### 3.3 Validation rules
 
 | Rule | Detail |
-|------|--------|
+|------|------|
 | `offer` kind | `feed_item_id` required; must belong to same `user_id` |
 | `case_study` | `body_document_id` or `summary` required |
 | `external_link` | `external_url` required; https only |
@@ -227,14 +235,13 @@ Automatic timeline vs manual portfolio:
 | **Portfolio tab** | `user_portfolio_items` | Curated grid |
 | **Pins** | `user_profile_pins` | Top of overview |
 | **Activity tab** | `feed_items` + `trades` | Auto-generated public history |
-| **Listings tab** | `FeedService.ListFeedByAuthor` | Active marketplace posts |
+| **Listings tab** | `GET /api/v1/feed/by-author/{id}` | Active marketplace posts |
 
 ### 4.1 Public activity query (depends on feed module)
 
 ```sql
--- name: ListPublicActivity :many
--- Union or single query over:
---   feed_items WHERE author_id = $1 AND status IN ('fulfilled', 'expired')
+-- listPublicActivity: union or single query over:
+--   feed_items WHERE author_id = ? AND status IN ('fulfilled', 'expired')
 --   ordered by updated_at DESC, id DESC
 -- Future: JOIN trade_public_disclosure for completed trades
 ```
@@ -262,202 +269,247 @@ Both parties opt in. `public_summary` may reference a `documents` row for markdo
 
 ---
 
-## Step 5: Protocol Buffers
+## Step 5: REST / OpenAPI Surface
 
-Extend `apps/backend/internal/apitypes/` and add `apps/backend/internal/apitypes/`.
+Extend DTOs in `core/openapi/src/main/kotlin/dto/` (`document.kt`, `portfolio.kt`). Regenerate with `./gradlew :core:openapi:build`. Full index: [api_index.md](./api_index.md).
 
-### 5.1 Document messages
+### 5.1 Routes
 
-```protobuf
-syntax = "proto3";
-package zula;
+| Method | Path | Request | Response | Auth |
+|--------|------|---------|----------|------|
+| `GET` | `/api/v1/sellers/{idOrUsername}` | — | `SellerProfileResponse` (+ readme, pins) | Public |
+| `GET` | `/api/v1/users/{userId}/readme` | — | `RichDocument` | Public |
+| `PUT` | `/api/v1/users/me/readme` | `UpdateProfileReadmeRequest` | `RichDocument` | Auth |
+| `GET` | `/api/v1/portfolio` | `user_id`, `PortfolioCursor`, `limit` | `ListPortfolioItemsResponse` | Public |
+| `POST` | `/api/v1/portfolio/items` | `UpsertPortfolioItemRequest` | `PortfolioItem` | Auth |
+| `DELETE` | `/api/v1/portfolio/items/{id}` | — | `DeletePortfolioItemResponse` | Auth |
+| `POST` | `/api/v1/portfolio/pins` | `PinPortfolioItemRequest` | `PinPortfolioItemResponse` | Auth |
+| `DELETE` | `/api/v1/portfolio/pins/{id}` | — | `UnpinPortfolioItemResponse` | Auth |
+| `PUT` | `/api/v1/portfolio/pins/reorder` | `ReorderProfilePinsRequest` | `ReorderProfilePinsResponse` | Auth |
+| `GET` | `/api/v1/activity/public` | `user_id`, `ProfileCursor`, `limit` | `ListPublicActivityResponse` | Public |
 
-message RichDocument {
-    string id = 1;
-    string format = 2;           // always "markdown" in MVP
-    string source_markdown = 3;  // canonical storage
-    int32 revision = 6;
-    string updated_at = 7;
-}
+### 5.2 DTO summaries
 
-message UpdateDocumentRequest {
-    string document_id = 1;      // empty = create
-    string source_markdown = 2;
-    optional int32 expected_revision = 3;  // optimistic concurrency
-}
-```
+```kotlin
+// core/openapi/src/main/kotlin/dto/document.kt
 
-### 5.2 Profile & portfolio RPCs
+@Serializable
+data class RichDocument(
+    val id: String,
+    val format: String = "markdown",
+    val sourceMarkdown: String,
+    val revision: Int,
+    val updatedAt: String,
+)
 
-```protobuf
-service UserService {
-    // Profile (extend seller profile plan)
-    rpc GetSellerProfile(GetSellerProfileRequest) returns (SellerProfileResponse);
-    rpc UpdateProfileReadme(UpdateProfileReadmeRequest) returns (RichDocument);
-    rpc GetProfileReadme(GetProfileReadmeRequest) returns (RichDocument);
+@Serializable
+data class UpdateDocumentRequest(
+    val documentId: String? = null,       // null = create
+    val sourceMarkdown: String,
+    val expectedRevision: Int? = null,      // optimistic concurrency
+)
 
-    // Portfolio
-    rpc ListPortfolioItems(ListPortfolioItemsRequest) returns (ListPortfolioItemsResponse);
-    rpc UpsertPortfolioItem(UpsertPortfolioItemRequest) returns (PortfolioItem);
-    rpc DeletePortfolioItem(DeletePortfolioItemRequest) returns (DeletePortfolioItemResponse);
-    rpc PinPortfolioItem(PinPortfolioItemRequest) returns (PinPortfolioItemResponse);
-    rpc UnpinPortfolioItem(UnpinPortfolioItemRequest) returns (UnpinPortfolioItemResponse);
-    rpc ReorderProfilePins(ReorderProfilePinsRequest) returns (ReorderProfilePinsResponse);
+@Serializable
+data class UpdateProfileReadmeRequest(
+    val sourceMarkdown: String,
+    val expectedRevision: Int? = null,
+)
 
-    // Activity
-    rpc ListPublicActivity(ListPublicActivityRequest) returns (ListPublicActivityResponse);
-}
+// core/openapi/src/main/kotlin/dto/portfolio.kt
 
-message SellerProfileResponse {
-    // ... existing header fields ...
-    RichDocument readme = 20;
-    repeated PortfolioItem pins = 21;
-}
+@Serializable
+data class PortfolioItem(
+    val id: String,
+    val kind: String,
+    val title: String,
+    val summary: String?,
+    val body: RichDocument? = null,       // omitted on list; full on detail
+    val feedItemId: String?,
+    val tradeId: String?,
+    val externalUrl: String?,
+    val coverUrl: String?,
+    val visibility: String,
+    val sortOrder: Int,
+    val createdAt: String,
+)
 
-message PortfolioItem {
-    string id = 1;
-    string kind = 2;
-    string title = 3;
-    string summary = 4;
-    RichDocument body = 5;
-    string feed_item_id = 6;
-    string trade_id = 7;
-    string external_url = 8;
-    string cover_url = 9;
-    string visibility = 10;
-    int32 sort_order = 11;
-    string created_at = 12;
-}
+@Serializable
+data class SellerProfileResponse(
+    // ... existing header fields (seller_profile_module.md) ...
+    val readme: RichDocument? = null,
+    val pins: List<PortfolioItem> = emptyList(),
+)
 
-message ListPortfolioItemsRequest {
-    string user_id = 1;
-    PortfolioCursor cursor = 2;  // document
-    int32 limit = 3;
-}
+@Serializable
+data class ListPortfolioItemsResponse(
+    val items: List<PortfolioItem>,
+    val nextCursor: PortfolioCursor?,
+    val hasMore: Boolean,
+)
 ```
 
 ### 5.3 Feed integration — long bodies
 
-In `feed`, replace plain `body` string with document reference:
+In `features:feed`, replace plain `body` string with document reference:
 
-```protobuf
-message FeedItem {
+```kotlin
+@Serializable
+data class FeedItem(
     // ...
-    string body_document_id = 11;
-    RichDocument body = 12;      // full markdown on GetFeedItem; omitted on list pages
+    val bodyDocumentId: String? = null,
+    val body: RichDocument? = null,      // full markdown on GET detail; omitted on list
+)
+```
+
+List endpoints omit `body`; clients truncate markdown locally for cards. Detail view returns full `sourceMarkdown`.
+
+### Auth policy
+
+Public routes (`GET /sellers/…`, `GET /portfolio`, `GET /activity/public`, `GET /users/{id}/readme`) mount outside `authenticate("auth-jwt")` in `UserRouting.kt`. Owner mutations require JWT. Block policy A applies to all public reads — see [auth_and_permissions.md](./auth_and_permissions.md).
+
+```kotlin
+// features/user/src/main/kotlin/.../UserRouting.kt (portfolio subset)
+fun Route.configurePortfolioRouting(userService: UserService) {
+    route("/api/v1") {
+        get("/users/{userId}/readme") {
+            call.respond(userService.getProfileReadme(call.parameters["userId"]!!, call.optionalUserId()))
+        }
+        get("/portfolio") { /* user_id query param */ }
+        get("/activity/public") { /* user_id query param */ }
+
+        authenticate("auth-jwt") {
+            put("/users/me/readme") {
+                call.respond(userService.updateProfileReadme(call.requireUserId(), call.receive()))
+            }
+            route("/portfolio") {
+                post("/items") { /* upsert */ }
+                delete("/items/{id}") { /* … */ }
+                post("/pins") { /* max 6 enforced in UserService */ }
+                delete("/pins/{id}") { /* … */ }
+                put("/pins/reorder") { /* … */ }
+            }
+        }
+    }
 }
 ```
 
-List endpoints omit `body`; clients truncate markdown locally for cards. Detail view returns full `source_markdown`.
-
 ---
 
-## Step 6: SQLC Queries
+## Step 6: SQLDelight Queries
 
-Add `apps/backend/db/query/documents.sql` and `profile_portfolio.sql`.
+Add `core/database/src/main/sqldelight/documents.sq` and `profile_portfolio.sq`. Regenerate with `./gradlew :core:database:generateSqlDelightInterface`.
 
 ### 6.1 Documents
 
 ```sql
--- name: CreateDocument :one
+createDocument:
 INSERT INTO documents (owner_user_id, format, source)
-VALUES ($1, $2, $3)
+VALUES (?, ?, ?)
 RETURNING *;
 
--- name: UpdateDocument :one
+-- expectedRevision: pass null to skip optimistic check; otherwise WHERE revision = ?
+updateDocument:
 UPDATE documents
-SET source = $3,
+SET source = ?,
     revision = revision + 1,
     updated_at = CURRENT_TIMESTAMP
-WHERE id = $1 AND owner_user_id = $2
-  AND (sqlc.narg(expected_revision)::int IS NULL OR revision = sqlc.narg(expected_revision))
+WHERE id = ? AND owner_user_id = ?
+  AND (? IS NULL OR revision = ?)
 RETURNING *;
 
--- name: GetDocument :one
-SELECT * FROM documents WHERE id = $1 LIMIT 1;
+getDocument:
+SELECT * FROM documents WHERE id = ? LIMIT 1;
 ```
 
 ### 6.2 Profile readme
 
 ```sql
--- name: GetProfileReadmeDocument :one
+getProfileReadmeDocument:
 SELECT d.*
 FROM user_profile_readme upr
 JOIN documents d ON d.id = upr.document_id
-WHERE upr.user_id = $1;
+WHERE upr.user_id = ?;
 
--- name: UpsertProfileReadme :one
--- tx: create document if needed, upsert user_profile_readme
+-- upsertProfileReadme: run in UserService transaction —
+-- createDocument if needed, then INSERT/UPDATE user_profile_readme
 ```
 
 ### 6.3 Portfolio & pins
 
 ```sql
--- name: ListPortfolioItems :many
--- keyset on (sort_order, id)
+listPortfolioItemsPage:
+SELECT *
+FROM user_portfolio_items
+WHERE user_id = ?
+  AND visibility = 'public'
+  AND (sort_order, id) < (?, ?)
+ORDER BY sort_order DESC, id DESC
+LIMIT ?;
 
--- name: ListProfilePins :many
+listProfilePins:
 SELECT pi.*, p.*
 FROM user_profile_pins pin
 JOIN user_portfolio_items pi ON pi.id = pin.portfolio_item_id
-WHERE pin.user_id = $1
+WHERE pin.user_id = ?
 ORDER BY pin.sort_order
 LIMIT 6;
 
--- name: CountProfilePins :one
-SELECT count(*)::int FROM user_profile_pins WHERE user_id = $1;
+countProfilePins:
+SELECT count(*) FROM user_profile_pins WHERE user_id = ?;
 ```
 
 ---
 
-## Step 7: Go Services
+## Step 7: Kotlin Service (`features/user/.../UserService.kt`)
 
-### 7.1 `DocumentService` or helpers in `UserService`
+Document helpers live in `UserService` (or a private `DocumentRepository` injected via Koin). No separate `DocumentService` for MVP.
 
-```go
-func (s *UserService) UpdateProfileReadme(ctx context.Context, req *pb.UpdateProfileReadmeRequest) (*pb.RichDocument, error) {
-    ownerID := requireViewer(ctx)
-    // validate markdown length
-    // upsert documents.source + user_profile_readme in tx
+### 7.1 `updateProfileReadme`
+
+```kotlin
+suspend fun updateProfileReadme(ownerId: Long, req: UpdateProfileReadmeRequest): RichDocument {
+    validateMarkdownLength(req.sourceMarkdown, maxBytes = 32 * 1024)
+    // upsert documents.source + user_profile_readme in transaction
+    return queries.transactionWithResult { /* createDocument + upsertProfileReadme */ }
 }
 ```
 
-### 7.2 `GetSellerProfile` composition
+### 7.2 `getSellerProfile` composition
 
 ```text
 Q1  header JOIN (users, user_profiles, user_stats)
 Q2  readme document (JOIN user_profile_readme)
-Q3  pins (ListProfilePins, LIMIT 6)
+Q3  pins (listProfilePins, LIMIT 6)
 ```
 
 **3 queries** for overview. Tabs load separately:
 
-- `ListPortfolioItems` — keyset
-- `ListPublicActivity` — keyset
-- `ListFeedByAuthor` — FeedService
-- `ListSellerReviews` — UserService
+- `GET /api/v1/portfolio` — keyset
+- `GET /api/v1/activity/public` — keyset
+- `GET /api/v1/feed/by-author/{id}` — FeedService
+- `GET /api/v1/reviews/seller/{userId}` — UserService
 
 ### 7.3 Portfolio flows
 
 **"I'm proud of this deal"**
 
 1. Trade completes → prompt for `trade_public_disclosures` opt-in.
-2. User taps "Add to portfolio" → `UpsertPortfolioItem` kind `case_study`, link `trade_id`, pre-fill markdown template document.
-3. Optional `PinPortfolioItem`.
+2. User taps "Add to portfolio" → `POST /api/v1/portfolio/items` kind `case_study`, link `tradeId`, pre-fill markdown template document.
+3. Optional `POST /api/v1/portfolio/pins`.
 
 **Pin an active offer**
 
-1. `UpsertPortfolioItem` kind `offer`, `feed_item_id` set.
-2. `PinPortfolioItem` if desired.
+1. `POST /api/v1/portfolio/items` kind `offer`, `feedItemId` set.
+2. `POST /api/v1/portfolio/pins` if desired.
 
 ### 7.4 N+1 checklist
 
 | Risk | Mitigation |
 |------|------------|
-| Load full `body` document per portfolio card in grid | List returns `summary` + `cover_url` only; document on `GetPortfolioItem` |
+| Load full `body` document per portfolio card in grid | List returns `summary` + `coverUrl` only; document on detail |
 | Render markdown per row in feed | List omits `body`; client truncates markdown locally for cards |
-| Fetch reviewer profiles per review | JOIN in `ListSellerReviews` (seller profile plan) |
-| Pin query per portfolio item | Single `ListProfilePins` JOIN |
+| Fetch reviewer profiles per review | JOIN in seller reviews query (seller profile plan) |
+| Pin query per portfolio item | Single `listProfilePins` JOIN |
 
 ---
 
@@ -524,29 +576,29 @@ Use `documents` for every long text field:
 
 ### Phase portfolio-A — Documents + profile README ✅
 
-- [x] `documents` + `document_revisions` in `000001_init.up.sql`
-- [x] `document` + helpers
-- [x] `user_profile_readme` + `UpdateProfileReadme` / `GetProfileReadme`
-- [x] `GetSellerProfile` includes readme + pins
+- [x] `documents` + `document_revisions` in `000001_init.sql`
+- [x] Document helpers in `UserService`
+- [x] `user_profile_readme` + `PUT /api/v1/users/me/readme` / `GET …/readme`
+- [x] `GET /api/v1/sellers/{idOrUsername}` includes readme + pins
 - [x] Tests: length limits, source persistence
 
 ### Phase portfolio-B — Portfolio & pins ✅
 
 - [x] `user_portfolio_items` + `user_profile_pins`
 - [x] Portfolio CRUD + pin/unpin/reorder (max 6)
-- [x] `ListPortfolioItems` keyset pagination
+- [x] `GET /api/v1/portfolio` keyset pagination
 - [ ] Link `offer` items to `feed_items` (needs feed)
 
 ### Phase portfolio-C — Feed body migration
 
 - [ ] `feed_items.body_document_id` migration
-- [ ] `CreateFeedItem` creates document for body
-- [ ] List feed omits body; detail returns `RichDocument.source_markdown`
+- [ ] `POST /api/v1/feed/items` creates document for body
+- [ ] List feed omits body; detail returns `RichDocument.sourceMarkdown`
 - [ ] Depends on [feed module](./feed_module.md) Phase feed-B+
 
 ### Phase portfolio-D — Public activity
 
-- [ ] `ListPublicActivity` from fulfilled/expired `feed_items`
+- [ ] `GET /api/v1/activity/public` from fulfilled/expired `feed_items`
 - [ ] Depends on feed module
 
 ### Phase portfolio-E — Trades & case studies
@@ -567,20 +619,21 @@ Use `documents` for every long text field:
 ## Step 12: Verification
 
 ```bash
-# devenv shell
-gen-openapi
-cd apps/backend && sqlc generate
-devenv test
+./gradlew :core:database:generateSqlDelightInterface
+./gradlew :core:openapi:build
+./gradlew :features:user:test
+./gradlew test
+
+./gradlew test
 db-seed
-cd apps/backend && go test ./...
 ```
 
 ### Manual checks
 
-- `GetSellerProfile` returns readme markdown + up to 6 pins
-- `UpdateProfileReadme` persists markdown source
+- `GET /api/v1/sellers/{id}` returns readme markdown + up to 6 pins
+- `PUT /api/v1/users/me/readme` persists markdown source
 - Portfolio grid paginates without loading full documents
-- `ListFeed` omits full body; detail view returns markdown
+- `GET /api/v1/feed` omits full body; detail view returns markdown
 - Pin 7th item → rejected
 - `offer` portfolio item references another user's listing → rejected
 
@@ -590,13 +643,16 @@ cd apps/backend && go test ./...
 
 | Path | Purpose |
 |------|---------|
-| `apps/backend/db/migration/000001_init.up.sql` | Full schema including documents, portfolio |
-| `apps/backend/db/query/documents.sql` | Document SQLC |
-| `apps/backend/db/query/profile_portfolio.sql` | Portfolio SQLC |
-| `apps/backend/internal/apitypes/` | Rich document messages |
-| `apps/backend/internal/apitypes/` | Profile + portfolio RPCs |
-| `apps/backend/internal/service/user_document.go` | Document helpers |
-| `apps/backend/internal/service/user.go` | Profile + portfolio handlers |
+| `core/database/src/main/resources/db/migration/000001_init.sql` | Full schema including documents, portfolio |
+| `core/database/src/main/sqldelight/documents.sq` | Document SQLDelight |
+| `core/database/src/main/sqldelight/profile_portfolio.sq` | Portfolio SQLDelight |
+| `core/openapi/src/main/kotlin/dto/document.kt` | `RichDocument` DTOs |
+| `core/openapi/src/main/kotlin/dto/portfolio.kt` | Portfolio DTOs |
+| `core/openapi/src/main/resources/openapi.yaml` | Generated / merged spec |
+| `features/user/src/main/kotlin/.../UserRouting.kt` | Portfolio/readme/activity routes |
+| `features/user/src/main/kotlin/.../UserService.kt` | Document + portfolio handlers |
+| `features/user/src/main/kotlin/.../UserModule.kt` | Koin wiring |
+| `features/user/src/test/kotlin/.../PortfolioTest.kt` | Portfolio tests |
 | `docs/profile_portfolio_module.md` | This guide |
 
 ---
@@ -609,8 +665,8 @@ cd apps/backend && go test ./...
 4. **Markdown only in `source`** — backend never stores HTML or derived preview text.
 5. **Clients parse markdown** — web → HTML; iOS/Android → native node trees.
 6. **Public deals are opt-in summaries** — never auto-publish sensitive trade fields.
-7. **Composable RPCs** — overview ≠ full portfolio ≠ listings ≠ activity.
-8. **List endpoints omit long bodies** — full `source_markdown` on detail/readme endpoints only.
+7. **Composable REST calls** — overview ≠ full portfolio ≠ listings ≠ activity.
+8. **List endpoints omit long bodies** — full `sourceMarkdown` on detail/readme endpoints only.
 
 ---
 
@@ -628,5 +684,5 @@ cd apps/backend && go test ./...
 ## Related Documentation
 
 - [user_module.md](./user_module.md) — auth, `user_profiles`, `user_stats`
-- [feed_module.md](./feed_module.md) — `feed_items`, `ListFeedByAuthor`
+- [feed_module.md](./feed_module.md) — `feed_items`, author feed
 - [AGENTS.md](../AGENTS.md) — keyset pagination, thin-client rules

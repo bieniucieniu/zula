@@ -1,6 +1,6 @@
 # Zula development conventions
 
-Cross-cutting rules referenced by all module docs. Repository-wide agent rules also live in [AGENTS.md](../AGENTS.md).
+Cross-cutting rules referenced by all module docs.
 
 ---
 
@@ -9,6 +9,16 @@ Cross-cutting rules referenced by all module docs. Repository-wide agent rules a
 - Validation, state machines, and SQL live on the **backend**.
 - Clients render UI, parse markdown locally, and call REST/WS.
 - Never trust client-computed trust scores, trade states, or pagination cursors without server validation.
+
+---
+
+## Ktor module layout
+
+Follow [architecture.md](./architecture.md#ktor-project-layout):
+
+- **`app`** — composition root (`Application.kt`, Koin bootstrap, route mounting)
+- **`core:*`** — database, security, openapi, rabbitmq
+- **`features:*`** — domain silos with `*Routing.kt`, `*Service.kt`, `*Consumer.kt` / `*Publisher.kt`
 
 ---
 
@@ -22,14 +32,14 @@ Cross-cutting rules referenced by all module docs. Repository-wide agent rules a
 
 **Offset pagination** is only for small admin grids with bounded datasets.
 
-### Shared cursor messages
+### Shared cursor DTOs
 
-| Message | Package | Used for |
-|---------|---------|----------|
-| `FeedCursor` | `apitypes` | Feed lists, author feed, trait feed |
-| `ProfileCursor` | `apitypes` | Reviews, portfolio, public activity |
+| DTO | Package | Used for |
+|-----|---------|----------|
+| `FeedCursor` | `core:openapi` | Feed lists, author feed, trait feed |
+| `ProfileCursor` | `core:openapi` | Reviews, portfolio, public activity |
 
-Do not invent a third cursor shape without updating [api_index.md](./api_index.md) and `apps/backend/internal/apitypes/`.
+Do not invent a third cursor shape without updating [api_index.md](./api_index.md) and `core/openapi/`.
 
 ---
 
@@ -46,19 +56,19 @@ See [profile_portfolio_module.md](./profile_portfolio_module.md) for length limi
 
 ## Tests
 
-- Go tests live under **`apps/backend/tests/`**, grouped by area (e.g. `tests/service/`, `tests/feed/`).
-- Do **not** add `*_test.go` under `internal/` production packages.
-- After API type or SQL changes: `gen-openapi`, `sqlc generate`, `go test ./tests/...`, then `devenv test` before marking a wave done.
+- Kotlin tests live under **`features/{name}/src/test/kotlin/`**, grouped by area.
+- Core infra tests under **`core/{name}/src/test/kotlin/`**.
+- Integration tests under **`app/src/test/kotlin/`**.
+- Do **not** colocate production and test sources.
+- After API or SQL changes: regenerate SQLDelight + OpenAPI, then `./gradlew test` before marking a wave done.
 
 ---
 
-## Migrations
+## Database & migrations
 
-- SQL files live in `apps/backend/db/migration/000NNN_*.up.sql` (+ optional `.down.sql`).
-- **Backend auto-migrate:** on startup the server applies pending migrations and records them in `schema_migrations`.
-- Disable with `AUTO_MIGRATE=false` or the `--no-auto-migrate` CLI flag.
-- Legacy databases created before auto-migrate are baselined on first startup (existing schema is detected, only missing migrations run).
-- After adding a migration: commit the `.up.sql` file; restart the backend (or run tests against a DB with auto-migrate enabled).
+- SQLDelight `.sq` files live in `core/database/src/main/sqldelight/`.
+- Versioned migrations: `core/database/src/main/resources/db/migration/000NNN_*.sql`.
+- **Auto-migrate:** `Application.kt` runs pending migrations at startup (disable via env `AUTO_MIGRATE=false`).
 - Never run destructive SQL outside migration files.
 
 Canonical table list: [schema.md](./schema.md).
@@ -68,24 +78,22 @@ Canonical table list: [schema.md](./schema.md).
 ## API type workflow
 
 ```bash
-# inside devenv shell
-gen-openapi        # OpenAPI spec from swag annotations
-gen-api            # Web (Orval)
-gen-api-android    # Android
-gen-api-ios        # iOS
+./gradlew :core:database:generateSqlDelightInterface   # SQLDelight DAOs
+./gradlew :core:openapi:build                            # refresh OpenAPI spec
+npm run gen-api -w apps/web                              # Orval client (when web ships)
 ```
 
-- Backend request/response structs: `apps/backend/internal/apitypes/`.
-- Shared messages: `RichDocument`, `ProfileCursor`, `FeedCursor` in `apitypes`.
-- OpenAPI contract: [packages/openapi/](../packages/openapi/).
+- Request/response DTOs: `core/openapi/src/main/kotlin/.../dto/`.
+- Shared types: `RichDocument`, `ProfileCursor`, `FeedCursor`.
+- Live spec: `core/openapi/src/main/resources/openapi.yaml` (served at `/swagger`).
 
 ---
 
 ## Auth patterns
 
-- REST: Bearer JWT in `Authorization` header; validated in HTTP middleware.
-- **Public methods** listed explicitly in `unprotectedMethods` (`auth.go`).
-- **Admin methods:** env allowlist (e.g. Google ID for `UpdateImplicitTrust`); same pattern for moderation admin RPCs.
+- REST: Bearer JWT in `Authorization` header; validated in Ktor `Authentication` plugin (`core:security`).
+- **Public routes** listed explicitly in route auth config.
+- **Admin routes:** env allowlist (e.g. Google ID for `UpdateImplicitTrust`); same pattern for moderation admin.
 
 Full matrix: [auth_and_permissions.md](./auth_and_permissions.md).
 
@@ -101,8 +109,8 @@ Full matrix: [auth_and_permissions.md](./auth_and_permissions.md).
 
 ## Blocks
 
-- **UserService** owns `BlockUser` / `UnblockUser`.
-- **Policy A (seller profile):** `GetSellerProfile` returns `NotFound` when either party blocked the other (authenticated viewer).
+- **user** feature owns block/unblock routes.
+- **Policy A (seller profile):** seller profile returns `404` when either party blocked the other (authenticated viewer).
 - Feed/chat/moderation must filter blocked users when those modules ship.
 
 ---
@@ -113,7 +121,7 @@ Full matrix: [auth_and_permissions.md](./auth_and_permissions.md).
 |---------|------|
 | Feed cards | JOIN `user_stats` only; no lazy trust recalc per row |
 | Profile page | Lazy trust recalc OK (1h TTL) |
-| Seller header | Do not embed feed listings — separate `ListFeedByAuthor` |
+| Seller header | Do not embed feed listings — separate author feed route |
 | Portfolio grid | Return `summary` + cover; load `RichDocument` on detail only |
 
 ---
@@ -122,13 +130,13 @@ Full matrix: [auth_and_permissions.md](./auth_and_permissions.md).
 
 - Module docs follow [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md).
 - Update [docs/README.md](./README.md) status after shipping phases.
-- Definition of Done: [implementation_plan.md](./implementation_plan.md#definition-of-done-per-phase) (backend tests + doc status + web smoke for user-facing RPCs).
+- Definition of Done: [implementation_plan.md](./implementation_plan.md#definition-of-done-per-phase).
 
 ---
 
-## Cross-module internal API
+## Cross-feature internal API
 
-Use `app.ModuleAPI` — see [architecture.md](./architecture.md#internal-module-api-cross-service). Do not import sibling `internal/service` packages.
+Use Koin contract interfaces — see [architecture.md](./architecture.md#cross-feature-internal-api). Do not import sibling feature `*Service.kt` classes.
 
 ---
 
