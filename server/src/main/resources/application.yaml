@@ -1,15 +1,19 @@
 ktor:
   deployment:
     port: 8080
+    rootPath: /api
+    watch:
+      - classes
+  development: true
   application:
     modules:
       - com.zula.core.http.HttpKt.configureHttp
       - com.zula.core.http.SerializationKt.configureSerialization
-      - com.zula.core.security.SecurityKt.configureSecurity
       - com.zula.core.http.SseKt.configureSse
       - com.zula.core.http.StatusPagesKt.configureStatusPages
+      - com.zula.core.security.SecurityKt.configureSecurity
       - com.zula.core.database.DatabaseKt.configureDatabase
-      - com.zula.app.KoinKt.configureKoin
       - com.zula.core.rabbitmq.RabbitmqKt.configureRabbitmq
       - com.zula.core.openapi.OpenApiKt.configureOpenApi
+      - com.zula.app.KoinKt.configureKoin
       - com.zula.app.RoutingKt.configureRouting

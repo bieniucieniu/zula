@@ -14,6 +14,15 @@ application {
 kotlin {
     jvmToolchain(21)
 }
+
+ktor {
+    openApi {
+        enabled = true
+        codeInferenceEnabled = true
+        onlyCommented = false
+    }
+}
+
 dependencies {
     implementation(ktorLibs.client.apache)
     implementation(ktorLibs.client.core)
@@ -29,7 +38,6 @@ dependencies {
     implementation(ktorLibs.server.defaultHeaders)
     implementation(ktorLibs.server.forwardedHeader)
     implementation(ktorLibs.server.netty)
-    implementation(ktorLibs.server.openapi)
     implementation(ktorLibs.server.routingOpenapi)
     implementation(ktorLibs.server.sse)
     implementation(ktorLibs.server.statusPages)

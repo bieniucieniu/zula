@@ -15,19 +15,17 @@ zula/
 
 ### Server (API)
 
-| Task | Description |
-|------|-------------|
-| `./gradlew :server:run` | Run the API server on port 8080 |
-| `./gradlew :server:build` | Build the server JAR |
-| `./gradlew :server:test` | Run server tests |
+| Task                      | Description                     |
+|---------------------------|---------------------------------|
+| `./gradlew :server:run`   | Run the API server on port 8080 |
+| `./gradlew :server:build` | Build the server JAR            |
+| `./gradlew :server:test`  | Run server tests                |
 
 API routes are under `/api`. OAuth login/callback stay at `/login` and `/callback`.
 
-### Web (SPA)
-
 ```bash
-npm install
-npm run dev -w apps/web
+cd apps/web && bun run dev
+cd apps/native && bun run dev
 ```
 
 Vite dev server runs on port 5173 and proxies `/api`, `/login`, and `/callback` to the Ktor server.
