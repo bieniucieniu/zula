@@ -61,7 +61,7 @@
 
 ## Traits module *(planned — Wave 1)*
 
-*Doc: [traits_module.md](./traits_module.md)* · migration: `000002_feed.up.sql`
+*Doc: [traits_module.md](./traits_module.md)* · migration: `000002_feed.sql`
 
 | Table | Purpose |
 |-------|---------|
@@ -86,15 +86,77 @@
 
 ## Media module *(planned — Wave 2)*
 
-*Doc: [media_module.md](./media_module.md)*
+*Doc: [media_module.md](./media_module.md)* · migration: `000003_media.sql` (or merged into `000002_feed.sql`)
 
-Uses `feed_item_media`, portfolio `cover_object_key`, `user_profiles.avatar_url` (validated key/URL). No separate media table required for MVP.
+`features:media` owns the **registry** and MinIO lifecycle. Other modules store key strings and call `MediaService.commitKeys` / `releaseKey`.
+
+### Registry
+
+| Table | Purpose |
+|-------|---------|
+| `media_objects` | Canonical record per S3 object: owner, status, `ref_count`, GC timestamps |
+
+```sql
+CREATE TABLE media_objects (
+    object_key     text PRIMARY KEY,
+    owner_user_id  bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status         text NOT NULL CHECK (status IN ('pending', 'active', 'deleted')),
+    content_type   text,
+    byte_size      bigint,
+    ref_count      int NOT NULL DEFAULT 0 CHECK (ref_count >= 0),
+    created_at     timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    committed_at   timestamptz,
+    delete_after   timestamptz
+);
+
+CREATE INDEX media_objects_owner_idx
+    ON media_objects (owner_user_id, status);
+
+CREATE INDEX media_objects_gc_idx
+    ON media_objects (status, delete_after)
+    WHERE status IN ('pending', 'deleted');
+```
+
+| Column | Notes |
+|--------|-------|
+| `object_key` | `uploads/{user_id}/{uuid}` — same string stored in feature tables |
+| `status` | `pending` → `active` on commit; `deleted` when `ref_count` reaches 0 |
+| `ref_count` | Increment on `commitKeys`; decrement on `releaseKey` |
+| `delete_after` | Set when status becomes `deleted`; GC deletes S3 object after grace |
+
+### Reference sites (not FK to `media_objects`)
+
+Keys are validated at write time; no FK to keep feed/profile migrations independent.
+
+| Location | Column | Owner feature |
+|----------|--------|---------------|
+| `feed_item_media` | `object_key` | `features:feed` |
+| `user_portfolio_items` | `cover_object_key` | `features:user` |
+| `user_profiles` | `avatar_url` | `features:user` |
+
+On delete/replace, owning feature calls `releaseKey`. On create/link, calls `commitKeys` in the same transaction.
+
+### GC queries (SQLDelight: `media.sq`)
+
+| Query | Purpose |
+|-------|---------|
+| `selectGcPendingOrphans` | `pending` older than 24h |
+| `selectGcDeletedReady` | `deleted`, `ref_count = 0`, past `delete_after` |
+| `deleteMediaObject` | Remove row after successful S3 delete |
+
+### Related feed table
+
+| Table | Purpose |
+|-------|---------|
+| `feed_item_media` | Per-item media rows: `object_key`, `sort_order`, optional `embedding` |
+
+Defined in feed migration (`000002_feed.sql`). See [feed_module.md](./feed_module.md).
 
 ---
 
 ## Geolocation module *(planned — Wave 2)*
 
-*Doc: [geolocation_module.md](./geolocation_module.md)* · migration: `000004_geolocation.up.sql`
+*Doc: [geolocation_module.md](./geolocation_module.md)* · migration: `000004_geolocation.sql`
 
 | Table | Purpose |
 |-------|---------|
@@ -106,7 +168,7 @@ Writes to `user_profiles.location_tag`; optional `feed_items.origin_location_tag
 
 ## Trade module *(planned — Wave 3)*
 
-*Doc: [trade_module.md](./trade_module.md)* · migration: `000005_trades.up.sql`
+*Doc: [trade_module.md](./trade_module.md)* · migration: `000005_trades.sql`
 
 | Table | Purpose |
 |-------|---------|
@@ -119,7 +181,7 @@ Writes to `user_profiles.location_tag`; optional `feed_items.origin_location_tag
 
 ## Validation module *(planned — Wave 3)*
 
-*Doc: [validation_module.md](./validation_module.md)* · migration: `000007_validation.up.sql`
+*Doc: [validation_module.md](./validation_module.md)* · migration: `000007_validation.sql`
 
 | Table | Purpose |
 |-------|---------|
@@ -129,7 +191,7 @@ Writes to `user_profiles.location_tag`; optional `feed_items.origin_location_tag
 
 ## Chat module *(planned — Wave 3)*
 
-*Doc: [chat_module.md](./chat_module.md)* · migration: `000006_chat.up.sql`
+*Doc: [chat_module.md](./chat_module.md)* · migration: `000006_chat.sql`
 
 | Table | Purpose |
 |-------|---------|
@@ -141,7 +203,7 @@ Writes to `user_profiles.location_tag`; optional `feed_items.origin_location_tag
 
 ## Moderation module *(planned — Wave 5)*
 
-*Doc: [moderation_module.md](./moderation_module.md)* · migration: `000008_moderation.up.sql`
+*Doc: [moderation_module.md](./moderation_module.md)* · migration: `000008_moderation.sql`
 
 | Table | Purpose |
 |-------|---------|
@@ -166,6 +228,7 @@ erDiagram
     users ||--o| user_profile_readme : readme
     users ||--o{ user_portfolio_items : portfolio
     users ||--o{ user_profile_pins : pins
+    users ||--o{ media_objects : owns
     documents ||--o{ document_revisions : history
     user_profile_readme }o--|| documents : points_to
     user_portfolio_items }o--o| documents : body
