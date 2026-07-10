@@ -41,9 +41,9 @@ ktor:
     modules:
       - com.zula.core.http.HttpKt.configureHttp
       - com.zula.core.http.SerializationKt.configureSerialization
-      - com.zula.core.security.SecurityKt.configureSecurity
       - com.zula.core.rabbitmq.RabbitmqKt.configureRabbitmq
       - com.zula.core.openapi.OpenApiKt.configureOpenApi
       - com.zula.app.KoinKt.configureKoin
+      - com.zula.core.security.SecurityKt.configureSecurity
       - com.zula.core.database.DatabaseKt.configureDatabase
       - com.zula.app.RoutingKt.configureRouting

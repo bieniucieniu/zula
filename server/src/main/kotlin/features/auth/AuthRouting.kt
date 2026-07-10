@@ -1,16 +1,18 @@
 package com.zula.features.auth
 
-import com.zula.core.security.SecurityBootstrapKey
 import com.zula.core.security.oauth.OAuthProviderNames
+import com.zula.core.security.SecurityConfig
+import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
+import org.koin.ktor.ext.getKoin
 
 fun Route.configureAuthRouting() {
-    val bootstrap = application.attributes.getOrNull(SecurityBootstrapKey) ?: return
+    val config = application.getKoin().getOrNull<SecurityConfig>() ?: return
 
-    if (bootstrap.config.oauth.google.isConfigured) {
+    if (config.oauth.google.isConfigured) {
         authenticate(OAuthProviderNames.GOOGLE) {
             get("/auth/login/google") {
                 // Ktor redirects to Google authorize URL automatically.
@@ -24,7 +26,7 @@ fun Route.configureAuthRouting() {
         }
     }
 
-    if (bootstrap.config.oauth.apple.isConfigured) {
+    if (config.oauth.apple.isConfigured) {
         authenticate(OAuthProviderNames.APPLE) {
             get("/auth/login/apple") {
                 // Ktor redirects to Apple authorize URL automatically.

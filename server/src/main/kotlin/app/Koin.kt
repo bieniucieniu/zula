@@ -3,6 +3,7 @@ package com.zula.app
 import com.zula.core.database.databaseModule
 import com.zula.core.openapi.openApiModule
 import com.zula.core.rabbitmq.rabbitmqModule
+import com.zula.core.security.SecurityConfig
 import com.zula.core.security.securityModule
 import com.zula.features.auth.authModule
 import com.zula.features.chat.chatModule
@@ -28,7 +29,9 @@ fun Application.configureKoin() {
                 password = config["password"]?.toString()
                 maximumPoolSize = config["maximumPoolSize"]?.toString()?.toInt() ?: 10
             },
-            securityModule(this@configureKoin),
+            securityModule {
+                SecurityConfig.from(environment.config)
+            },
             openApiModule,
             rabbitmqModule,
             authModule,
