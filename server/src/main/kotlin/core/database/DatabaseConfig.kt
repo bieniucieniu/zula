@@ -3,7 +3,7 @@ package com.zula.core.database
 import com.zaxxer.hikari.HikariConfig
 import com.zula.lib.utils.stringOrNull
 import com.zula.lib.utils.toBooleanOrNull
-import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.*
 
 data class DatabaseConfig(
     val jdbcUrl: String = "",
@@ -15,13 +15,6 @@ data class DatabaseConfig(
     val isEnabled: Boolean
         get() = jdbcUrl.isNotBlank()
 
-    constructor(config: ApplicationConfig) : this(
-        jdbcUrl = config.stringOrNull("jdbcUrl").orEmpty(),
-        username = config.stringOrNull("username"),
-        password = config.stringOrNull("password"),
-        maximumPoolSize = config.propertyOrNull("maximumPoolSize")?.getString()?.toIntOrNull() ?: 10,
-        autoMigrate = config.propertyOrNull("autoMigrate")?.getString()?.toBooleanOrNull() ?: true,
-    )
 
     fun toHikariConfig(): HikariConfig =
         HikariConfig().apply {
@@ -31,6 +24,16 @@ data class DatabaseConfig(
             maximumPoolSize = this@DatabaseConfig.maximumPoolSize
             driverClassName = "org.postgresql.Driver"
         }
+
+    companion object {
+        fun from(config: ApplicationConfig?) = DatabaseConfig(
+            jdbcUrl = config?.stringOrNull("jdbcUrl").orEmpty(),
+            username = config?.stringOrNull("username"),
+            password = config?.stringOrNull("password"),
+            maximumPoolSize = config?.propertyOrNull("maximumPoolSize")?.getString()?.toIntOrNull() ?: 10,
+            autoMigrate = config?.propertyOrNull("autoMigrate")?.getString()?.toBooleanOrNull() ?: true,
+        )
+    }
 }
 
 class DatabaseConfigBuilder {

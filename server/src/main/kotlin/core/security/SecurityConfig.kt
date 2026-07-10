@@ -2,7 +2,7 @@ package com.zula.core.security
 
 import com.zula.lib.utils.configOrNull
 import com.zula.lib.utils.stringOrNull
-import io.ktor.server.config.ApplicationConfig
+import io.ktor.server.config.*
 
 data class SecurityConfig(
     val appUrl: String?,
@@ -27,15 +27,19 @@ data class JwtConfig(
     val accessTokenTtlSeconds: Long = 3600,
     val kubernetes: JwtKubernetesConfig = JwtKubernetesConfig(),
 ) {
-    constructor(config: ApplicationConfig) : this(
-        audience = config.stringOrNull("audience") ?: "zula",
-        realm = config.stringOrNull("realm") ?: "Zula",
-        autoGenerateKey = config.propertyOrNull("autoGenerateKey")?.getString()?.toBooleanStrictOrNull() ?: true,
-        privateKeyPem = config.stringOrNull("privateKeyPem"),
-        publicKeyPem = config.stringOrNull("publicKeyPem"),
-        accessTokenTtlSeconds = config.propertyOrNull("accessTokenTtlSeconds")?.getString()?.toLongOrNull() ?: 3600,
-        kubernetes = config.configOrNull("kubernetes")?.let { JwtKubernetesConfig(it) } ?: JwtKubernetesConfig(),
-    )
+    companion object {
+
+        fun from(config: ApplicationConfig?) = JwtConfig(
+            audience = config?.stringOrNull("audience") ?: "zula",
+            realm = config?.stringOrNull("realm") ?: "Zula",
+            autoGenerateKey = config?.propertyOrNull("autoGenerateKey")?.getString()?.toBooleanStrictOrNull() ?: true,
+            privateKeyPem = config?.stringOrNull("privateKeyPem"),
+            publicKeyPem = config?.stringOrNull("publicKeyPem"),
+            accessTokenTtlSeconds = config?.propertyOrNull("accessTokenTtlSeconds")?.getString()?.toLongOrNull()
+                ?: 3600,
+            kubernetes = config?.configOrNull("kubernetes")?.let { JwtKubernetesConfig(it) } ?: JwtKubernetesConfig(),
+        )
+    }
 }
 
 data class JwtKubernetesConfig(
@@ -57,12 +61,7 @@ data class JwtKubernetesConfig(
 data class OAuthConfig(
     val google: GoogleOAuthConfig = GoogleOAuthConfig(),
     val apple: AppleOAuthConfig = AppleOAuthConfig(),
-) {
-    constructor(config: ApplicationConfig) : this(
-        google = config.configOrNull("google")?.let { GoogleOAuthConfig(it) } ?: GoogleOAuthConfig(),
-        apple = config.configOrNull("apple")?.let { AppleOAuthConfig(it) } ?: AppleOAuthConfig(),
-    )
-}
+)
 
 data class GoogleOAuthConfig(
     val clientId: String? = null,
@@ -71,10 +70,13 @@ data class GoogleOAuthConfig(
     val isConfigured: Boolean
         get() = !clientId.isNullOrBlank() && !clientSecret.isNullOrBlank()
 
-    constructor(config: ApplicationConfig) : this(
-        clientId = config.stringOrNull("clientId"),
-        clientSecret = config.stringOrNull("clientSecret"),
-    )
+    companion object {
+
+        fun from(config: ApplicationConfig?) = GoogleOAuthConfig(
+            clientId = config?.stringOrNull("clientId"),
+            clientSecret = config?.stringOrNull("clientSecret"),
+        )
+    }
 }
 
 data class AppleOAuthConfig(
@@ -85,14 +87,17 @@ data class AppleOAuthConfig(
 ) {
     val isConfigured: Boolean
         get() = !clientId.isNullOrBlank() &&
-            !teamId.isNullOrBlank() &&
-            !keyId.isNullOrBlank() &&
-            !privateKeyPem.isNullOrBlank()
+                !teamId.isNullOrBlank() &&
+                !keyId.isNullOrBlank() &&
+                !privateKeyPem.isNullOrBlank()
 
-    constructor(config: ApplicationConfig) : this(
-        clientId = config.stringOrNull("clientId"),
-        teamId = config.stringOrNull("teamId"),
-        keyId = config.stringOrNull("keyId"),
-        privateKeyPem = config.stringOrNull("privateKeyPem"),
-    )
+    companion object {
+
+        fun from(config: ApplicationConfig?) = AppleOAuthConfig(
+            clientId = config?.stringOrNull("clientId"),
+            teamId = config?.stringOrNull("teamId"),
+            keyId = config?.stringOrNull("keyId"),
+            privateKeyPem = config?.stringOrNull("privateKeyPem"),
+        )
+    }
 }
