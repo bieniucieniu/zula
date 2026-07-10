@@ -1,5 +1,6 @@
 package com.zula.core.database
 
+import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -52,7 +53,17 @@ fun databaseModule(database: Map<String, Any?>?): Module = module {
         )
     }
 
+    single<SqlDriver> {
+        get<HikariDataSource>().asJdbcDriver()
+    }
+
     single {
-        Database(get<HikariDataSource>().asJdbcDriver())
+        val driver = get<SqlDriver>()
+        Database.Schema.migrate(
+            driver = driver,
+            oldVersion = 0,
+            newVersion = Database.Schema.version,
+        )
+        Database(driver)
     }
 }
