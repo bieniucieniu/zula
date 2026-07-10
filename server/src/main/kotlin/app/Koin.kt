@@ -21,7 +21,7 @@ fun Application.configureKoin() {
     install(Koin) {
         slf4jLogger()
         modules(
-            databaseModule(this@configureKoin),
+            databaseModule(environment.config.propertyOrNull("database")?.getMap()),
             securityModule,
             openApiModule,
             rabbitmqModule,
