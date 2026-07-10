@@ -5,6 +5,24 @@ database:
   maximumPoolSize: ${DATABASE_MAX_POOL_SIZE:10}
   autoMigrate: ${AUTO_MIGRATE:true}
 
+security:
+  appUrl: ${APP_URL:}
+  jwt:
+    audience: ${JWT_AUDIENCE:zula}
+    realm: ${JWT_REALM:Zula}
+    autoGenerateKey: ${JWT_AUTO_GENERATE_KEY:true}
+    privateKeyPem: ${JWT_PRIVATE_KEY_PEM:}
+    accessTokenTtlSeconds: ${JWT_ACCESS_TOKEN_TTL_SECONDS:3600}
+  oauth:
+    google:
+      clientId: ${GOOGLE_CLIENT_ID:}
+      clientSecret: ${GOOGLE_CLIENT_SECRET:}
+    apple:
+      clientId: ${APPLE_CLIENT_ID:}
+      teamId: ${APPLE_TEAM_ID:}
+      keyId: ${APPLE_KEY_ID:}
+      privateKeyPem: ${APPLE_PRIVATE_KEY:}
+
 ktor:
   deployment:
     port: 8080
