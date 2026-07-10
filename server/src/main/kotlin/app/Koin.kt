@@ -28,7 +28,7 @@ fun Application.configureKoin() {
                 password = config["password"]?.toString()
                 maximumPoolSize = config["maximumPoolSize"]?.toString()?.toInt() ?: 10
             },
-            securityModule {},
+            securityModule(this@configureKoin),
             openApiModule,
             rabbitmqModule,
             authModule,
