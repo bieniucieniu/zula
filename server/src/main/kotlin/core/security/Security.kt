@@ -31,8 +31,10 @@ fun Application.configureSecurity() {
     installAppleOAuth(config, oauthClient)
 }
 
-fun securityModule(builder: () -> SecurityConfig?): Module = module {
-    val config = builder() ?: return@module
+fun securityModule(builder: SecurityConfigBuilder.() -> Unit): Module =
+    securityModule(SecurityConfigBuilder().apply(builder).build())
+
+fun securityModule(config: SecurityConfig): Module = module {
     val log = LoggerFactory.getLogger("SecurityModule")
 
     single { config }
