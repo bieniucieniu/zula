@@ -23,6 +23,7 @@ data class JwtConfig(
     val realm: String,
     val autoGenerateKey: Boolean,
     val privateKeyPem: String?,
+    val publicKeyPem: String?,
     val accessTokenTtlSeconds: Long,
 ) {
     companion object {
@@ -32,6 +33,7 @@ data class JwtConfig(
                 realm = config.propertyOrNull("realm")?.getString() ?: "Zula",
                 autoGenerateKey = config.propertyOrNull("autoGenerateKey")?.getString()?.toBooleanStrictOrNull() ?: true,
                 privateKeyPem = config.propertyOrNull("privateKeyPem")?.getString()?.takeIf { it.isNotBlank() },
+                publicKeyPem = config.propertyOrNull("publicKeyPem")?.getString()?.takeIf { it.isNotBlank() },
                 accessTokenTtlSeconds = config.propertyOrNull("accessTokenTtlSeconds")?.getString()?.toLongOrNull()
                     ?: 3600,
             )

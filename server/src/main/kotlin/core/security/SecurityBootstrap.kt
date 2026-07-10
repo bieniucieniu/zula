@@ -2,7 +2,7 @@ package com.zula.core.security
 
 import com.auth0.jwt.JWT
 import com.zula.core.security.jwt.JwtKeyLoader
-import com.zula.core.security.jwt.JwtKeyPair
+import com.zula.core.security.jwt.JwtKeys
 import com.zula.core.security.jwt.RsaSessionJwtIssuer
 import com.zula.core.security.jwt.SessionJwtIssuer
 import com.zula.core.security.oauth.OAuthPaths
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory
 
 data class SecurityBootstrap(
     val config: SecurityConfig,
-    val jwtKeys: JwtKeyPair,
+    val jwtKeys: JwtKeys,
     val sessionJwtIssuer: SessionJwtIssuer,
     val oauthClient: HttpClient,
 ) {
@@ -53,7 +53,7 @@ private fun Application.installJwt(bootstrap: SecurityBootstrap) {
         jwt(AuthProviderNames.JWT) {
             realm = config.jwt.realm
             verifier { _ ->
-                JWT.require(bootstrap.jwtKeys.signingAlgorithm())
+                JWT.require(bootstrap.jwtKeys.verificationAlgorithm())
                     .withAudience(config.jwt.audience)
                     .build()
             }

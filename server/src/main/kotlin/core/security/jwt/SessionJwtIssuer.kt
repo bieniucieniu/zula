@@ -13,11 +13,12 @@ interface SessionJwtIssuer {
 }
 
 class RsaSessionJwtIssuer(
-    private val keys: JwtKeyPair,
+    private val keys: JwtKeys,
     private val config: JwtConfig,
     private val configuredAppUrl: String?,
 ) : SessionJwtIssuer {
     override fun issue(call: ApplicationCall, subject: String, claims: Map<String, String>): String {
+        require(keys.canSign) { "JWT private key is not configured on this instance" }
         val issuer = normalizeIssuer(call.publicBaseUrl(configuredAppUrl))
         val expiresAt = Date.from(Instant.now().plusSeconds(config.accessTokenTtlSeconds))
         var builder = JWT.create()
