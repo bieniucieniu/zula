@@ -8,7 +8,7 @@ sqlDelight = "2.3.2"
 hikari = "7.1.0"
 postgres = "42.7.3"
 
-kubernetesClient = "24.0.0"
+kubernetesClient = "27.0.0"
 
 [libraries]
 damirdenisTudor-ktorServerRabbitmq = { module = "io.github.damirdenis-tudor:ktor-server-rabbitmq", version.ref = "damirdenisTudor-ktorServerRabbitmq" }
