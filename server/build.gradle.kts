@@ -48,8 +48,24 @@ tasks.register<JavaExec>("generateJwtK8sSecret") {
     mainClass.set("com.zula.core.security.jwt.JwtKeyGeneratorKt")
     val namespace = (findProperty("jwtSecretNamespace") as String?) ?: "zula"
     val secretName = (findProperty("jwtSecretName") as String?) ?: "zula-jwt-keys"
+    systemProperty("jwtKeysCommand", "generate")
     systemProperty("jwtSecretNamespace", namespace)
     systemProperty("jwtSecretName", secretName)
+}
+
+tasks.register<JavaExec>("manageJwtKeys") {
+    group = "security"
+    description = "Manage JWT keys: generate, validate, pull, push (Kubernetes)"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.zula.core.security.jwt.JwtKeyGeneratorKt")
+    val command = (findProperty("jwtKeysCommand") as String?) ?: "generate"
+    val namespace = (findProperty("jwtSecretNamespace") as String?) ?: "zula"
+    val secretName = (findProperty("jwtSecretName") as String?) ?: "zula-jwt-keys"
+    val k8sEnabled = (findProperty("jwtK8sEnabled") as String?) ?: "false"
+    systemProperty("jwtKeysCommand", command)
+    systemProperty("jwtSecretNamespace", namespace)
+    systemProperty("jwtSecretName", secretName)
+    systemProperty("jwtK8sEnabled", k8sEnabled)
 }
 
 dependencies {
@@ -84,4 +100,5 @@ dependencies {
     implementation(libs.sqlDelight.jdbcDrver)
     implementation(libs.hikari)
     implementation(libs.postgres)
+    implementation(libs.kubernetes.client)
 }

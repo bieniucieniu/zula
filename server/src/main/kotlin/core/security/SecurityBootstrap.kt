@@ -1,7 +1,8 @@
 package com.zula.core.security
 
 import com.auth0.jwt.JWT
-import com.zula.core.security.jwt.JwtKeyLoader
+import com.zula.core.security.jwt.keys.KeysManager
+import com.zula.core.security.jwt.keys.KeysManagers
 import com.zula.core.security.jwt.JwtKeys
 import com.zula.core.security.jwt.RsaSessionJwtIssuer
 import com.zula.core.security.jwt.SessionJwtIssuer
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory
 data class SecurityBootstrap(
     val config: SecurityConfig,
     val jwtKeys: JwtKeys,
+    val keysManager: KeysManager,
     val sessionJwtIssuer: SessionJwtIssuer,
     val oauthClient: HttpClient,
 ) {
@@ -34,10 +36,12 @@ data class SecurityBootstrap(
 
         fun load(application: Application): SecurityBootstrap {
             val config = SecurityConfig.from(application.environment.config)
-            val jwtKeys = JwtKeyLoader.load(config.jwt, log)
+            val keysManager = KeysManagers.create(config.jwt, log)
+            val jwtKeys = keysManager.resolve()
             return SecurityBootstrap(
                 config = config,
                 jwtKeys = jwtKeys,
+                keysManager = keysManager,
                 sessionJwtIssuer = RsaSessionJwtIssuer(jwtKeys, config.jwt, config.appUrl),
                 oauthClient = HttpClient(Apache),
             )

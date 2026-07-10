@@ -87,27 +87,8 @@ data class JwtKeys(
 }
 
 object JwtKeyLoader {
-    fun load(config: com.zula.core.security.JwtConfig, log: org.slf4j.Logger): JwtKeys {
-        val privateKey = config.privateKeyPem
-        val publicKey = config.publicKeyPem
-
-        when {
-            privateKey != null && publicKey != null -> return JwtKeys.fromKeyPair(privateKey, publicKey)
-            privateKey != null -> return JwtKeys.fromPrivateKeyPem(privateKey)
-            publicKey != null -> {
-                log.info("JWT verify-only mode: public key configured without private key")
-                return JwtKeys.verifyOnly(publicKey)
-            }
-            config.autoGenerateKey -> {
-                log.warn("JWT keys not configured; generating ephemeral in-memory RSA key pair")
-                return JwtKeys.generateRsa2048()
-            }
-            else -> error(
-                "JWT keys required: set JWT_PRIVATE_KEY_PEM (+ optional JWT_PUBLIC_KEY_PEM), " +
-                    "or JWT_PUBLIC_KEY_PEM for verify-only, or enable JWT_AUTO_GENERATE_KEY",
-            )
-        }
-    }
+    fun load(config: com.zula.core.security.JwtConfig, log: org.slf4j.Logger): JwtKeys =
+        com.zula.core.security.jwt.keys.KeysManagers.create(config, log).resolve()
 }
 
 internal fun String.decodePrivateKey(): RSAPrivateKey {

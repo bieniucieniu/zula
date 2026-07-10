@@ -25,6 +25,7 @@ data class JwtConfig(
     val privateKeyPem: String?,
     val publicKeyPem: String?,
     val accessTokenTtlSeconds: Long,
+    val kubernetes: JwtKubernetesConfig,
 ) {
     companion object {
         fun from(config: ApplicationConfig): JwtConfig =
@@ -36,6 +37,27 @@ data class JwtConfig(
                 publicKeyPem = config.propertyOrNull("publicKeyPem")?.getString()?.takeIf { it.isNotBlank() },
                 accessTokenTtlSeconds = config.propertyOrNull("accessTokenTtlSeconds")?.getString()?.toLongOrNull()
                     ?: 3600,
+                kubernetes = JwtKubernetesConfig.from(config.config("kubernetes")),
+            )
+    }
+}
+
+data class JwtKubernetesConfig(
+    val enabled: Boolean,
+    val namespace: String?,
+    val secretName: String,
+    val autoPull: Boolean,
+    val autoPush: Boolean,
+) {
+    companion object {
+        fun from(config: ApplicationConfig): JwtKubernetesConfig =
+            JwtKubernetesConfig(
+                enabled = config.propertyOrNull("enabled")?.getString()?.toBooleanStrictOrNull() ?: false,
+                namespace = config.propertyOrNull("namespace")?.getString()?.takeIf { it.isNotBlank() },
+                secretName = config.propertyOrNull("secretName")?.getString()?.takeIf { it.isNotBlank() }
+                    ?: "zula-jwt-keys",
+                autoPull = config.propertyOrNull("autoPull")?.getString()?.toBooleanStrictOrNull() ?: true,
+                autoPush = config.propertyOrNull("autoPush")?.getString()?.toBooleanStrictOrNull() ?: false,
             )
     }
 }
