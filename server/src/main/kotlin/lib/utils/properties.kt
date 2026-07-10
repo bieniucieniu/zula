@@ -13,3 +13,6 @@ fun String.toBooleanOrNull(): Boolean? {
         else -> null
     }
 }
+
+fun ApplicationConfig.stringOrNull(key: String): String? =
+    propertyOrNull(key)?.getString()?.takeIf { it.isNotBlank() }
