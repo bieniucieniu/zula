@@ -134,7 +134,25 @@ Full matrix: [auth_and_permissions.md](./auth_and_permissions.md).
 
 ---
 
-## Cross-feature internal API
+## Kotlin types: prefer interfaces over inheritance
+
+- **Do not use class inheritance** for app/domain code unless an external library or framework requires it (e.g. Ktor `Application` modules, SQLDelight generated types, test base classes from a test framework).
+- **Default to interfaces** for contracts, dependency injection, and cross-feature boundaries (`core/contracts/*`, Koin bindings).
+- **Use sealed interfaces** (or sealed classes only when you need restricted concrete subtypes with shared state) for closed sets of variants — e.g. event types, result states, strategy hooks.
+- **Prefer composition:** wrap or delegate to collaborators instead of extending a base `*Service` / `*Repository` class.
+- **Data classes** stay flat; do not build DTO or domain hierarchies with `open` base classes.
+
+```kotlin
+// Prefer
+sealed interface TrustEvent { ... }
+interface BlockResolver { ... }
+
+// Avoid (unless a library forces it)
+open class BaseService { ... }
+class UserService : BaseService()
+```
+
+---
 
 Use Koin contract interfaces — see [architecture.md](./architecture.md#cross-feature-internal-api). Do not import sibling feature `*Service.kt` classes.
 
