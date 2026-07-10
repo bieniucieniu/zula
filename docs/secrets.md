@@ -69,6 +69,42 @@ Generate a Kubernetes Secret manifest from the repo:
   > deploy/k8s/zula-jwt-keys.secret.yaml
 ```
 
+Or use the keys manager CLI (same entrypoint):
+
+```bash
+# print manifest
+./gradlew :server:manageJwtKeys -PjwtKeysCommand=generate
+
+# push a fresh key pair to the in-cluster / kubeconfig API
+./gradlew :server:manageJwtKeys -PjwtKeysCommand=push \
+  -PjwtK8sEnabled=true -PjwtSecretNamespace=zula
+
+# pull and print manifest
+./gradlew :server:manageJwtKeys -PjwtKeysCommand=pull \
+  -PjwtK8sEnabled=true -PjwtSecretNamespace=zula
+```
+
+In-cluster bootstrap (same namespace as the backend):
+
+```yaml
+security:
+  jwt:
+    autoGenerateKey: false
+    kubernetes:
+      enabled: true
+      secretName: zula-jwt-keys
+      autoPull: true      # load secret when env PEMs are absent
+      autoPush: false     # set true only for one-shot bootstrap jobs
+```
+
+| Variable | Purpose |
+|----------|---------|
+| `JWT_K8S_ENABLED` | Enable Kubernetes API integration for JWT keys |
+| `JWT_K8S_NAMESPACE` | Secret namespace (defaults to pod namespace) |
+| `JWT_K8S_SECRET_NAME` | Secret name (default `zula-jwt-keys`) |
+| `JWT_K8S_AUTO_PULL` | Pull secret on startup when env keys missing |
+| `JWT_K8S_AUTO_PUSH` | Push freshly generated keys to secret |
+
 Apply in the **app namespace** (same namespace as the backend Service):
 
 ```bash

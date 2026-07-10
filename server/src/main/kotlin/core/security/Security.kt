@@ -2,6 +2,7 @@ package com.zula.core.security
 
 import com.zula.core.security.jwt.JwtKeys
 import com.zula.core.security.jwt.SessionJwtIssuer
+import com.zula.core.security.jwt.keys.KeysManager
 import io.ktor.server.application.*
 import io.ktor.util.AttributeKey
 import org.koin.core.module.Module
@@ -18,5 +19,6 @@ fun securityModule(application: Application): Module = module {
     single { get<SecurityBootstrap>().config }
     single { get<SecurityBootstrap>().jwtKeys }
     single<JwtKeys> { get<SecurityBootstrap>().jwtKeys }
+    single<KeysManager> { get<SecurityBootstrap>().keysManager }
     single<SessionJwtIssuer> { get<SecurityBootstrap>().sessionJwtIssuer }
 }
