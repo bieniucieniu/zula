@@ -10,15 +10,21 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.koin.ktor.ext.inject
 
+private fun ApplicationConfig.databaseConfig(): Map<String, Any?>? =
+    propertyOrNull("database")?.getMap()
+
+private fun Map<String, Any?>.jdbcUrl(): String =
+    get("jdbcUrl")?.toString().orEmpty()
+
 fun Application.configureDatabase() {
-    val jdbcUrl = environment.config.propertyOrNull("database.jdbcUrl")?.getString()
-    if (jdbcUrl.isNullOrBlank()) {
+    val database = environment.config.databaseConfig()
+    if (database?.jdbcUrl().isNullOrBlank()) {
         log.info("Database disabled, no JDBC URL provided")
         return
     }
 
-    val database: Database by inject()
-    database.healthQueries.healthCheck().executeAsOne()
+    val db: Database by inject()
+    db.healthQueries.healthCheck().executeAsOne()
     log.info("Database health check OK")
 
     val dataSource: HikariDataSource by inject()
@@ -27,10 +33,10 @@ fun Application.configureDatabase() {
     }
 }
 
-fun databaseModule(application: Application): Module = module {
-    val config = application.environment.config
-    val jdbcUrl = config.propertyOrNull("database.jdbcUrl")?.getString()
-    if (jdbcUrl.isNullOrBlank()) {
+fun databaseModule(database: Map<String, Any?>?): Module = module {
+    val config = database ?: return@module
+    val jdbcUrl = config.jdbcUrl()
+    if (jdbcUrl.isBlank()) {
         return@module
     }
 
@@ -38,9 +44,9 @@ fun databaseModule(application: Application): Module = module {
         HikariDataSource(
             HikariConfig().apply {
                 this.jdbcUrl = jdbcUrl
-                username = config.property("database.username").getString()
-                password = config.property("database.password").getString()
-                maximumPoolSize = config.property("database.maximumPoolSize").getString().toInt()
+                username = config["username"]?.toString() ?: "zula"
+                password = config["password"]?.toString() ?: "zula"
+                maximumPoolSize = config["maximumPoolSize"]?.toString()?.toInt() ?: 10
                 driverClassName = "org.postgresql.Driver"
             },
         )
