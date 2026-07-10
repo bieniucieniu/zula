@@ -17,11 +17,29 @@ private fun ApplicationConfig.databaseConfig(): Map<String, Any?>? =
 private fun Map<String, Any?>.jdbcUrl(): String =
     get("jdbcUrl")?.toString().orEmpty()
 
+private fun Map<String, Any?>.autoMigrateEnabled(): Boolean =
+    when (get("autoMigrate")?.toString()?.lowercase()) {
+        "false", "0", "no" -> false
+        else -> true
+    }
+
 fun Application.configureDatabase() {
     val database = environment.config.databaseConfig()
     if (database?.jdbcUrl().isNullOrBlank()) {
         log.info("Database disabled, no JDBC URL provided")
         return
+    }
+
+    if (database.autoMigrateEnabled()) {
+        val driver: SqlDriver by inject()
+        Database.Schema.migrate(
+            driver = driver,
+            oldVersion = 0,
+            newVersion = Database.Schema.version,
+        )
+        log.info("Database schema migrated to version ${Database.Schema.version}")
+    } else {
+        log.info("Database auto-migrate disabled (AUTO_MIGRATE=false)")
     }
 
     val db: Database by inject()
@@ -58,12 +76,6 @@ fun databaseModule(database: Map<String, Any?>?): Module = module {
     }
 
     single {
-        val driver = get<SqlDriver>()
-        Database.Schema.migrate(
-            driver = driver,
-            oldVersion = 0,
-            newVersion = Database.Schema.version,
-        )
-        Database(driver)
+        Database(get<SqlDriver>())
     }
 }
