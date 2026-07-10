@@ -28,11 +28,17 @@ sqldelight {
     databases {
         register("Database") {
             packageName.set("com.zula")
+            // Export .sqm -> valid SQL for Flyway etc. Run manually:
+            // ./gradlew :server:generateMainDatabaseMigrations
             migrationOutputDirectory = layout.buildDirectory.dir("resources/db/migrations")
             migrationOutputFileFormat = ".sql"
             dialect("app.cash.sqldelight:postgresql-dialect:${libs.versions.sqlDelight.get()}")
         }
     }
+}
+
+tasks.named("compileKotlin") {
+    dependsOn("generateSqlDelightInterface")
 }
 
 dependencies {
