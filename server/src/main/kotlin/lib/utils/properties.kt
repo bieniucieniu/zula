@@ -16,3 +16,10 @@ fun String.toBooleanOrNull(): Boolean? {
 
 fun ApplicationConfig.stringOrNull(key: String): String? =
     propertyOrNull(key)?.getString()?.takeIf { it.isNotBlank() }
+
+fun ApplicationConfig.configOrNull(key: String): ApplicationConfig? =
+    try {
+        config(key)
+    } catch (_: Exception) {
+        null
+    }

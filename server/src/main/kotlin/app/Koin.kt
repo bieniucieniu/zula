@@ -17,6 +17,7 @@ import com.zula.features.trade.tradeModule
 import com.zula.features.user.userModule
 import com.zula.features.validation.validationModule
 import com.zula.lib.utils.stringOrNull
+import com.zula.lib.utils.configOrNull
 import io.ktor.server.application.*
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
@@ -26,13 +27,13 @@ fun Application.configureKoin() {
         slf4jLogger()
         modules(
             databaseModule {
-                config = DatabaseConfig(environment.config.config("database"))
+                config = environment.config.configOrNull("database")?.let { DatabaseConfig(it) } ?: DatabaseConfig()
             },
             securityModule {
-                val security = environment.config.config("security")
-                appUrl = security.stringOrNull("appUrl")
-                jwt = JwtConfig(security.config("jwt"))
-                oauth = OAuthConfig(security.config("oauth"))
+                val security = environment.config.configOrNull("security")
+                appUrl = security?.stringOrNull("appUrl")
+                jwt = security?.configOrNull("jwt")?.let { JwtConfig(it) } ?: JwtConfig()
+                oauth = security?.configOrNull("oauth")?.let { OAuthConfig(it) } ?: OAuthConfig()
             },
             openApiModule,
             rabbitmqModule,

@@ -6,11 +6,11 @@ import com.zula.lib.utils.toBooleanOrNull
 import io.ktor.server.config.ApplicationConfig
 
 data class DatabaseConfig(
-    val jdbcUrl: String,
-    val username: String?,
-    val password: String?,
-    val maximumPoolSize: Int,
-    val autoMigrate: Boolean,
+    val jdbcUrl: String = "",
+    val username: String? = null,
+    val password: String? = null,
+    val maximumPoolSize: Int = 10,
+    val autoMigrate: Boolean = true,
 ) {
     val isEnabled: Boolean
         get() = jdbcUrl.isNotBlank()
