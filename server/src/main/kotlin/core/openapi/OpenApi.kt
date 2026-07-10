@@ -7,9 +7,7 @@ import org.koin.dsl.module
 
 fun Application.configureOpenApi() {
     routing {
-        swaggerUI(path = "swagger") {
-            // Swagger UI at /swagger per architecture
-        }
+        swaggerUI(path = "swagger")
     }
 }
 

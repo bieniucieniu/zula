@@ -16,8 +16,6 @@ ktor:
     modules:
       - com.zula.core.http.HttpKt.configureHttp
       - com.zula.core.http.SerializationKt.configureSerialization
-      - com.zula.core.http.SseKt.configureSse
-      - com.zula.core.http.StatusPagesKt.configureStatusPages
       - com.zula.core.security.SecurityKt.configureSecurity
       - com.zula.core.rabbitmq.RabbitmqKt.configureRabbitmq
       - com.zula.core.openapi.OpenApiKt.configureOpenApi

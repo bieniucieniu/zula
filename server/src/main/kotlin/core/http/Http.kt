@@ -1,7 +1,7 @@
 package com.zula.core.http
 
 import com.ucasoft.ktor.simpleCache.SimpleCache
-import com.ucasoft.ktor.simpleMemoryCache.*
+import com.ucasoft.ktor.simpleMemoryCache.memoryCache
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
@@ -10,6 +10,9 @@ import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.conditionalheaders.*
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.forwardedheaders.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.response.*
+import io.ktor.server.sse.*
 import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureHttp() {
@@ -33,4 +36,10 @@ fun Application.configureHttp() {
     }
     install(ForwardedHeaders)
     install(XForwardedHeaders)
+    install(SSE)
+    install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
+        }
+    }
 }

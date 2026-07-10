@@ -1,10 +1,12 @@
 package com.zula.core.database
 
 import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.driver.jdbc.JdbcDriver
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zula.Database
+import com.zula.lib.utils.toBooleanOrNull
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import org.koin.core.module.Module
@@ -17,11 +19,8 @@ private fun ApplicationConfig.databaseConfig(): Map<String, Any?>? =
 private fun Map<String, Any?>.jdbcUrl(): String =
     get("jdbcUrl")?.toString().orEmpty()
 
-private fun Map<String, Any?>.autoMigrateEnabled(): Boolean =
-    when (get("autoMigrate")?.toString()?.lowercase()) {
-        "false", "0", "no" -> false
-        else -> true
-    }
+private fun Map<String, Any?>.autoMigrateEnabled(): Boolean = get("autoMigrate")?.toBooleanOrNull() ?: true
+
 
 fun Application.configureDatabase() {
     val database = environment.config.databaseConfig()
@@ -50,30 +49,27 @@ fun Application.configureDatabase() {
     }
 }
 
-fun databaseModule(database: Map<String, Any?>?): Module = module {
-    val config = database ?: return@module
-    val jdbcUrl = config.jdbcUrl()
-    if (jdbcUrl.isBlank()) {
+fun databaseModule(builder: HikariConfig.() -> Unit): Module = databaseModule(HikariConfig().apply(builder))
+fun databaseModule(config: HikariConfig): Module = module {
+    if (config.jdbcUrl.isBlank()) {
         return@module
     }
 
+
     single<HikariDataSource> {
         HikariDataSource(
-            HikariConfig().apply {
-                this.jdbcUrl = jdbcUrl
-                username = config["username"]?.toString() ?: "zula"
-                password = config["password"]?.toString() ?: "zula"
-                maximumPoolSize = config["maximumPoolSize"]?.toString()?.toInt() ?: 10
+            config.apply {
                 driverClassName = "org.postgresql.Driver"
             },
         )
     }
 
-    single<SqlDriver> {
-        get<HikariDataSource>().asJdbcDriver()
+    single<JdbcDriver> {
+        val h: HikariDataSource = get()
+        h.asJdbcDriver()
     }
 
-    single {
-        Database(get<SqlDriver>())
+    single<Database> {
+        Database(get())
     }
 }

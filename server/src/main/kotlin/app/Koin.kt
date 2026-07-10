@@ -21,19 +21,25 @@ fun Application.configureKoin() {
     install(Koin) {
         slf4jLogger()
         modules(
-            databaseModule(environment.config.propertyOrNull("database")?.getMap()),
-            securityModule,
+            databaseModule {
+                val config = environment.config.propertyOrNull("database")?.getMap() ?: return@databaseModule
+                jdbcUrl = config["jdbcUrl"]?.toString()
+                username = config["username"]?.toString()
+                password = config["password"]?.toString()
+                maximumPoolSize = config["maximumPoolSize"]?.toString()?.toInt() ?: 10
+            },
+            securityModule {},
             openApiModule,
             rabbitmqModule,
-            _root_ide_package_.com.zula.features.auth.authModule,
-            _root_ide_package_.com.zula.features.user.userModule,
-            _root_ide_package_.com.zula.features.feed.feedModule,
-            _root_ide_package_.com.zula.features.media.mediaModule,
-            _root_ide_package_.com.zula.features.geolocation.geolocationModule,
-            _root_ide_package_.com.zula.features.trade.tradeModule,
-            _root_ide_package_.com.zula.features.validation.validationModule,
-            _root_ide_package_.com.zula.features.chat.chatModule,
-            _root_ide_package_.com.zula.features.moderation.moderationModule,
+            authModule,
+            userModule,
+            feedModule,
+            mediaModule,
+            geolocationModule,
+            tradeModule,
+            validationModule,
+            chatModule,
+            moderationModule,
         )
     }
 }
