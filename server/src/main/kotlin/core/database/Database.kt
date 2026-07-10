@@ -9,7 +9,7 @@ import io.ktor.server.application.*
 import io.ktor.server.config.*
 import org.koin.core.module.Module
 import org.koin.dsl.module
-import org.koin.ktor.ext.inject
+import org.koin.ktor.ext.get
 
 private fun ApplicationConfig.databaseConfig(): Map<String, Any?>? =
     propertyOrNull("database")?.getMap()
@@ -31,9 +31,8 @@ fun Application.configureDatabase() {
     }
 
     if (database.autoMigrateEnabled()) {
-        val driver: SqlDriver by inject()
         Database.Schema.migrate(
-            driver = driver,
+            driver = get<SqlDriver>(),
             oldVersion = 0,
             newVersion = Database.Schema.version,
         )
@@ -42,11 +41,10 @@ fun Application.configureDatabase() {
         log.info("Database auto-migrate disabled (AUTO_MIGRATE=false)")
     }
 
-    val db: Database by inject()
-    db.healthQueries.healthCheck().executeAsOne()
+    get<Database>().healthQueries.healthCheck().executeAsOne()
     log.info("Database health check OK")
 
-    val dataSource: HikariDataSource by inject()
+    val dataSource = get<HikariDataSource>()
     monitor.subscribe(ApplicationStopping) {
         dataSource.close()
     }
