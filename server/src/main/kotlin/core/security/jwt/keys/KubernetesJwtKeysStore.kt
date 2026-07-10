@@ -1,16 +1,19 @@
 package com.zula.core.security.jwt.keys
 
 import com.zula.core.security.jwt.JwtKeys
-import io.fabric8.kubernetes.api.model.SecretBuilder
-import io.fabric8.kubernetes.client.KubernetesClient
-import io.fabric8.kubernetes.client.KubernetesClientBuilder
+import io.kubernetes.client.openapi.ApiClient
+import io.kubernetes.client.openapi.ApiException
+import io.kubernetes.client.openapi.apis.CoreV1Api
+import io.kubernetes.client.openapi.models.V1ObjectMeta
+import io.kubernetes.client.openapi.models.V1Secret
+import io.kubernetes.client.util.ClientBuilder
 import org.slf4j.LoggerFactory
-import java.util.Base64
 
 class KubernetesJwtKeysStore(
-    private val client: KubernetesClient = KubernetesClientBuilder().build(),
+    private val client: ApiClient = ClientBuilder.standard().build(),
 ) : JwtKeysStore {
     private val log = LoggerFactory.getLogger(KubernetesJwtKeysStore::class.java)
+    private val api = CoreV1Api(client)
 
     override fun pull(target: JwtKeysTarget): JwtKeys? =
         runCatching { pullSecret(target) }
@@ -19,28 +22,27 @@ class KubernetesJwtKeysStore(
 
     override fun push(target: JwtKeysTarget, keys: JwtKeys) {
         require(keys.canSign) { "Cannot push verify-only JWT keys to Kubernetes" }
-
-        val secret = SecretBuilder()
-            .withNewMetadata()
-            .withName(target.secretName)
-            .withNamespace(target.namespace)
-            .endMetadata()
-            .withType("Opaque")
-            .addToStringData(PRIVATE_KEY, keys.privateKeyPem!!)
-            .addToStringData(PUBLIC_KEY, keys.publicKeyPem)
-            .addToStringData(AUTO_GENERATE_FLAG, "false")
-            .build()
-
-        client.secrets().inNamespace(target.namespace).resource(secret).createOrReplace()
+        upsertSecret(target, buildSecret(target, keys))
         log.info("Upserted Kubernetes secret {}/{}", target.namespace, target.secretName)
     }
 
+    fun close() {
+        runCatching {
+            client.httpClient.dispatcher.executorService.shutdown()
+            client.httpClient.connectionPool.evictAll()
+        }
+    }
+
     private fun pullSecret(target: JwtKeysTarget): JwtKeys? {
-        val secret = client.secrets().inNamespace(target.namespace).withName(target.secretName).get()
-            ?: run {
+        val secret = try {
+            api.readNamespacedSecret(target.secretName, target.namespace).execute()
+        } catch (notFound: ApiException) {
+            if (notFound.code == 404) {
                 log.info("Kubernetes secret {}/{} not found", target.namespace, target.secretName)
                 return null
             }
+            throw notFound
+        }
 
         val privateKey = secret.readEntry(PRIVATE_KEY)
         val publicKey = secret.readEntry(PUBLIC_KEY)
@@ -62,14 +64,38 @@ class KubernetesJwtKeysStore(
         }
     }
 
-    fun close() {
-        client.close()
+    private fun upsertSecret(target: JwtKeysTarget, secret: V1Secret) {
+        try {
+            api.replaceNamespacedSecret(target.secretName, target.namespace, secret).execute()
+        } catch (notFound: ApiException) {
+            if (notFound.code == 404) {
+                api.createNamespacedSecret(target.namespace, secret).execute()
+            } else {
+                throw notFound
+            }
+        }
     }
 
-    private fun io.fabric8.kubernetes.api.model.Secret.readEntry(key: String): String? {
+    private fun buildSecret(target: JwtKeysTarget, keys: JwtKeys): V1Secret =
+        V1Secret()
+            .metadata(
+                V1ObjectMeta()
+                    .name(target.secretName)
+                    .namespace(target.namespace),
+            )
+            .type("Opaque")
+            .stringData(
+                mapOf(
+                    PRIVATE_KEY to keys.privateKeyPem!!,
+                    PUBLIC_KEY to keys.publicKeyPem,
+                    AUTO_GENERATE_FLAG to "false",
+                ),
+            )
+
+    private fun V1Secret.readEntry(key: String): String? {
         stringData?.get(key)?.takeIf { it.isNotBlank() }?.let { return it.trim() }
-        return data?.get(key)?.takeIf { it.isNotBlank() }?.let { encoded ->
-            String(Base64.getDecoder().decode(encoded), Charsets.UTF_8).trim()
+        return data?.get(key)?.takeIf { it.isNotEmpty() }?.let { bytes ->
+            String(bytes, Charsets.UTF_8).trim()
         }
     }
 
