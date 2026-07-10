@@ -24,6 +24,7 @@ ktor {
 }
 
 dependencies {
+    implementation(ktorLibs.client.apache5)
     implementation(ktorLibs.client.apache)
     implementation(ktorLibs.client.core)
     implementation(ktorLibs.serialization.kotlinx.json)

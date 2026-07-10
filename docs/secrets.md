@@ -44,7 +44,13 @@ Override via root `.env` for **iOS debug** (simulator or LAN IP), then run `gen-
 
 Sync to `Secret/backend-secrets` in the GitOps repo:
 
-- `JWT_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `PG_PASSWORD`, OAuth client secrets
+- `JWT_PRIVATE_KEY`, `JWT_PUBLIC_KEY` (RSA PEM, RS256), `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `PG_PASSWORD`, OAuth client secrets
+
+Optional JWT tuning (ConfigMap or secrets):
+
+- `JWT_ISSUER` — defaults to `APP_URL`
+- `JWT_AUDIENCE` — defaults to `zula-api`
+- `JWT_KEY_ID` — JWKS `kid`, defaults to `zula-1`
 
 **ConfigMap (GitOps, not Infisical):** `APP_URL`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_PUBLIC_URL` (optional), `PG_HOST`, `PG_PORT`, `PG_DATABASE`, `PG_USER`, `HTTP_PORT`.
 
