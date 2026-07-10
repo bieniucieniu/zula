@@ -41,6 +41,17 @@ tasks.named("compileKotlin") {
     dependsOn("generateSqlDelightInterface")
 }
 
+tasks.register<JavaExec>("generateJwtK8sSecret") {
+    group = "security"
+    description = "Generate RSA JWT keys and print a Kubernetes Secret manifest"
+    classpath = sourceSets.main.get().runtimeClasspath
+    mainClass.set("com.zula.core.security.jwt.JwtKeyGeneratorKt")
+    val namespace = (findProperty("jwtSecretNamespace") as String?) ?: "zula"
+    val secretName = (findProperty("jwtSecretName") as String?) ?: "zula-jwt-keys"
+    systemProperty("jwtSecretNamespace", namespace)
+    systemProperty("jwtSecretName", secretName)
+}
+
 dependencies {
     implementation(ktorLibs.client.apache)
     implementation(ktorLibs.client.core)

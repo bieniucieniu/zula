@@ -12,6 +12,7 @@ security:
     realm: ${JWT_REALM:Zula}
     autoGenerateKey: ${JWT_AUTO_GENERATE_KEY:true}
     privateKeyPem: ${JWT_PRIVATE_KEY_PEM:}
+    publicKeyPem: ${JWT_PUBLIC_KEY_PEM:}
     accessTokenTtlSeconds: ${JWT_ACCESS_TOKEN_TTL_SECONDS:3600}
   oauth:
     google:

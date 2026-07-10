@@ -44,9 +44,48 @@ Override via root `.env` for **iOS debug** (simulator or LAN IP), then run `gen-
 
 Sync to `Secret/backend-secrets` in the GitOps repo:
 
-- `JWT_SECRET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `PG_PASSWORD`, OAuth client secrets
+- `JWT_PRIVATE_KEY_PEM`, `JWT_PUBLIC_KEY_PEM` (RSA session JWT; see below)
+- `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `PG_PASSWORD`, OAuth client secrets
 
-**ConfigMap (GitOps, not Infisical):** `APP_URL`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_PUBLIC_URL` (optional), `PG_HOST`, `PG_PORT`, `PG_DATABASE`, `PG_USER`, `HTTP_PORT`.
+Legacy `JWT_SECRET` (HMAC) is replaced by asymmetric JWT keys in `core/security`.
+
+**ConfigMap (GitOps, not Infisical):** `APP_URL`, `S3_ENDPOINT`, `S3_BUCKET`, `S3_PUBLIC_URL` (optional), `PG_HOST`, `PG_PORT`, `PG_DATABASE`, `PG_USER`, `HTTP_PORT`, `JWT_AUTO_GENERATE_KEY=false`.
+
+### Session JWT keys (RSA)
+
+| Variable | Purpose |
+|----------|---------|
+| `JWT_PRIVATE_KEY_PEM` | Signs session tokens (PKCS#8 PEM). Required on auth-serving pods. |
+| `JWT_PUBLIC_KEY_PEM` | Verifies tokens. Optional if private key is set (public is derived). Required alone for verify-only replicas. |
+| `JWT_AUTO_GENERATE_KEY` | `false` in cluster (default locally: `true`). Never rely on ephemeral keys in production. |
+| `JWT_AUDIENCE` | Expected `aud` claim (default `zula`). |
+
+Generate a Kubernetes Secret manifest from the repo:
+
+```bash
+./gradlew :server:generateJwtK8sSecret \
+  -PjwtSecretNamespace=zula \
+  -PjwtSecretName=zula-jwt-keys \
+  > deploy/k8s/zula-jwt-keys.secret.yaml
+```
+
+Apply in the **app namespace** (same namespace as the backend Service):
+
+```bash
+kubectl apply -f deploy/k8s/zula-jwt-keys.secret.yaml
+```
+
+Wire the backend Deployment (GitOps):
+
+```yaml
+envFrom:
+  - secretRef:
+      name: zula-jwt-keys
+```
+
+Example stub: [deploy/k8s/jwt-keys-secret.example.yaml](../deploy/k8s/jwt-keys-secret.example.yaml).
+
+Verify-only pods (e.g. read replicas that validate JWT but never issue) can mount **only** `JWT_PUBLIC_KEY_PEM` and omit the private key.
 
 ### S3 / MinIO
 
