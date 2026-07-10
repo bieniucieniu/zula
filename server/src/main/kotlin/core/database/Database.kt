@@ -3,33 +3,22 @@ package com.zula.core.database
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.JdbcDriver
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
-import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import com.zula.Database
-import com.zula.lib.utils.toBooleanOrNull
 import io.ktor.server.application.*
-import io.ktor.server.config.*
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import org.koin.ktor.ext.get
-
-private fun ApplicationConfig.databaseConfig(): Map<String, Any?>? =
-    propertyOrNull("database")?.getMap()
-
-private fun Map<String, Any?>.jdbcUrl(): String =
-    get("jdbcUrl")?.toString().orEmpty()
-
-private fun Map<String, Any?>.autoMigrateEnabled(): Boolean = get("autoMigrate")?.toBooleanOrNull() ?: true
-
+import org.koin.ktor.ext.getKoin
 
 fun Application.configureDatabase() {
-    val database = environment.config.databaseConfig()
-    if (database?.jdbcUrl().isNullOrBlank()) {
+    val config = getKoin().getOrNull<DatabaseConfig>()
+    if (config == null) {
         log.info("Database disabled, no JDBC URL provided")
         return
     }
 
-    if (database.autoMigrateEnabled()) {
+    if (config.autoMigrate) {
         Database.Schema.migrate(
             driver = get<SqlDriver>(),
             oldVersion = 0,
@@ -49,19 +38,18 @@ fun Application.configureDatabase() {
     }
 }
 
-fun databaseModule(builder: HikariConfig.() -> Unit): Module = databaseModule(HikariConfig().apply(builder))
-fun databaseModule(config: HikariConfig): Module = module {
-    if (config.jdbcUrl.isBlank()) {
+fun databaseModule(builder: DatabaseConfigBuilder.() -> Unit): Module =
+    databaseModule(DatabaseConfigBuilder().apply(builder).build())
+
+fun databaseModule(config: DatabaseConfig): Module = module {
+    if (!config.isEnabled) {
         return@module
     }
 
+    single { config }
 
     single<HikariDataSource> {
-        HikariDataSource(
-            config.apply {
-                driverClassName = "org.postgresql.Driver"
-            },
-        )
+        HikariDataSource(config.toHikariConfig())
     }
 
     single<JdbcDriver> {
