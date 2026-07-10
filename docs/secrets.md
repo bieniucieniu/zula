@@ -60,29 +60,21 @@ Legacy `JWT_SECRET` (HMAC) is replaced by asymmetric JWT keys in `core/security`
 | `JWT_AUTO_GENERATE_KEY` | `false` in cluster (default locally: `true`). Never rely on ephemeral keys in production. |
 | `JWT_AUDIENCE` | Expected `aud` claim (default `zula`). |
 
-Generate a Kubernetes Secret manifest from the repo:
+Kubernetes API access is **runtime only** — `KeysManager` in the running backend (`DefaultKeysManager` + `KubernetesJwtKeysStore`). No Gradle/CLI tasks talk to the cluster.
+
+**Bootstrap options**
+
+1. **GitOps / Infisical** — generate an RSA pair locally, commit or sync a Secret (see example below).
+2. **Runtime one-shot** — enable `autoPush` once so startup generates keys and writes the Secret via the in-cluster API; then turn `autoPush` off.
+
+Generate PEMs locally (2048-bit RSA):
 
 ```bash
-./gradlew :server:generateJwtK8sSecret \
-  -PjwtSecretNamespace=zula \
-  -PjwtSecretName=zula-jwt-keys \
-  > deploy/k8s/zula-jwt-keys.secret.yaml
+openssl genrsa -out jwt-private.pem 2048
+openssl rsa -in jwt-private.pem -pubout -out jwt-public.pem
 ```
 
-Or use the keys manager CLI (same entrypoint):
-
-```bash
-# print manifest
-./gradlew :server:manageJwtKeys -PjwtKeysCommand=generate
-
-# push a fresh key pair to the in-cluster / kubeconfig API
-./gradlew :server:manageJwtKeys -PjwtKeysCommand=push \
-  -PjwtK8sEnabled=true -PjwtSecretNamespace=zula
-
-# pull and print manifest
-./gradlew :server:manageJwtKeys -PjwtKeysCommand=pull \
-  -PjwtK8sEnabled=true -PjwtSecretNamespace=zula
-```
+Copy into [deploy/k8s/jwt-keys-secret.example.yaml](../deploy/k8s/jwt-keys-secret.example.yaml), set `JWT_AUTO_GENERATE_KEY: "false"`, apply in the app namespace.
 
 In-cluster bootstrap (same namespace as the backend):
 
