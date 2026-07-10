@@ -1,3 +1,3 @@
 package com.zula.features.moderation
 
-class ModerationConsumer(private val moderationService: ModerationService)
+class ModerationConsumer(private val moderationService: com.zula.features.moderation.ModerationService)

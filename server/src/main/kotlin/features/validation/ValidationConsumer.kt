@@ -1,3 +1,3 @@
 package com.zula.features.validation
 
-class ValidationConsumer(private val validationService: ValidationService)
+class ValidationConsumer(private val validationService: com.zula.features.validation.ValidationService)

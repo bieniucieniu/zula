@@ -13,7 +13,7 @@ fun Route.configureAuthRouting() {
 
         get("/callback") {
             val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
-            call.sessions.set(UserSession(principal?.accessToken.toString()))
+            call.sessions.set(_root_ide_package_.com.zula.features.auth.UserSession(principal?.accessToken.toString()))
             call.respondRedirect("/api/hello")
         }
     }

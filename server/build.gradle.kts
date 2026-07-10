@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(ktorLibs.plugins.ktor)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.sqlDelight)
 }
 
 group = "com.zula"
@@ -20,6 +21,17 @@ ktor {
         enabled = true
         codeInferenceEnabled = true
         onlyCommented = false
+    }
+}
+
+sqldelight {
+    databases {
+        register("Database") {
+            packageName.set("com.zula")
+            migrationOutputDirectory = layout.buildDirectory.dir("resources/db/migrations")
+            migrationOutputFileFormat = ".sql"
+            dialect("app.cash.sqldelight:postgresql-dialect:${libs.versions.sqlDelight.get()}")
+        }
     }
 }
 
@@ -51,4 +63,8 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
+
+    implementation(libs.sqlDelight.jdbcDrver)
+    implementation(libs.hikari)
+    implementation(libs.postgres)
 }
