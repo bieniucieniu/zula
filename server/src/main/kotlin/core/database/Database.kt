@@ -2,7 +2,6 @@ package com.zula.core.database
 
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.driver.jdbc.JdbcDriver
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariDataSource
 import com.zula.*
@@ -44,13 +43,20 @@ internal fun migrateSchema(driver: SqlDriver) {
     val target = Database.Schema.version
     val current = readSchemaVersion(driver)
 
-    if (current < target) {
-        Database.Schema.migrate(
-            driver = driver,
-            oldVersion = current,
-            newVersion = target,
-        )
-        writeSchemaVersion(driver, target)
+    when {
+        current == 0L -> {
+            // .sq CREATE TABLE lives in Schema.create; migrate() is empty without .sqm files.
+            Database.Schema.create(driver)
+            writeSchemaVersion(driver, target)
+        }
+        current < target -> {
+            Database.Schema.migrate(
+                driver = driver,
+                oldVersion = current,
+                newVersion = target,
+            )
+            writeSchemaVersion(driver, target)
+        }
     }
 }
 
@@ -163,13 +169,13 @@ fun databaseModule(config: DatabaseConfig): Module = module {
         HikariDataSource(config.toHikariConfig())
     }
 
-    single<JdbcDriver> {
+    single<SqlDriver> {
         val h: HikariDataSource = get()
         h.asJdbcDriver()
     }
 
     single<Database> {
-        val driver: JdbcDriver = get()
+        val driver: SqlDriver = get()
         createDatabase(driver)
     }
 }

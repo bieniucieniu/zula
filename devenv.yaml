@@ -19,5 +19,6 @@ permitted_insecure_packages:
 
 secretspec:
   enable: true
+  # Load declared secrets from project `.env` into config.secretspec.secrets
   provider: dotenv
   profile: default

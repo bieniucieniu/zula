@@ -12,6 +12,10 @@ devenv.local.yaml
 # direnv
 .direnv
 
+# local secrets / env
+.env
+!.env.example
+
 # pre-commit
 .pre-commit-config.yaml
 .kotlin/errors
