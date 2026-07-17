@@ -1,5 +1,5 @@
 [versions]
-damirdenisTudor-ktorServerRabbitmq = "1.5.0"
+rabbitmq = "1.5.0"
 koin = "4.2.2"
 kotlin = "2.3.21"
 logback = "1.5.35"
@@ -11,7 +11,7 @@ postgres = "42.7.3"
 kubernetesClient = "27.0.0"
 
 [libraries]
-damirdenisTudor-ktorServerRabbitmq = { module = "io.github.damirdenis-tudor:ktor-server-rabbitmq", version.ref = "damirdenisTudor-ktorServerRabbitmq" }
+rabbitmq-ktor = { module = "io.github.damirdenis-tudor:ktor-server-rabbitmq", version.ref = "rabbitmq" }
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koin-loggerSlf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

@@ -38,8 +38,18 @@ fun Application.configureHttp() {
     install(XForwardedHeaders)
     install(SSE)
     install(StatusPages) {
+        exception<HttpException> { call, cause ->
+            call.respondProblem(
+                status = cause.status,
+                detail = cause.message ?: cause.status.description,
+            )
+        }
         exception<Throwable> { call, cause ->
-            call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
+            call.application.log.error("Unhandled error", cause)
+            call.respondProblem(
+                status = HttpStatusCode.InternalServerError,
+                detail = "Internal Server Error",
+            )
         }
     }
 }

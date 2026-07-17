@@ -22,9 +22,14 @@ data class JwtConfig(
     val audience: String = "zula",
     val realm: String = "Zula",
     val autoGenerateKey: Boolean = true,
+    val keysJson: String? = null,
     val privateKeyPem: String? = null,
     val publicKeyPem: String? = null,
-    val accessTokenTtlSeconds: Long = 3600,
+    val signingEnabled: Boolean = true,
+    val defaultKeyId: String = "default",
+    val accessTokenTtlSeconds: Long = 900,
+    val refreshTokenTtlSeconds: Long = 2_592_000,
+    val providerTokenEncryptionKey: String? = null,
     val kubernetes: JwtKubernetesConfig = JwtKubernetesConfig(),
 ) {
     companion object {
@@ -33,10 +38,16 @@ data class JwtConfig(
             audience = config?.stringOrNull("audience") ?: "zula",
             realm = config?.stringOrNull("realm") ?: "Zula",
             autoGenerateKey = config?.propertyOrNull("autoGenerateKey")?.getString()?.toBooleanStrictOrNull() ?: true,
+            keysJson = config?.stringOrNull("keysJson"),
             privateKeyPem = config?.stringOrNull("privateKeyPem"),
             publicKeyPem = config?.stringOrNull("publicKeyPem"),
+            signingEnabled = config?.propertyOrNull("signingEnabled")?.getString()?.toBooleanStrictOrNull() ?: true,
+            defaultKeyId = config?.stringOrNull("defaultKeyId") ?: "default",
             accessTokenTtlSeconds = config?.propertyOrNull("accessTokenTtlSeconds")?.getString()?.toLongOrNull()
-                ?: 3600,
+                ?: 900,
+            refreshTokenTtlSeconds = config?.propertyOrNull("refreshTokenTtlSeconds")?.getString()?.toLongOrNull()
+                ?: 2_592_000,
+            providerTokenEncryptionKey = config?.stringOrNull("providerTokenEncryptionKey"),
             kubernetes = config?.configOrNull("kubernetes")?.let { JwtKubernetesConfig(it) } ?: JwtKubernetesConfig(),
         )
     }

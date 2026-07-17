@@ -1,27 +1,118 @@
 package com.zula.features.auth
 
-import com.zula.core.security.oauth.OAuthProviderNames
+import com.ucasoft.ktor.simpleCache.cacheOutput
+import com.zula.core.security.AuthProviderNames
+import com.zula.core.security.JwtConfig
 import com.zula.core.security.SecurityConfig
+import com.zula.core.security.jwt.configureJwksRouting
+import com.zula.core.security.oauth.OAuthProviderNames
+import com.zula.features.auth.domain.AuthenticateRequest
+import com.zula.features.auth.domain.ChallengeRequest
+import com.zula.features.auth.domain.RefreshRequest
+import com.zula.lib.id.Ids
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.sessions.*
 import org.koin.ktor.ext.getKoin
+import org.koin.ktor.ext.inject
+import kotlin.time.Duration.Companion.hours
 
 fun Route.configureAuthRouting() {
-    val config = application.getKoin().getOrNull<SecurityConfig>() ?: return
+    val config: SecurityConfig = application.getKoin().getOrNull() ?: return
+    val authService: AuthService by inject()
+    val jwtConfig: JwtConfig by inject()
+
+    configureJwksRouting()
+
+    cacheOutput(1.hours) {
+        get("/auth/providers") {
+            call.respond(OAuthProvidersResponse(config.oauth.configuredProviders()))
+        }
+    }
+
+    post("/auth/authenticate") {
+        val request: AuthenticateRequest = call.receive()
+        val tokens = authService.authenticate(call, request)
+
+        call.setAccessCookies(tokens)
+
+        call.respond(tokens)
+    }
+
+    post("/auth/refresh") {
+        val refreshBody: RefreshRequest? = runCatching {
+            call.receive<RefreshRequest>()
+        }.getOrNull()
+        val refreshToken = refreshBody?.refreshToken ?: call.readRefreshCookie()
+        ?: return@post call.respond(HttpStatusCode.BadRequest, "refreshToken required")
+        val tokens = authService.refresh(call, refreshToken)
+        call.setAccessCookies(tokens)
+
+        call.respond(tokens)
+    }
+
+    authenticate(AuthProviderNames.JWT, optional = true) {
+        post("/auth/logout") {
+            val principal: JWTPrincipal? = call.principal()
+            val sessionId = principal?.payload?.getClaim("sid")?.asString()?.let {
+                Ids.parseOrNull(it)
+            }
+            val refreshBody: RefreshRequest? = runCatching {
+                call.receive<RefreshRequest>()
+            }.getOrNull()
+            val refreshToken = refreshBody?.refreshToken
+                ?: call.readRefreshCookie()
+            authService.logout(sessionId, refreshToken)
+            call.clearAuthCookies()
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+
+    post("/auth/challenge") {
+        val request: ChallengeRequest = call.receive()
+        val response = when (request.purpose) {
+            "magic_link" -> authService.createMagicLinkChallenge(request.channel, request.target)
+            else -> authService.createChallenge(request)
+        }
+        call.respond(response)
+    }
+
+    authenticate(AuthProviderNames.JWT) {
+        get("/auth/providers/linked") {
+            val principal: JWTPrincipal? = call.principal()
+            val userId = principal?.payload?.subject?.let(Ids::parseOrNull)
+                ?: return@get call.respond(HttpStatusCode.Unauthorized)
+            call.respond(authService.listLinkedProviders(userId))
+        }
+    }
 
     if (config.oauth.google.isConfigured) {
         authenticate(OAuthProviderNames.GOOGLE) {
             get("/auth/login/google") {
-                // Ktor redirects to Google authorize URL automatically.
+                call.respondRedirect("/auth/callback/google")
             }
 
             get("/auth/callback/google") {
                 val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
-                call.sessions.set(UserSession(principal?.accessToken.toString()))
-                call.respondRedirect("/api")
+                val idToken = principal?.extraParameters?.get("id_token")
+                if (idToken != null) {
+                    val tokens = authService.authenticate(
+                        call,
+                        AuthenticateRequest(
+                            provider = "google",
+                            idToken = idToken,
+                            providerRefreshToken = principal.extraParameters["refresh_token"],
+                        ),
+                    )
+                    call.setAccessCookies(tokens)
+                    call.respondRedirect("/")
+                } else {
+                    call.respondRedirect("/")
+                }
             }
         }
     }
@@ -29,15 +120,30 @@ fun Route.configureAuthRouting() {
     if (config.oauth.apple.isConfigured) {
         authenticate(OAuthProviderNames.APPLE) {
             get("/auth/login/apple") {
-                // Ktor redirects to Apple authorize URL automatically.
+                call.respondRedirect("/auth/callback/apple")
             }
 
             get("/auth/callback/apple") {
                 val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
                 val idToken = principal?.extraParameters?.get("id_token")
-                call.sessions.set(UserSession(idToken ?: principal?.accessToken.toString()))
-                call.respondRedirect("/api")
+                if (idToken != null) {
+                    val tokens = authService.authenticate(
+                        call,
+                        AuthenticateRequest(
+                            provider = "apple",
+                            idToken = idToken,
+                        ),
+                    )
+                    call.setAccessCookies(tokens)
+                    call.respondRedirect("/")
+                } else {
+                    call.respondRedirect("/")
+                }
             }
         }
     }
 }
+
+private fun ApplicationCall.useCookieDelivery(): Boolean =
+    request.queryParameters["delivery"] == "cookie" ||
+            request.headers["X-Auth-Delivery"] == "cookie"

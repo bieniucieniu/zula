@@ -1,0 +1,143 @@
+findUserByIdentity:
+SELECT users.id, users.username FROM users
+JOIN user_identities ON users.id = user_identities.user_id
+WHERE user_identities.provider = ? AND user_identities.provider_user_id = ?
+LIMIT 1;
+
+insertUser:
+INSERT INTO users (id, username)
+VALUES (?, ?);
+
+insertUserAuto:
+INSERT INTO users (username)
+VALUES (?)
+RETURNING id;
+
+insertUserProfile:
+INSERT INTO user_profiles (user_id, display_name, updated_at)
+VALUES (?, ?, ?);
+
+upsertUserStats:
+INSERT INTO user_stats (user_id, explicit_rating_avg, implicit_trust_score, last_calculated_at)
+VALUES (?, 5.0, 100, ?)
+ON CONFLICT(user_id) DO NOTHING;
+
+findIdentityByProvider:
+SELECT * FROM user_identities
+WHERE provider = ? AND provider_user_id = ?
+LIMIT 1;
+
+insertIdentity:
+INSERT INTO user_identities (
+    id, user_id, provider, provider_user_id, email, provider_metadata,
+    provider_refresh_token_enc, credentials_status, scopes
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+insertIdentityAuto:
+INSERT INTO user_identities (
+    user_id, provider, provider_user_id, email, provider_metadata,
+    provider_refresh_token_enc, credentials_status, scopes
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING id;
+
+updateIdentityLogin:
+UPDATE user_identities
+SET email = ?, provider_metadata = ?, credentials_status = ?
+WHERE id = ?;
+
+updateIdentityProviderRefresh:
+UPDATE user_identities
+SET provider_refresh_token_enc = ?, credentials_status = ?, credentials_checked_at = ?
+WHERE id = ?;
+
+updateIdentityProviderTokens:
+UPDATE user_identities
+SET provider_access_token_enc = ?, provider_token_expires_at = ?,
+    credentials_status = ?, credentials_checked_at = ?
+WHERE id = ?;
+
+revokeIdentityCredentials:
+UPDATE user_identities
+SET provider_refresh_token_enc = NULL, provider_access_token_enc = NULL,
+    credentials_status = 'revoked', credentials_revoked_at = ?
+WHERE id = ?;
+
+findIdentityByUserAndProvider:
+SELECT * FROM user_identities
+WHERE user_id = ? AND provider = ?
+LIMIT 1;
+
+listIdentitiesByUser:
+SELECT * FROM user_identities WHERE user_id = ?;
+
+insertSession:
+INSERT INTO user_sessions (
+    id, user_id, auth_method, refresh_token_hash, device_info, ip_address,
+    expires_at, is_revoked, rotated_from_id
+) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?);
+
+insertSessionAuto:
+INSERT INTO user_sessions (
+    user_id, auth_method, refresh_token_hash, device_info, ip_address,
+    expires_at, is_revoked, rotated_from_id
+) VALUES (?, ?, ?, ?, ?, ?, 0, ?)
+RETURNING id;
+
+findSessionById:
+SELECT * FROM user_sessions WHERE id = ? LIMIT 1;
+
+findActiveSessionOwnedBy:
+SELECT * FROM user_sessions
+WHERE id = ? AND user_id = ? AND is_revoked = 0 AND expires_at > ?
+LIMIT 1;
+
+findSessionByRefreshHash:
+SELECT * FROM user_sessions WHERE refresh_token_hash = ? AND is_revoked = 0 LIMIT 1;
+
+findAnySessionByRefreshHash:
+SELECT * FROM user_sessions WHERE refresh_token_hash = ? LIMIT 1;
+
+findSessionsRotatedFrom:
+SELECT * FROM user_sessions WHERE rotated_from_id = ?;
+
+revokeSession:
+UPDATE user_sessions SET is_revoked = 1 WHERE id = ?;
+
+claimSessionForRefresh:
+UPDATE user_sessions SET is_revoked = 1
+WHERE id = ? AND is_revoked = 0 AND expires_at > ?
+RETURNING id;
+
+extendOAuthSession:
+UPDATE user_sessions SET expires_at = ? WHERE id = ? AND is_revoked = 0 AND user_id = ?;
+
+getUserById:
+SELECT * FROM users WHERE id = ? LIMIT 1;
+
+findUserByUsername:
+SELECT * FROM users WHERE username = ? LIMIT 1;
+
+insertAuthChallenge:
+INSERT INTO auth_challenges (
+    id, channel, target, code_hash, purpose, expires_at
+) VALUES (?, ?, ?, ?, ?, ?);
+
+insertAuthChallengeAuto:
+INSERT INTO auth_challenges (
+    channel, target, code_hash, purpose, expires_at
+) VALUES (?, ?, ?, ?, ?)
+RETURNING id;
+
+findAuthChallenge:
+SELECT * FROM auth_challenges WHERE id = ? LIMIT 1;
+
+consumeAuthChallenge:
+UPDATE auth_challenges SET consumed_at = ?
+WHERE id = ? AND consumed_at IS NULL
+RETURNING id;
+
+findAuthChallengeByCodeHash:
+SELECT * FROM auth_challenges WHERE code_hash = ? LIMIT 1;
+
+incrementChallengeAttempts:
+UPDATE auth_challenges SET attempts = attempts + 1 WHERE id = ?;

@@ -11,9 +11,14 @@ security:
     audience: ${JWT_AUDIENCE:zula}
     realm: ${JWT_REALM:Zula}
     autoGenerateKey: ${JWT_AUTO_GENERATE_KEY:true}
+    keysJson: ${JWT_KEYS:}
     privateKeyPem: ${JWT_PRIVATE_KEY_PEM:}
     publicKeyPem: ${JWT_PUBLIC_KEY_PEM:}
-    accessTokenTtlSeconds: ${JWT_ACCESS_TOKEN_TTL_SECONDS:3600}
+    signingEnabled: ${JWT_SIGNING_ENABLED:true}
+    defaultKeyId: ${JWT_KEY_ID:default}
+    accessTokenTtlSeconds: ${JWT_ACCESS_TOKEN_TTL_SECONDS:900}
+    refreshTokenTtlSeconds: ${JWT_REFRESH_TOKEN_TTL_SECONDS:2592000}
+    providerTokenEncryptionKey: ${PROVIDER_TOKEN_ENCRYPTION_KEY:}
     kubernetes:
       enabled: ${JWT_K8S_ENABLED:false}
       namespace: ${JWT_K8S_NAMESPACE:}

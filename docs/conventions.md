@@ -26,8 +26,8 @@ Follow [architecture.md](./architecture.md#ktor-project-layout):
 
 **User-facing lists** (feeds, reviews, portfolio, activity, chat history) use **keyset (cursor) pagination**:
 
-- Anchor tuple e.g. `(created_at, id) < ($cursor_time, $cursor_id)`
-- Stable ordering: always include a unique tie-breaker (`id`)
+- Anchor on UUIDv7 **`id` only**: `id < $cursor_id` with `ORDER BY id DESC`
+- Creation time is encoded in the UUIDv7; decode via `Ids.createdAtMillis(id)` — do **not** store a redundant `created_at` on UUID PKs
 - Response: `next_cursor`, `has_more`
 
 **Offset pagination** is only for small admin grids with bounded datasets.

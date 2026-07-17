@@ -11,8 +11,11 @@
 
 | Object | Purpose |
 |--------|---------|
-| `generate_snowflake_id()` | BIGINT primary keys |
-| `snowflake_seq` | Sequence for ID generation |
+| `generate_uuid_v7()` | UUID PKs (UUIDv7, time-ordered; app uses `Uuid.generateV7()`) |
+
+Entity tables use `id UUID PRIMARY KEY DEFAULT generate_uuid_v7()` and **no `created_at`** — create time is in the UUIDv7 timestamp field (`Ids.createdAtMillis`).
+
+Explicit mint: `Ids.next()` / `Uuid.generateV7()` before insert (JWT `sid`, chat sync). Omit `id` on INSERT to use DB DEFAULT.
 
 ---
 
@@ -22,7 +25,7 @@
 
 | Table | Purpose |
 |-------|---------|
-| `users` | Identity: `id`, `username`, `created_at` |
+| `users` | Identity: UUIDv7 `id`, `username` |
 | `user_profiles` | Display: `display_name`, `avatar_url`, `bio`, `timezone`, `preferred_language`, `location_tag`, `seller_headline` |
 | `user_identities` | OAuth links (`google`, `apple`) |
 | `user_sessions` | JWT session hashes, revocation |

@@ -1,5 +1,6 @@
 package com.zula.core.security.jwt.keys
 
+import com.zula.core.security.jwt.JwtKeySet
 import com.zula.core.security.jwt.JwtKeys
 
 sealed interface KeysValidation {
@@ -31,4 +32,6 @@ interface KeysManager {
     fun pushToKubernetes(keys: JwtKeys)
 
     fun resolve(): JwtKeys
+
+    fun resolveKeySet(): JwtKeySet
 }

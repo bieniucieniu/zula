@@ -14,6 +14,9 @@ application {
 
 kotlin {
     jvmToolchain(21)
+    compilerOptions {
+        optIn.add("kotlin.uuid.ExperimentalUuidApi")
+    }
 }
 
 ktor {
@@ -60,7 +63,7 @@ dependencies {
     implementation(ktorLibs.server.sse)
     implementation(ktorLibs.server.statusPages)
     implementation(ktorLibs.server.swagger)
-    implementation(libs.damirdenisTudor.ktorServerRabbitmq)
+    implementation(libs.rabbitmq.ktor)
     implementation(libs.koin.ktor)
     implementation(libs.koin.loggerSlf4j)
     implementation(libs.logback.classic)

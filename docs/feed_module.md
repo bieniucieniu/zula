@@ -48,7 +48,7 @@ FeedService.kt
         │    └─ assemble FeedItem DTO (no DB calls in loop)
         │
         ├─ GET /feed (cold start / explicit chronological)
-        │    └─ keyset on (created_at, id)
+        │    └─ keyset on id (UUIDv7)
         │
         └─ POST /feed/items
              ├─ tx: insert feed_items + traits + media rows
@@ -397,7 +397,7 @@ ORDER BY fi.created_at DESC, fi.id DESC
 LIMIT :page_limit;
 ```
 
-**Cursor:** `(created_at, id)` — required by [conventions.md](./conventions.md) for infinite scroll.
+**Cursor:** UUIDv7 `id` — required by [conventions.md](./conventions.md) for infinite scroll.
 
 **SQLDelight equivalent:** bind `:cursor_created_at` and `:cursor_id` as nullable; pass `null` on first page.
 
@@ -818,7 +818,7 @@ curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/v1/feed/for-yo
 1. **MVP ships `GET /feed/for-you`**, not chronological-only with personalization later.
 2. **Vectors re-rank inside SQL filters** — not unbounded nearest-neighbor over the full catalog.
 3. **Traits are explainable filters**; embeddings handle fuzzy relevance.
-4. **Keyset pagination only** — `(created_at, id)` for chrono, `(score, id)` for ranked.
+4. **Keyset pagination only** — `id` for chrono (UUIDv7 order), `(score, id)` for ranked.
 5. **Fixed query budget** — batch `IN ?` for traits and media; no per-item DB calls.
 6. **Embeddings on write** for text; async for images via RabbitMQ.
 7. **No Redis** until Postgres profiling shows need.

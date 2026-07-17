@@ -21,7 +21,7 @@ class KubernetesJwtKeysStore(
             .getOrNull()
 
     override fun push(target: JwtKeysTarget, keys: JwtKeys) {
-        require(keys.canSign) { "Cannot push verify-only JWT keys to Kubernetes" }
+        require(keys.canSign()) { "Cannot push verify-only JWT keys to Kubernetes" }
         upsertSecret(target, buildSecret(target, keys))
         log.info("Upserted Kubernetes secret {}/{}", target.namespace, target.secretName)
     }

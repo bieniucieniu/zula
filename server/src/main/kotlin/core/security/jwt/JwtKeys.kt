@@ -1,6 +1,13 @@
 package com.zula.core.security.jwt
 
 import com.auth0.jwt.algorithms.Algorithm
+import com.zula.core.security.JwtConfig
+import com.zula.core.security.jwt.keys.KeysManagers
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.slf4j.Logger
+import java.security.Key
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.interfaces.RSAPrivateCrtKey
@@ -9,14 +16,13 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.RSAPublicKeySpec
 import java.security.spec.X509EncodedKeySpec
-import java.util.Base64
+import java.util.*
 
 data class JwtKeys(
     val privateKeyPem: String?,
     val publicKeyPem: String,
 ) {
-    val canSign: Boolean
-        get() = !privateKeyPem.isNullOrBlank()
+    fun canSign(): Boolean = !privateKeyPem.isNullOrBlank()
 
     fun verificationAlgorithm(): Algorithm =
         Algorithm.RSA256(publicKeyPem.decodePublicKey(), null)
@@ -27,22 +33,19 @@ data class JwtKeys(
         return Algorithm.RSA256(publicKeyPem.decodePublicKey(), privateKey)
     }
 
-    fun toKubernetesSecretYaml(namespace: String, secretName: String): String {
-        require(canSign) { "Cannot export Kubernetes secret without a private key" }
-        return buildString {
-            appendLine("apiVersion: v1")
-            appendLine("kind: Secret")
-            appendLine("metadata:")
-            appendLine("  name: $secretName")
-            appendLine("  namespace: $namespace")
-            appendLine("type: Opaque")
-            appendLine("stringData:")
-            appendLine("  JWT_PRIVATE_KEY_PEM: |")
-            privateKeyPem!!.lines().forEach { appendLine("    $it") }
-            appendLine("  JWT_PUBLIC_KEY_PEM: |")
-            publicKeyPem.lines().forEach { appendLine("    $it") }
-            appendLine("  JWT_AUTO_GENERATE_KEY: \"false\"")
-        }
+    fun toKubernetesSecretJson(namespace: String, secretName: String): String {
+        if (!canSign()) error("Cannot export Kubernetes secret without a private key")
+        val privatePem = privateKeyPem ?: error("Cannot export Kubernetes secret without a private key")
+        return Json.encodeToString(
+            KubernetesSecretJson(
+                metadata = KubernetesSecretMetadata(name = secretName, namespace = namespace),
+                stringData = mapOf(
+                    "JWT_PRIVATE_KEY_PEM" to privatePem,
+                    "JWT_PUBLIC_KEY_PEM" to publicKeyPem,
+                    "JWT_AUTO_GENERATE_KEY" to "false",
+                ),
+            ),
+        )
     }
 
     companion object {
@@ -87,8 +90,7 @@ data class JwtKeys(
 }
 
 object JwtKeyLoader {
-    fun load(config: com.zula.core.security.JwtConfig, log: org.slf4j.Logger): JwtKeys =
-        com.zula.core.security.jwt.keys.KeysManagers.create(config, log).resolve()
+    fun load(config: JwtConfig, log: Logger): JwtKeys = KeysManagers.create(config, log).resolve()
 }
 
 internal fun String.decodePrivateKey(): RSAPrivateKey {
@@ -110,8 +112,23 @@ private fun String.stripPemHeaders(): String =
         .replace("-----END RSA PRIVATE KEY-----", "")
         .replace("\\s".toRegex(), "")
 
-private fun java.security.Key.toPem(type: String): String {
+private fun Key.toPem(type: String): String {
     val header = if (type == "PUBLIC") "PUBLIC KEY" else "PRIVATE KEY"
     val encoded = Base64.getEncoder().encodeToString(encoded)
     return "-----BEGIN $header-----\n$encoded\n-----END $header-----"
 }
+
+@Serializable
+private data class KubernetesSecretJson(
+    val apiVersion: String = "v1",
+    val kind: String = "Secret",
+    val metadata: KubernetesSecretMetadata,
+    val type: String = "Opaque",
+    val stringData: Map<String, String>,
+)
+
+@Serializable
+private data class KubernetesSecretMetadata(
+    val name: String,
+    val namespace: String,
+)
