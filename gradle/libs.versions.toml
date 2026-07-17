@@ -1,7 +1,7 @@
 [versions]
 rabbitmq = "1.5.0"
 koin = "4.2.2"
-kotlin = "2.3.21"
+kotlin = "2.4.10"
 logback = "1.5.35"
 ucasoft-ktorSimpleCache = "0.72.1"
 sqlDelight = "2.3.2"
