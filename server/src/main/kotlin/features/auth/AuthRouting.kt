@@ -17,6 +17,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.describe
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.ext.inject
 import kotlin.time.Duration.Companion.hours
@@ -31,6 +32,9 @@ fun Route.configureAuthRouting() {
     cacheOutput(1.hours) {
         get("/auth/providers") {
             call.respond(OAuthProvidersResponse(config.oauth.configuredProviders()))
+        }.describe {
+            operationId = "listProviders"
+            tag("auth")
         }
     }
 
@@ -41,6 +45,9 @@ fun Route.configureAuthRouting() {
         call.setAccessCookies(tokens)
 
         call.respond(tokens)
+    }.describe {
+        operationId = "authenticate"
+        tag("auth")
     }
 
     post("/auth/refresh") {
@@ -53,6 +60,9 @@ fun Route.configureAuthRouting() {
         call.setAccessCookies(tokens)
 
         call.respond(tokens)
+    }.describe {
+        operationId = "refresh"
+        tag("auth")
     }
 
     authenticate(AuthProviderNames.JWT, optional = true) {
@@ -69,6 +79,9 @@ fun Route.configureAuthRouting() {
             authService.logout(sessionId, refreshToken)
             call.clearAuthCookies()
             call.respond(HttpStatusCode.NoContent)
+        }.describe {
+            operationId = "logout"
+            tag("auth")
         }
     }
 
@@ -79,6 +92,9 @@ fun Route.configureAuthRouting() {
             else -> authService.createChallenge(request)
         }
         call.respond(response)
+    }.describe {
+        operationId = "createChallenge"
+        tag("auth")
     }
 
     authenticate(AuthProviderNames.JWT) {
@@ -87,6 +103,9 @@ fun Route.configureAuthRouting() {
             val userId = principal?.payload?.subject?.let(Ids::parseOrNull)
                 ?: return@get call.respond(HttpStatusCode.Unauthorized)
             call.respond(authService.listLinkedProviders(userId))
+        }.describe {
+            operationId = "listLinkedProviders"
+            tag("auth")
         }
     }
 
@@ -94,6 +113,9 @@ fun Route.configureAuthRouting() {
         authenticate(OAuthProviderNames.GOOGLE) {
             get("/auth/login/google") {
                 call.respondRedirect("/auth/callback/google")
+            }.describe {
+                operationId = "loginGoogle"
+                tag("auth")
             }
 
             get("/auth/callback/google") {
@@ -113,6 +135,9 @@ fun Route.configureAuthRouting() {
                 } else {
                     call.respondRedirect("/")
                 }
+            }.describe {
+                operationId = "callbackGoogle"
+                tag("auth")
             }
         }
     }
@@ -121,6 +146,9 @@ fun Route.configureAuthRouting() {
         authenticate(OAuthProviderNames.APPLE) {
             get("/auth/login/apple") {
                 call.respondRedirect("/auth/callback/apple")
+            }.describe {
+                operationId = "loginApple"
+                tag("auth")
             }
 
             get("/auth/callback/apple") {
@@ -139,6 +167,9 @@ fun Route.configureAuthRouting() {
                 } else {
                     call.respondRedirect("/")
                 }
+            }.describe {
+                operationId = "callbackApple"
+                tag("auth")
             }
         }
     }

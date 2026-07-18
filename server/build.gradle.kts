@@ -16,6 +16,7 @@ kotlin {
     jvmToolchain(21)
     compilerOptions {
         optIn.add("kotlin.uuid.ExperimentalUuidApi")
+        optIn.add("io.ktor.utils.io.ExperimentalKtorApi")
     }
 }
 
