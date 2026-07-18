@@ -1,15 +1,15 @@
 {
-	"projectName": "start-app",
-	"mode": "file-router",
-	"typescript": true,
-	"packageManager": "bun",
-	"includeExamples": false,
-	"tailwind": true,
-	"addOnOptions": {},
-	"envVarValues": {},
-	"git": true,
-	"install": true,
-	"routerOnly": false,
-	"version": 1,
-	"framework": "react"
+  "projectName": "start-app",
+  "mode": "file-router",
+  "typescript": true,
+  "packageManager": "bun",
+  "includeExamples": false,
+  "tailwind": true,
+  "addOnOptions": {},
+  "envVarValues": {},
+  "git": true,
+  "install": true,
+  "routerOnly": false,
+  "version": 1,
+  "framework": "react"
 }

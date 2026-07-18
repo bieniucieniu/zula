@@ -6,8 +6,8 @@
  */
 
 export interface ChallengeResponse {
-  challengeId: string;
-  expiresIn: number;
+  challengeId: string
+  expiresIn: number
   /** @nullable */
-  token?: string | null;
+  token?: string | null
 }

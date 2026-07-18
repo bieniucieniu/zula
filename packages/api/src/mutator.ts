@@ -1,29 +1,38 @@
-export const getApiBaseUrl = (): string =>
-	(typeof import.meta !== "undefined" &&
-		(import.meta as ImportMeta & { env?: Record<string, string> }).env
-			?.VITE_API_BASE_URL) ||
-	process.env.EXPO_PUBLIC_API_BASE_URL ||
-	process.env.ZULA_API_BASE_URL ||
-	"";
+let apiBaseUrl: string | ((url: string, options: RequestInit) => string) = ""
+export function getApiBaseUrl(url: string, options: RequestInit): string {
+  if (typeof apiBaseUrl === "function") {
+    return apiBaseUrl(url, options)
+  }
+  if (typeof apiBaseUrl === "string") {
+    return `${apiBaseUrl}${url}`
+  }
+  return url
+}
 
-export const customInstance = async <T>(
-	url: string,
-	options: RequestInit,
-): Promise<T> => {
-	const res = await fetch(`${getApiBaseUrl()}${url}`, {
-		...options,
-		headers: {
-			"Content-Type": "application/json",
-			...options.headers,
-		},
-	});
+export function setApiBaseUrl(url: string): void
+export function setApiBaseUrl(url: (url: string, options: RequestInit) => string): void
+export function setApiBaseUrl(url: string | ((url: string, options: RequestInit) => string)) {
+  if (typeof url === "string") {
+    url = url.replaceAll(/(\\|\/)$/, "")
+  }
+  apiBaseUrl = url
+}
 
-	const text = await res.text();
-	const data = text ? JSON.parse(text) : undefined;
+export const customInstance = async <T>(url: string, options: RequestInit): Promise<T> => {
+  const res = await fetch(`${getApiBaseUrl(url, options)}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  })
 
-	if (!res.ok) {
-		throw data ?? new Error(res.statusText);
-	}
+  const text = await res.text()
+  const data = text ? JSON.parse(text) : undefined
 
-	return data as T;
-};
+  if (!res.ok) {
+    throw data ?? new Error(res.statusText)
+  }
+
+  return data as T
+}

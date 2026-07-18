@@ -5,15 +5,15 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export * from './authenticateRequest';
-export * from './authTokensResponse';
-export * from './callbackGoogleParams';
-export * from './challengeRequest';
-export * from './challengeResponse';
-export * from './jwkKey';
-export * from './jwksResponse';
-export * from './linkedProviderResponse';
-export * from './linkedProvidersResponse';
-export * from './oAuthProviderInfo';
-export * from './oAuthProvidersResponse';
-export * from './refreshRequest';
+export * from "./authenticateRequest"
+export * from "./authTokensResponse"
+export * from "./callbackGoogleParams"
+export * from "./challengeRequest"
+export * from "./challengeResponse"
+export * from "./jwkKey"
+export * from "./jwksResponse"
+export * from "./linkedProviderResponse"
+export * from "./linkedProvidersResponse"
+export * from "./oAuthProviderInfo"
+export * from "./oAuthProvidersResponse"
+export * from "./refreshRequest"

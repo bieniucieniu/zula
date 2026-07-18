@@ -6,10 +6,10 @@
  */
 
 export interface JwkKey {
-  kty?: string;
-  use?: string;
-  alg?: string;
-  kid: string;
-  n: string;
-  e: string;
+  kty?: string
+  use?: string
+  alg?: string
+  kid: string
+  n: string
+  e: string
 }

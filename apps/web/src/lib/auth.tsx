@@ -1,10 +1,4 @@
-import {
-  createContext,
-  use,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react"
+import { createContext, use, useEffect, useState, type ReactNode } from "react"
 
 const SESSION_KEY = "zula.auth.session"
 
@@ -52,13 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true)
   }, [])
 
-  async function login({
-    email,
-    password,
-  }: {
-    email: string
-    password: string
-  }) {
+  async function login({ email, password }: { email: string; password: string }) {
     if (!email || !password) {
       throw new Error("Email and password required")
     }

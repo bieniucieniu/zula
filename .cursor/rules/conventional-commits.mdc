@@ -1,0 +1,61 @@
+---
+description: Use Conventional Commits for all git commit messages
+alwaysApply: true
+---
+
+# Conventional Commits
+
+All git commit messages MUST follow [Conventional Commits](https://www.conventionalcommits.org/).
+
+## Format
+
+```
+<type>(<optional scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+- **type**: required, lowercase
+- **scope**: optional, noun for area touched (`api`, `web`, `auth`, `server`, …)
+- **description**: imperative mood, lowercase start, no trailing period, concise
+- **body/footer**: optional; use `BREAKING CHANGE:` footer when needed
+
+## Allowed types
+
+| type | use for |
+|------|---------|
+| `feat` | new user-facing capability |
+| `fix` | bug fix |
+| `docs` | docs only |
+| `style` | formatting; no code meaning change |
+| `refactor` | restructure without behavior change |
+| `perf` | performance |
+| `test` | tests only |
+| `build` | deps, bundler, gradle, workspace packaging |
+| `ci` | CI config |
+| `chore` | maintenance that does not fit above |
+
+## Examples
+
+```
+# ❌ BAD
+Add @zula/api Orval client with tagged OpenAPI operationIds.
+Mount routes under /api and split devenv process profiles.
+Updated stuff
+fixed bug
+
+# ✅ GOOD
+feat(api): add @zula/api Orval client with tagged operationIds
+fix(auth): refresh cookie when access token expired
+chore(devenv): split backend web and native process profiles
+refactor(server): mount feature routes under /api
+```
+
+## Agent rules
+
+- When creating a commit (user-requested or otherwise), draft the message in Conventional Commits form.
+- Prefer a scope when the change is clearly localized; omit scope for broad cross-cutting commits.
+- Do not use non-conventional subjects (sentence case summaries, trailing periods, WIP without a type).
+- Breaking changes: append `!` after type/scope (`feat(api)!: …`) and/or add a `BREAKING CHANGE:` footer.

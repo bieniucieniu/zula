@@ -19,10 +19,8 @@ in
     pkgs.bun
   ];
 
-  # Secrets come from SecretSpec (provider=dotenv → `.env`), not devenv's dotenv module.
   dotenv.disableHint = true;
 
-  # --- Service config (disabled in base; enabled by profiles) ---
   services.postgres = {
     enable = true;
     listen_addresses = "127.0.0.1";
@@ -94,26 +92,24 @@ in
     };
   };
 
-  # --- Env from SecretSpec (.env via provider=dotenv in devenv.yaml) ---
   env = secrets;
 
-  scripts.zula-deps.exec = ''
-    echo "Starting backend deps (Postgres + RabbitMQ)…"
-    exec devenv --profile backend up
-  '';
+  scripts.pg = {
+    packages = [ pkgs.postgresql ];
+    exec = ''
+      export PGHOST="''${PGHOST:-127.0.0.1}"
+      export PGPORT="''${PGPORT:-5432}"
+      export PGUSER="''${DATABASE_USERNAME:-zula}"
+      export PGDATABASE="''${PGDATABASE:-zula}"
+      export PGPASSWORD="''${DATABASE_PASSWORD:-''${PGPASSWORD:-zula}}"
+      exec ${pkgs.postgresql}/bin/psql "$@"
+    '';
+  };
 
-  scripts.zula-all.exec = ''
-    echo "Starting all: deps + server + web + native…"
-    exec devenv --profile all up
-  '';
-
-  scripts.pg.exec = ''
-    export PGHOST="''${PGHOST:-127.0.0.1}"
-    export PGPORT="''${PGPORT:-5432}"
-    export PGUSER="''${DATABASE_USERNAME:-zula}"
-    export PGDATABASE="''${PGDATABASE:-zula}"
-    export PGPASSWORD="''${DATABASE_PASSWORD:-''${PGPASSWORD:-zula}}"
-    exec ${pkgs.postgresql}/bin/psql "$@"
+  scripts.gen-api.exec = ''
+    cd "${root}/packages/api"
+    bun run gen
+    bun run format
   '';
 
   enterShell = ''
@@ -123,6 +119,7 @@ in
     }"
     echo "  deps:    devenv --profile backend up   # or: zula-deps"
     echo "  all:     devenv --profile all up       # or: zula-all"
+    echo "  api:     gen-api                       # orval + biome format (server must be up)"
     echo "  db:      psql                          # interactive (needs devenv up)"
     echo "  jdbc:    $DATABASE_JDBC_URL"
     echo "  app:     $APP_URL"

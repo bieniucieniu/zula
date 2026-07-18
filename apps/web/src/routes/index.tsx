@@ -39,11 +39,7 @@ function App() {
       <div className="flex max-w-sm flex-col items-center gap-2 text-center">
         <h1 className="font-heading text-lg font-medium">Signed in</h1>
         <p className="text-sm text-muted-foreground">{session.email}</p>
-        <Button
-          variant="outline"
-          disabled={pending}
-          onClick={() => void onLogout()}
-        >
+        <Button variant="outline" disabled={pending} onClick={() => void onLogout()}>
           {pending ? "Logging out…" : "Logout"}
         </Button>
       </div>

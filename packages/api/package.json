@@ -1,20 +1,21 @@
 {
-	"name": "@zula/api",
-	"private": true,
-	"type": "module",
-	"exports": {
-		".": "./src/index.ts",
-		"./model": "./src/generated/model/index.ts",
-		"./auth": "./src/generated/auth/auth.ts"
-	},
-	"scripts": {
-		"gen": "orval --config orval.config.ts"
-	},
-	"peerDependencies": {
-		"@tanstack/react-query": "^5"
-	},
-	"devDependencies": {
-		"orval": "^8.22.0",
-		"typescript": "^6"
-	}
+  "name": "@zula/api",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./model": "./src/generated/model/index.ts",
+    "./auth": "./src/generated/auth/auth.ts"
+  },
+  "scripts": {
+    "gen": "orval --config orval.config.ts",
+    "format": "biome format --write"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5"
+  },
+  "devDependencies": {
+    "orval": "^8.22.0",
+    "typescript": "^6"
+  }
 }
