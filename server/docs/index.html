@@ -689,6 +689,123 @@
   <script>
     // Script section to load models into a JS Var
     var defs = {}
+            defs["AuthTokensResponse"] = {
+  "title" : "AuthTokensResponse",
+  "required" : [ "accessToken", "expiresIn" ],
+  "properties" : {
+    "accessToken" : { },
+    "expiresIn" : { },
+    "tokenType" : { },
+    "refreshToken" : { }
+  }
+};
+            defs["AuthenticateRequest"] = {
+  "title" : "AuthenticateRequest",
+  "required" : [ "provider" ],
+  "properties" : {
+    "provider" : { },
+    "idToken" : { },
+    "providerRefreshToken" : { },
+    "scopes" : { },
+    "challengeId" : { },
+    "code" : { },
+    "magicLinkToken" : { },
+    "sessionId" : { },
+    "deviceInfo" : { }
+  }
+};
+            defs["ChallengeRequest"] = {
+  "title" : "ChallengeRequest",
+  "required" : [ "channel", "target" ],
+  "properties" : {
+    "channel" : { },
+    "target" : { },
+    "purpose" : { }
+  }
+};
+            defs["ChallengeResponse"] = {
+  "title" : "ChallengeResponse",
+  "required" : [ "challengeId", "expiresIn" ],
+  "properties" : {
+    "challengeId" : { },
+    "expiresIn" : { },
+    "token" : { }
+  }
+};
+            defs["JwkKey"] = {
+  "title" : "JwkKey",
+  "required" : [ "e", "kid", "n" ],
+  "properties" : {
+    "kty" : { },
+    "use" : { },
+    "alg" : { },
+    "kid" : { },
+    "n" : { },
+    "e" : { }
+  }
+};
+            defs["JwksResponse"] = {
+  "title" : "JwksResponse",
+  "required" : [ "keys" ],
+  "properties" : {
+    "keys" : {
+      "items" : {
+        "$ref" : "#/components/schemas/JwkKey"
+      }
+    }
+  }
+};
+            defs["LinkedProviderResponse"] = {
+  "title" : "LinkedProviderResponse",
+  "required" : [ "credentialsStatus", "provider", "providerUserId" ],
+  "properties" : {
+    "provider" : { },
+    "providerUserId" : { },
+    "email" : { },
+    "credentialsStatus" : { }
+  }
+};
+            defs["LinkedProvidersResponse"] = {
+  "title" : "LinkedProvidersResponse",
+  "required" : [ "providers" ],
+  "properties" : {
+    "providers" : {
+      "items" : {
+        "$ref" : "#/components/schemas/LinkedProviderResponse"
+      }
+    }
+  }
+};
+            defs["OAuthProviderInfo"] = {
+  "title" : "OAuthProviderInfo",
+  "required" : [ "authorizeUrl", "clientId", "id", "scopes", "tokenUrl" ],
+  "properties" : {
+    "id" : { },
+    "clientId" : { },
+    "authorizeUrl" : { },
+    "tokenUrl" : { },
+    "scopes" : {
+      "items" : { }
+    }
+  }
+};
+            defs["OAuthProvidersResponse"] = {
+  "title" : "OAuthProvidersResponse",
+  "required" : [ "providers" ],
+  "properties" : {
+    "providers" : {
+      "items" : {
+        "$ref" : "#/components/schemas/OAuthProviderInfo"
+      }
+    }
+  }
+};
+            defs["RefreshRequest"] = {
+  "title" : "RefreshRequest",
+  "properties" : {
+    "refreshToken" : { }
+  }
+};
   </script>
 
   <div class="container-fluid">
@@ -705,27 +822,40 @@
             -->
             <li class="nav-fixed nav-header active" data-group="_"><a href="#api-_">API Summary</a></li>
 
+                  <li class="nav-header" data-group="Auth"><a href="#api-Auth">API Methods - Auth</a></li>
+                    <li data-group="Auth" data-name="authenticate" class="">
+                      <a href="#api-Auth-authenticate">authenticate</a>
+                    </li>
+                    <li data-group="Auth" data-name="callbackGoogle" class="">
+                      <a href="#api-Auth-callbackGoogle">callbackGoogle</a>
+                    </li>
+                    <li data-group="Auth" data-name="createChallenge" class="">
+                      <a href="#api-Auth-createChallenge">createChallenge</a>
+                    </li>
+                    <li data-group="Auth" data-name="getJwks" class="">
+                      <a href="#api-Auth-getJwks">getJwks</a>
+                    </li>
+                    <li data-group="Auth" data-name="getWellKnownJwks" class="">
+                      <a href="#api-Auth-getWellKnownJwks">getWellKnownJwks</a>
+                    </li>
+                    <li data-group="Auth" data-name="listLinkedProviders" class="">
+                      <a href="#api-Auth-listLinkedProviders">listLinkedProviders</a>
+                    </li>
+                    <li data-group="Auth" data-name="listProviders" class="">
+                      <a href="#api-Auth-listProviders">listProviders</a>
+                    </li>
+                    <li data-group="Auth" data-name="loginGoogle" class="">
+                      <a href="#api-Auth-loginGoogle">loginGoogle</a>
+                    </li>
+                    <li data-group="Auth" data-name="logout" class="">
+                      <a href="#api-Auth-logout">logout</a>
+                    </li>
+                    <li data-group="Auth" data-name="refresh" class="">
+                      <a href="#api-Auth-refresh">refresh</a>
+                    </li>
                   <li class="nav-header" data-group="Default"><a href="#api-Default">API Methods - Default</a></li>
-                    <li data-group="Default" data-name="apiDefaultGet" class="">
-                      <a href="#api-Default-apiDefaultGet">apiDefaultGet</a>
-                    </li>
-                    <li data-group="Default" data-name="apiGet" class="">
-                      <a href="#api-Default-apiGet">apiGet</a>
-                    </li>
-                    <li data-group="Default" data-name="apiHelloGet" class="">
-                      <a href="#api-Default-apiHelloGet">apiHelloGet</a>
-                    </li>
-                    <li data-group="Default" data-name="apiJsonKotlinxSerializationGet" class="">
-                      <a href="#api-Default-apiJsonKotlinxSerializationGet">apiJsonKotlinxSerializationGet</a>
-                    </li>
-                    <li data-group="Default" data-name="apiShortGet" class="">
-                      <a href="#api-Default-apiShortGet">apiShortGet</a>
-                    </li>
-                    <li data-group="Default" data-name="callbackGet" class="">
-                      <a href="#api-Default-callbackGet">callbackGet</a>
-                    </li>
-                    <li data-group="Default" data-name="loginGet" class="">
-                      <a href="#api-Default-loginGet">loginGet</a>
+                    <li data-group="Default" data-name="rabbitmqGet" class="">
+                      <a href="#api-Default-rabbitmqGet">rabbitmqGet</a>
                     </li>
           </ul>
         </nav>
@@ -746,12 +876,2821 @@
           </div>
         </div>
         <div id="sections">
+                <section id="api-Auth">
+                  <h1>Auth</h1>
+                    <div id="api-Auth-authenticate">
+                      <article id="api-Auth-authenticate-0" data-group="User" data-name="authenticate" data-version="0">
+                        <div class="pull-left">
+                          <h1>authenticate</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/auth/authenticate</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-authenticate-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-authenticate-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-authenticate-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-authenticate-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-authenticate-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-authenticate-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-authenticate-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-authenticate-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-authenticate-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-authenticate-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-authenticate-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-authenticate-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/auth/authenticate"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-authenticate-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        
+        AuthApi apiInstance = new AuthApi();
+        AuthenticateRequest body = ; // AuthenticateRequest | 
+        try {
+            AuthTokensResponse result = apiInstance.authenticate(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#authenticate");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-authenticate-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        AuthenticateRequest body = ; // AuthenticateRequest | 
+        try {
+            AuthTokensResponse result = apiInstance.authenticate(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#authenticate");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-authenticate-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-authenticate-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">AuthenticateRequest *body = ; //  (optional)
+
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance authenticateWith:body
+              completionHandler: ^(AuthTokensResponse output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-authenticate-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+
+var api = new UntitledApi.AuthApi()
+var opts = { 
+  'body':  // {{AuthenticateRequest}} 
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.authenticate(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-authenticate-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-authenticate-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class authenticateExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AuthApi();
+            var body = new AuthenticateRequest(); // AuthenticateRequest |  (optional) 
+
+            try
+            {
+                AuthTokensResponse result = apiInstance.authenticate(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.authenticate: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-authenticate-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+$body = ; // AuthenticateRequest | 
+
+try {
+    $result = $api_instance->authenticate($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->authenticate: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-authenticate-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+my $body = WWW::SwaggerClient::Object::AuthenticateRequest->new(); # AuthenticateRequest | 
+
+eval { 
+    my $result = $api_instance->authenticate(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->authenticate: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-authenticate-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+body =  # AuthenticateRequest |  (optional)
+
+try: 
+    api_response = api_instance.authenticate(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AuthApi->authenticate: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AuthenticateRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_authenticate_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_authenticate_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-authenticate-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-authenticate-200-schema">
+                                  <div id='responses-authenticate-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AuthTokensResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-authenticate-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-authenticate-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-authenticate-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-callbackGoogle">
+                      <article id="api-Auth-callbackGoogle-0" data-group="User" data-name="callbackGoogle" data-version="0">
+                        <div class="pull-left">
+                          <h1>callbackGoogle</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/auth/callback/google</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-callbackGoogle-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-callbackGoogle-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-callbackGoogle-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-callbackGoogle-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-callbackGoogle-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-callbackGoogle-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-callbackGoogle-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-callbackGoogle-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-callbackGoogle-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-callbackGoogle-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-callbackGoogle-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-callbackGoogle-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"//api/auth/callback/google?id_token=&refresh_token="</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-callbackGoogle-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        
+        AuthApi apiInstance = new AuthApi();
+         idToken = ; //  | 
+         refreshToken = ; //  | 
+        try {
+            apiInstance.callbackGoogle(idToken, refreshToken);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#callbackGoogle");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-callbackGoogle-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+         idToken = ; //  | 
+         refreshToken = ; //  | 
+        try {
+            apiInstance.callbackGoogle(idToken, refreshToken);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#callbackGoogle");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-callbackGoogle-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-callbackGoogle-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp"> *idToken = ; //  (optional)
+ *refreshToken = ; //  (optional)
+
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance callbackGoogleWith:idToken
+    refreshToken:refreshToken
+              completionHandler: ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-callbackGoogle-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+
+var api = new UntitledApi.AuthApi()
+var opts = { 
+  'idToken': , // {{}} 
+  'refreshToken':  // {{}} 
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.callbackGoogle(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-callbackGoogle-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-callbackGoogle-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class callbackGoogleExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AuthApi();
+            var idToken = new (); //  |  (optional) 
+            var refreshToken = new (); //  |  (optional) 
+
+            try
+            {
+                apiInstance.callbackGoogle(idToken, refreshToken);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.callbackGoogle: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-callbackGoogle-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+$idToken = ; //  | 
+$refreshToken = ; //  | 
+
+try {
+    $api_instance->callbackGoogle($idToken, $refreshToken);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->callbackGoogle: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-callbackGoogle-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+my $idToken = ; #  | 
+my $refreshToken = ; #  | 
+
+eval { 
+    $api_instance->callbackGoogle(idToken => $idToken, refreshToken => $refreshToken);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->callbackGoogle: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-callbackGoogle-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+idToken =  #  |  (optional)
+refreshToken =  #  |  (optional)
+
+try: 
+    api_instance.callback_google(idToken=idToken, refreshToken=refreshToken)
+except ApiException as e:
+    print("Exception when calling AuthApi->callbackGoogle: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+                            <div class="methodsubtabletitle">Query parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">id_token</td>
+                                <td>
+                                
+                                
+                                    <div id="d2e199_callbackGoogle_idToken">
+                                        <div class="json-schema-view">
+                                            <div class="primitive">
+                                                <span class="type">
+                                                    
+                                                </span>
+                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                </tr>
+                                <tr><td style="width:150px;">refresh_token</td>
+                                <td>
+                                
+                                
+                                    <div id="d2e199_callbackGoogle_refreshToken">
+                                        <div class="json-schema-view">
+                                            <div class="primitive">
+                                                <span class="type">
+                                                    
+                                                </span>
+                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                </tr>
+                            </table>
+
+                          <h2>Responses</h2>
+                            <h3> Status: 302 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-createChallenge">
+                      <article id="api-Auth-createChallenge-0" data-group="User" data-name="createChallenge" data-version="0">
+                        <div class="pull-left">
+                          <h1>createChallenge</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/auth/challenge</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-createChallenge-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-createChallenge-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-createChallenge-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-createChallenge-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-createChallenge-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-createChallenge-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-createChallenge-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-createChallenge-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-createChallenge-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-createChallenge-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-createChallenge-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-createChallenge-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/auth/challenge"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-createChallenge-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        
+        AuthApi apiInstance = new AuthApi();
+        ChallengeRequest body = ; // ChallengeRequest | 
+        try {
+            ChallengeResponse result = apiInstance.createChallenge(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#createChallenge");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-createChallenge-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        ChallengeRequest body = ; // ChallengeRequest | 
+        try {
+            ChallengeResponse result = apiInstance.createChallenge(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#createChallenge");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-createChallenge-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-createChallenge-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">ChallengeRequest *body = ; //  (optional)
+
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance createChallengeWith:body
+              completionHandler: ^(ChallengeResponse output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-createChallenge-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+
+var api = new UntitledApi.AuthApi()
+var opts = { 
+  'body':  // {{ChallengeRequest}} 
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.createChallenge(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-createChallenge-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-createChallenge-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class createChallengeExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AuthApi();
+            var body = new ChallengeRequest(); // ChallengeRequest |  (optional) 
+
+            try
+            {
+                ChallengeResponse result = apiInstance.createChallenge(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.createChallenge: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-createChallenge-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+$body = ; // ChallengeRequest | 
+
+try {
+    $result = $api_instance->createChallenge($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->createChallenge: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-createChallenge-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+my $body = WWW::SwaggerClient::Object::ChallengeRequest->new(); # ChallengeRequest | 
+
+eval { 
+    my $result = $api_instance->createChallenge(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->createChallenge: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-createChallenge-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+body =  # ChallengeRequest |  (optional)
+
+try: 
+    api_response = api_instance.create_challenge(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AuthApi->createChallenge: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ChallengeRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_createChallenge_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_createChallenge_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-createChallenge-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-createChallenge-200-schema">
+                                  <div id='responses-createChallenge-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ChallengeResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-createChallenge-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-createChallenge-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-createChallenge-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-getJwks">
+                      <article id="api-Auth-getJwks-0" data-group="User" data-name="getJwks" data-version="0">
+                        <div class="pull-left">
+                          <h1>getJwks</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/auth/jwks</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-getJwks-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-getJwks-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-getJwks-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-getJwks-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-getJwks-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-getJwks-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-getJwks-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-getJwks-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-getJwks-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-getJwks-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-getJwks-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-getJwks-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+-H "Accept: application/json"\
+"//api/auth/jwks"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-getJwks-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        
+        AuthApi apiInstance = new AuthApi();
+        try {
+            JwksResponse result = apiInstance.getJwks();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#getJwks");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-getJwks-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        try {
+            JwksResponse result = apiInstance.getJwks();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#getJwks");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-getJwks-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-getJwks-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance getJwksWithCompletionHandler: 
+              ^(JwksResponse output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-getJwks-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+
+var api = new UntitledApi.AuthApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.getJwks(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-getJwks-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-getJwks-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class getJwksExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AuthApi();
+
+            try
+            {
+                JwksResponse result = apiInstance.getJwks();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.getJwks: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-getJwks-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+
+try {
+    $result = $api_instance->getJwks();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->getJwks: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-getJwks-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+
+eval { 
+    my $result = $api_instance->getJwks();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->getJwks: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-getJwks-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+
+try: 
+    api_response = api_instance.get_jwks()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AuthApi->getJwks: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-getJwks-200-schema">Schema</a>
+                                </li>
+
+                                <li class="">
+                                  <a data-toggle="tab" href="#responses-getJwks-200-headers">Headers</a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-getJwks-200-schema">
+                                  <div id='responses-getJwks-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "",
+  "headers" : {
+    "Cache-Control" : {
+      "required" : false,
+      "deprecated" : false,
+      "style" : "simple",
+      "explode" : false,
+      "content" : {
+        "text/plain" : { }
+      }
+    }
+  },
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/JwksResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-getJwks-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-getJwks-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-getJwks-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                                <div class="tab-pane" id="responses-getJwks-200-headers">
+                                    <table>
+                                        <tr>
+                                            <th width="150px">Name</th>
+                                            <th width="100px">Type</th>
+                                            <th width="100px">Format</th>
+                                            <th>Description</th>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-getWellKnownJwks">
+                      <article id="api-Auth-getWellKnownJwks-0" data-group="User" data-name="getWellKnownJwks" data-version="0">
+                        <div class="pull-left">
+                          <h1>getWellKnownJwks</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/.well-known/jwks.json</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-getWellKnownJwks-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-getWellKnownJwks-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-getWellKnownJwks-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-getWellKnownJwks-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-getWellKnownJwks-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-getWellKnownJwks-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-getWellKnownJwks-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-getWellKnownJwks-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-getWellKnownJwks-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-getWellKnownJwks-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-getWellKnownJwks-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-getWellKnownJwks-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+-H "Accept: application/json"\
+"//api/.well-known/jwks.json"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        
+        AuthApi apiInstance = new AuthApi();
+        try {
+            JwksResponse result = apiInstance.getWellKnownJwks();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#getWellKnownJwks");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        try {
+            JwksResponse result = apiInstance.getWellKnownJwks();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#getWellKnownJwks");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance getWellKnownJwksWithCompletionHandler: 
+              ^(JwksResponse output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+
+var api = new UntitledApi.AuthApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.getWellKnownJwks(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class getWellKnownJwksExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AuthApi();
+
+            try
+            {
+                JwksResponse result = apiInstance.getWellKnownJwks();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.getWellKnownJwks: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+
+try {
+    $result = $api_instance->getWellKnownJwks();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->getWellKnownJwks: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+
+eval { 
+    my $result = $api_instance->getWellKnownJwks();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->getWellKnownJwks: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-getWellKnownJwks-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+
+try: 
+    api_response = api_instance.get_well_known_jwks()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AuthApi->getWellKnownJwks: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-getWellKnownJwks-200-schema">Schema</a>
+                                </li>
+
+                                <li class="">
+                                  <a data-toggle="tab" href="#responses-getWellKnownJwks-200-headers">Headers</a>
+                                </li>
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-getWellKnownJwks-200-schema">
+                                  <div id='responses-getWellKnownJwks-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "",
+  "headers" : {
+    "Cache-Control" : {
+      "required" : false,
+      "deprecated" : false,
+      "style" : "simple",
+      "explode" : false,
+      "content" : {
+        "text/plain" : { }
+      }
+    }
+  },
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/JwksResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-getWellKnownJwks-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-getWellKnownJwks-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-getWellKnownJwks-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                                <div class="tab-pane" id="responses-getWellKnownJwks-200-headers">
+                                    <table>
+                                        <tr>
+                                            <th width="150px">Name</th>
+                                            <th width="100px">Type</th>
+                                            <th width="100px">Format</th>
+                                            <th>Description</th>
+                                        </tr>
+                                        <tr>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-listLinkedProviders">
+                      <article id="api-Auth-listLinkedProviders-0" data-group="User" data-name="listLinkedProviders" data-version="0">
+                        <div class="pull-left">
+                          <h1>listLinkedProviders</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/auth/providers/linked</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-listLinkedProviders-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-listLinkedProviders-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-listLinkedProviders-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-listLinkedProviders-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-listLinkedProviders-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-listLinkedProviders-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-listLinkedProviders-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-listLinkedProviders-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-listLinkedProviders-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-listLinkedProviders-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-listLinkedProviders-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-listLinkedProviders-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Accept: application/json"\
+"//api/auth/providers/linked"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AuthApi apiInstance = new AuthApi();
+        try {
+            LinkedProvidersResponse result = apiInstance.listLinkedProviders();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#listLinkedProviders");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        try {
+            LinkedProvidersResponse result = apiInstance.listLinkedProviders();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#listLinkedProviders");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance listLinkedProvidersWithCompletionHandler: 
+              ^(LinkedProvidersResponse output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+var defaultClient = UntitledApi.ApiClient.instance;
+
+
+var api = new UntitledApi.AuthApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.listLinkedProviders(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-listLinkedProviders-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class listLinkedProvidersExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AuthApi();
+
+            try
+            {
+                LinkedProvidersResponse result = apiInstance.listLinkedProviders();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.listLinkedProviders: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+
+try {
+    $result = $api_instance->listLinkedProviders();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->listLinkedProviders: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+
+eval { 
+    my $result = $api_instance->listLinkedProviders();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->listLinkedProviders: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-listLinkedProviders-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+
+try: 
+    api_response = api_instance.list_linked_providers()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AuthApi->listLinkedProviders: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 401 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                            <h3> Status: 200 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-listLinkedProviders-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-listLinkedProviders-200-schema">
+                                  <div id='responses-listLinkedProviders-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/LinkedProvidersResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-listLinkedProviders-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-listLinkedProviders-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-listLinkedProviders-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-listProviders">
+                      <article id="api-Auth-listProviders-0" data-group="User" data-name="listProviders" data-version="0">
+                        <div class="pull-left">
+                          <h1>listProviders</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/auth/providers</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-listProviders-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-listProviders-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-listProviders-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-listProviders-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-listProviders-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-listProviders-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-listProviders-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-listProviders-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-listProviders-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-listProviders-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-listProviders-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-listProviders-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+-H "Accept: application/json"\
+"//api/auth/providers"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-listProviders-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        
+        AuthApi apiInstance = new AuthApi();
+        try {
+            OAuthProvidersResponse result = apiInstance.listProviders();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#listProviders");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-listProviders-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        try {
+            OAuthProvidersResponse result = apiInstance.listProviders();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#listProviders");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-listProviders-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-listProviders-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance listProvidersWithCompletionHandler: 
+              ^(OAuthProvidersResponse output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-listProviders-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+
+var api = new UntitledApi.AuthApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.listProviders(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-listProviders-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-listProviders-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class listProvidersExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AuthApi();
+
+            try
+            {
+                OAuthProvidersResponse result = apiInstance.listProviders();
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.listProviders: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-listProviders-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+
+try {
+    $result = $api_instance->listProviders();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->listProviders: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-listProviders-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+
+eval { 
+    my $result = $api_instance->listProviders();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->listProviders: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-listProviders-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+
+try: 
+    api_response = api_instance.list_providers()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AuthApi->listProviders: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 200 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-listProviders-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-listProviders-200-schema">
+                                  <div id='responses-listProviders-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/OAuthProvidersResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-listProviders-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-listProviders-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-listProviders-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-loginGoogle">
+                      <article id="api-Auth-loginGoogle-0" data-group="User" data-name="loginGoogle" data-version="0">
+                        <div class="pull-left">
+                          <h1>loginGoogle</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/auth/login/google</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-loginGoogle-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-loginGoogle-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-loginGoogle-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-loginGoogle-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-loginGoogle-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-loginGoogle-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-loginGoogle-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-loginGoogle-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-loginGoogle-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-loginGoogle-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-loginGoogle-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-loginGoogle-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
+"//api/auth/login/google"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-loginGoogle-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        
+        AuthApi apiInstance = new AuthApi();
+        try {
+            apiInstance.loginGoogle();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#loginGoogle");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-loginGoogle-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        try {
+            apiInstance.loginGoogle();
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#loginGoogle");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-loginGoogle-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-loginGoogle-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance loginGoogleWithCompletionHandler: 
+              ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-loginGoogle-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+
+var api = new UntitledApi.AuthApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.loginGoogle(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-loginGoogle-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-loginGoogle-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class loginGoogleExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AuthApi();
+
+            try
+            {
+                apiInstance.loginGoogle();
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.loginGoogle: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-loginGoogle-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+
+try {
+    $api_instance->loginGoogle();
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->loginGoogle: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-loginGoogle-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+
+eval { 
+    $api_instance->loginGoogle();
+};
+if ($@) {
+    warn "Exception when calling AuthApi->loginGoogle: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-loginGoogle-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+
+try: 
+    api_instance.login_google()
+except ApiException as e:
+    print("Exception when calling AuthApi->loginGoogle: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 302 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-logout">
+                      <article id="api-Auth-logout-0" data-group="User" data-name="logout" data-version="0">
+                        <div class="pull-left">
+                          <h1>logout</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/auth/logout</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-logout-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-logout-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-logout-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-logout-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-logout-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-logout-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-logout-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-logout-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-logout-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-logout-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-logout-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-logout-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+ -H "Authorization: Bearer [[accessToken]]"\
+-H "Content-Type: application/json"\
+"//api/auth/logout"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-logout-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        ApiClient defaultClient = Configuration.getDefaultApiClient();
+
+
+        AuthApi apiInstance = new AuthApi();
+        RefreshRequest body = ; // RefreshRequest | 
+        try {
+            apiInstance.logout(body);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#logout");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-logout-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        RefreshRequest body = ; // RefreshRequest | 
+        try {
+            apiInstance.logout(body);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#logout");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-logout-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-logout-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">Configuration *apiConfig = [Configuration sharedConfig];
+RefreshRequest *body = ; //  (optional)
+
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance logoutWith:body
+              completionHandler: ^(NSError* error) {
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-logout-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+var defaultClient = UntitledApi.ApiClient.instance;
+
+
+var api = new UntitledApi.AuthApi()
+var opts = { 
+  'body':  // {{RefreshRequest}} 
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully.');
+  }
+};
+api.logout(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-logout-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-logout-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class logoutExample
+    {
+        public void main()
+        {
+
+
+            var apiInstance = new AuthApi();
+            var body = new RefreshRequest(); // RefreshRequest |  (optional) 
+
+            try
+            {
+                apiInstance.logout(body);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.logout: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-logout-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+$body = ; // RefreshRequest | 
+
+try {
+    $api_instance->logout($body);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->logout: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-logout-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+my $body = WWW::SwaggerClient::Object::RefreshRequest->new(); # RefreshRequest | 
+
+eval { 
+    $api_instance->logout(body => $body);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->logout: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-logout-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+body =  # RefreshRequest |  (optional)
+
+try: 
+    api_instance.logout(body=body)
+except ApiException as e:
+    print("Exception when calling AuthApi->logout: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/RefreshRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_logout_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_logout_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 204 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Auth-refresh">
+                      <article id="api-Auth-refresh-0" data-group="User" data-name="refresh" data-version="0">
+                        <div class="pull-left">
+                          <h1>refresh</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked"></p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="post"><code><span class="pln">/api/auth/refresh</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Auth-refresh-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Auth-refresh-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Auth-refresh-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Auth-refresh-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Auth-refresh-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Auth-refresh-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Auth-refresh-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Auth-refresh-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Auth-refresh-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Auth-refresh-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Auth-refresh-0-python">Python</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Auth-refresh-0-curl">
+                           <pre class="prettyprint"><code class="language-bsh">curl -X POST\
+-H "Accept: application/json"\
+-H "Content-Type: application/json"\
+"//api/auth/refresh"</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Auth-refresh-0-java">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
+import io.swagger.client.auth.*;
+import io.swagger.client.model.*;
+import io.swagger.client.api.AuthApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        
+        AuthApi apiInstance = new AuthApi();
+        RefreshRequest body = ; // RefreshRequest | 
+        try {
+            AuthTokensResponse result = apiInstance.refresh(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#refresh");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Auth-refresh-0-android">
+                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.AuthApi;
+
+public class AuthApiExample {
+
+    public static void main(String[] args) {
+        AuthApi apiInstance = new AuthApi();
+        RefreshRequest body = ; // RefreshRequest | 
+        try {
+            AuthTokensResponse result = apiInstance.refresh(body);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AuthApi#refresh");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Auth-refresh-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Auth-refresh-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">RefreshRequest *body = ; //  (optional)
+
+AuthApi *apiInstance = [[AuthApi alloc] init];
+
+[apiInstance refreshWith:body
+              completionHandler: ^(AuthTokensResponse output, NSError* error) {
+                            if (output) {
+                                NSLog(@"%@", output);
+                            }
+                            if (error) {
+                                NSLog(@"Error: %@", error);
+                            }
+                        }];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-refresh-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
+
+var api = new UntitledApi.AuthApi()
+var opts = { 
+  'body':  // {{RefreshRequest}} 
+};
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.refresh(opts, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Auth-refresh-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Auth-refresh-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using IO.Swagger.Api;
+using IO.Swagger.Client;
+using IO.Swagger.Model;
+
+namespace Example
+{
+    public class refreshExample
+    {
+        public void main()
+        {
+
+            var apiInstance = new AuthApi();
+            var body = new RefreshRequest(); // RefreshRequest |  (optional) 
+
+            try
+            {
+                AuthTokensResponse result = apiInstance.refresh(body);
+                Debug.WriteLine(result);
+            }
+            catch (Exception e)
+            {
+                Debug.Print("Exception when calling AuthApi.refresh: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-refresh-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+$api_instance = new Swagger\Client\ApiAuthApi();
+$body = ; // RefreshRequest | 
+
+try {
+    $result = $api_instance->refresh($body);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AuthApi->refresh: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-refresh-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::SwaggerClient::Configuration;
+use WWW::SwaggerClient::AuthApi;
+
+my $api_instance = WWW::SwaggerClient::AuthApi->new();
+my $body = WWW::SwaggerClient::Object::RefreshRequest->new(); # RefreshRequest | 
+
+eval { 
+    my $result = $api_instance->refresh(body => $body);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AuthApi->refresh: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Auth-refresh-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import swagger_client
+from swagger_client.rest import ApiException
+from pprint import pprint
+
+# create an instance of the API class
+api_instance = swagger_client.AuthApi()
+body =  # RefreshRequest |  (optional)
+
+try: 
+    api_response = api_instance.refresh(body=body)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AuthApi->refresh: %s\n" % e)</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Parameters</h2>
+
+
+
+                            <div class="methodsubtabletitle">Body parameters</div>
+                            <table id="methodsubtable">
+                              <tr>
+                                <th width="150px">Name</th>
+                                <th>Description</th>
+                              </tr>
+                                <tr><td style="width:150px;">body </td>
+                                <td>
+                                
+                                
+                                <script>
+                                $(document).ready(function() {
+                                  var schemaWrapper = {
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/RefreshRequest"
+      }
+    }
+  }
+};
+                                  var schema = schemaWrapper.content["application/json"].schema;
+                                  if (schema.$ref != null) {
+                                    schema = defsParser.$refs.get(schema.$ref);
+                                  } else {
+                                    schemaWrapper.components = {};
+                                    schemaWrapper.components.schemas = Object.assign({}, defs);
+                                    $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                      console.log(err);
+                                    });
+                                  }
+                                
+                                  var view = new JSONSchemaView(schema,2,{isBodyParam: true});
+                                  var result = $('#d2e199_refresh_body');
+                                  result.empty();
+                                  result.append(view.render());
+                                });
+                                </script>
+                                <div id="d2e199_refresh_body"></div>
+                                </td>
+                                </tr>
+                            </table>
+
+
+
+                          <h2>Responses</h2>
+                            <h3> Status: 400 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-refresh-400-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-refresh-400-schema">
+                                  <div id='responses-refresh-400-schema-400' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "x-content-type" : "application/json"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-refresh-400-schema-data').val(stringify(schema));
+                                        var result = $('#responses-refresh-400-schema-400');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-refresh-400-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                            <h3> Status: 200 -  </h3>
+
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-refresh-200-schema">Schema</a>
+                                </li>
+
+                            </ul>
+
+                            <div class="tab-content" style='margin-bottom: 10px;'>
+                                <div class="tab-pane active" id="responses-refresh-200-schema">
+                                  <div id='responses-refresh-200-schema-200' style="padding: 30px; border-left: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee;">
+                                    <script>
+                                      $(document).ready(function() {
+                                        var schemaWrapper = {
+  "description" : "",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/AuthTokensResponse"
+      }
+    }
+  }
+};
+                                        var schema = schemaWrapper.content["application/json"].schema;
+                                        if (schema.$ref != null) {
+                                          schema = defsParser.$refs.get(schema.$ref);
+                                        } else {
+                                          schemaWrapper.components = {};
+                                          schemaWrapper.components.schemas = Object.assign({}, defs);
+                                          $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                            console.log(err);
+                                          });
+                                        }
+
+                                        //console.log(JSON.stringify(schema));
+                                        var view = new JSONSchemaView(schema, 3);
+                                        $('#responses-refresh-200-schema-data').val(stringify(schema));
+                                        var result = $('#responses-refresh-200-schema-200');
+                                        result.empty();
+                                        result.append(view.render());
+                                      });
+                                    </script>
+                                  </div>
+                                  <input id='responses-refresh-200-schema-data' type='hidden' value=''></input>
+                                </div>
+                            </div>
+
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
                 <section id="api-Default">
                   <h1>Default</h1>
-                    <div id="api-Default-apiDefaultGet">
-                      <article id="api-Default-apiDefaultGet-0" data-group="User" data-name="apiDefaultGet" data-version="0">
+                    <div id="api-Default-rabbitmqGet">
+                      <article id="api-Default-rabbitmqGet-0" data-group="User" data-name="rabbitmqGet" data-version="0">
                         <div class="pull-left">
-                          <h1>apiDefaultGet</h1>
+                          <h1>rabbitmqGet</h1>
                           <p></p>
                         </div>
                         <div class="pull-right"></div>
@@ -760,30 +3699,31 @@
                         <p class="marked"></p>
                         <p></p>
                         <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/default</span></code></pre>
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/rabbitmq</span></code></pre>
                         <p>
                           <h3>Usage and SDK Samples</h3>
                         </p>
                         <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-apiDefaultGet-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-apiDefaultGet-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-apiDefaultGet-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiDefaultGet-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-apiDefaultGet-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-apiDefaultGet-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiDefaultGet-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-apiDefaultGet-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-apiDefaultGet-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-apiDefaultGet-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-apiDefaultGet-0-python">Python</a></li>
+                          <li class="active"><a href="#examples-Default-rabbitmqGet-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Default-rabbitmqGet-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Default-rabbitmqGet-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Default-rabbitmqGet-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Default-rabbitmqGet-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Default-rabbitmqGet-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Default-rabbitmqGet-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Default-rabbitmqGet-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Default-rabbitmqGet-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Default-rabbitmqGet-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Default-rabbitmqGet-0-python">Python</a></li>
                         </ul>
 
                         <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-apiDefaultGet-0-curl">
+                          <div class="tab-pane active" id="examples-Default-rabbitmqGet-0-curl">
                            <pre class="prettyprint"><code class="language-bsh">curl -X GET\
-"//api/default"</code></pre>
+-H "Accept: text/plain"\
+"//rabbitmq"</code></pre>
                           </div>
-                          <div class="tab-pane" id="examples-Default-apiDefaultGet-0-java">
+                          <div class="tab-pane" id="examples-Default-rabbitmqGet-0-java">
                             <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
 import io.swagger.client.auth.*;
 import io.swagger.client.model.*;
@@ -798,16 +3738,16 @@ public class DefaultApiExample {
         
         DefaultApi apiInstance = new DefaultApi();
         try {
-            apiInstance.apiDefaultGet();
+            apiInstance.rabbitmqGet();
         } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiDefaultGet");
+            System.err.println("Exception when calling DefaultApi#rabbitmqGet");
             e.printStackTrace();
         }
     }
 }</code></pre>
                           </div>
 
-                          <div class="tab-pane" id="examples-Default-apiDefaultGet-0-android">
+                          <div class="tab-pane" id="examples-Default-rabbitmqGet-0-android">
                             <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
 
 public class DefaultApiExample {
@@ -815,23 +3755,23 @@ public class DefaultApiExample {
     public static void main(String[] args) {
         DefaultApi apiInstance = new DefaultApi();
         try {
-            apiInstance.apiDefaultGet();
+            apiInstance.rabbitmqGet();
         } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiDefaultGet");
+            System.err.println("Exception when calling DefaultApi#rabbitmqGet");
             e.printStackTrace();
         }
     }
 }</code></pre>
                           </div>
   <!--
-  <div class="tab-pane" id="examples-Default-apiDefaultGet-0-groovy">
+  <div class="tab-pane" id="examples-Default-rabbitmqGet-0-groovy">
   <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
   </div> -->
-                            <div class="tab-pane" id="examples-Default-apiDefaultGet-0-objc">
+                            <div class="tab-pane" id="examples-Default-rabbitmqGet-0-objc">
                               <pre class="prettyprint"><code class="language-cpp">
 DefaultApi *apiInstance = [[DefaultApi alloc] init];
 
-[apiInstance apiDefaultGetWithCompletionHandler: 
+[apiInstance rabbitmqGetWithCompletionHandler: 
               ^(NSError* error) {
                             if (error) {
                                 NSLog(@"Error: %@", error);
@@ -840,7 +3780,7 @@ DefaultApi *apiInstance = [[DefaultApi alloc] init];
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiDefaultGet-0-javascript">
+                            <div class="tab-pane" id="examples-Default-rabbitmqGet-0-javascript">
                               <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
 
 var api = new UntitledApi.DefaultApi()
@@ -851,14 +3791,14 @@ var callback = function(error, data, response) {
     console.log('API called successfully.');
   }
 };
-api.apiDefaultGet(callback);
+api.rabbitmqGet(callback);
 </code></pre>
                             </div>
 
-                            <!--<div class="tab-pane" id="examples-Default-apiDefaultGet-0-angular">
+                            <!--<div class="tab-pane" id="examples-Default-rabbitmqGet-0-angular">
               <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
             </div>-->
-                            <div class="tab-pane" id="examples-Default-apiDefaultGet-0-csharp">
+                            <div class="tab-pane" id="examples-Default-rabbitmqGet-0-csharp">
                               <pre class="prettyprint"><code class="language-cs">using System;
 using System.Diagnostics;
 using IO.Swagger.Api;
@@ -867,7 +3807,7 @@ using IO.Swagger.Model;
 
 namespace Example
 {
-    public class apiDefaultGetExample
+    public class rabbitmqGetExample
     {
         public void main()
         {
@@ -876,11 +3816,11 @@ namespace Example
 
             try
             {
-                apiInstance.apiDefaultGet();
+                apiInstance.rabbitmqGet();
             }
             catch (Exception e)
             {
-                Debug.Print("Exception when calling DefaultApi.apiDefaultGet: " + e.Message );
+                Debug.Print("Exception when calling DefaultApi.rabbitmqGet: " + e.Message );
             }
         }
     }
@@ -888,21 +3828,21 @@ namespace Example
 </code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiDefaultGet-0-php">
+                            <div class="tab-pane" id="examples-Default-rabbitmqGet-0-php">
                               <pre class="prettyprint"><code class="language-php"><&#63;php
 require_once(__DIR__ . '/vendor/autoload.php');
 
 $api_instance = new Swagger\Client\ApiDefaultApi();
 
 try {
-    $api_instance->apiDefaultGet();
+    $api_instance->rabbitmqGet();
 } catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->apiDefaultGet: ', $e->getMessage(), PHP_EOL;
+    echo 'Exception when calling DefaultApi->rabbitmqGet: ', $e->getMessage(), PHP_EOL;
 }
 ?></code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiDefaultGet-0-perl">
+                            <div class="tab-pane" id="examples-Default-rabbitmqGet-0-perl">
                               <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
 use WWW::SwaggerClient::Configuration;
 use WWW::SwaggerClient::DefaultApi;
@@ -910,14 +3850,14 @@ use WWW::SwaggerClient::DefaultApi;
 my $api_instance = WWW::SwaggerClient::DefaultApi->new();
 
 eval { 
-    $api_instance->apiDefaultGet();
+    $api_instance->rabbitmqGet();
 };
 if ($@) {
-    warn "Exception when calling DefaultApi->apiDefaultGet: $@\n";
+    warn "Exception when calling DefaultApi->rabbitmqGet: $@\n";
 }</code></pre>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiDefaultGet-0-python">
+                            <div class="tab-pane" id="examples-Default-rabbitmqGet-0-python">
                               <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
 import time
 import swagger_client
@@ -928,9 +3868,9 @@ from pprint import pprint
 api_instance = swagger_client.DefaultApi()
 
 try: 
-    api_instance.api_default_get()
+    api_instance.rabbitmq_get()
 except ApiException as e:
-    print("Exception when calling DefaultApi->apiDefaultGet: %s\n" % e)</code></pre>
+    print("Exception when calling DefaultApi->rabbitmqGet: %s\n" % e)</code></pre>
                             </div>
                           </div>
 
@@ -942,1188 +3882,14 @@ except ApiException as e:
 
 
                           <h2>Responses</h2>
-                        </article>
-                      </div>
-                      <hr>
-                    <div id="api-Default-apiGet">
-                      <article id="api-Default-apiGet-0" data-group="User" data-name="apiGet" data-version="0">
-                        <div class="pull-left">
-                          <h1>apiGet</h1>
-                          <p></p>
-                        </div>
-                        <div class="pull-right"></div>
-                        <div class="clearfix"></div>
-                        <p></p>
-                        <p class="marked"></p>
-                        <p></p>
-                        <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api</span></code></pre>
-                        <p>
-                          <h3>Usage and SDK Samples</h3>
-                        </p>
-                        <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-apiGet-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-apiGet-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-apiGet-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiGet-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-apiGet-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-apiGet-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiGet-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-apiGet-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-apiGet-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-apiGet-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-apiGet-0-python">Python</a></li>
-                        </ul>
+                            <h3> Status: 200 -  </h3>
 
-                        <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-apiGet-0-curl">
-                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
-"//api"</code></pre>
-                          </div>
-                          <div class="tab-pane" id="examples-Default-apiGet-0-java">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
-import io.swagger.client.auth.*;
-import io.swagger.client.model.*;
-import io.swagger.client.api.DefaultApi;
+                            <ul class="nav nav-tabs nav-tabs-examples" >
+                            </ul>
 
-import java.io.File;
-import java.util.*;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.apiGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-
-                          <div class="tab-pane" id="examples-Default-apiGet-0-android">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.apiGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-  <!--
-  <div class="tab-pane" id="examples-Default-apiGet-0-groovy">
-  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-  </div> -->
-                            <div class="tab-pane" id="examples-Default-apiGet-0-objc">
-                              <pre class="prettyprint"><code class="language-cpp">
-DefaultApi *apiInstance = [[DefaultApi alloc] init];
-
-[apiInstance apiGetWithCompletionHandler: 
-              ^(NSError* error) {
-                            if (error) {
-                                NSLog(@"Error: %@", error);
-                            }
-                        }];
-</code></pre>
+                            <div class="tab-content" style='margin-bottom: 10px;'>
                             </div>
 
-                            <div class="tab-pane" id="examples-Default-apiGet-0-javascript">
-                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
-
-var api = new UntitledApi.DefaultApi()
-var callback = function(error, data, response) {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-};
-api.apiGet(callback);
-</code></pre>
-                            </div>
-
-                            <!--<div class="tab-pane" id="examples-Default-apiGet-0-angular">
-              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-            </div>-->
-                            <div class="tab-pane" id="examples-Default-apiGet-0-csharp">
-                              <pre class="prettyprint"><code class="language-cs">using System;
-using System.Diagnostics;
-using IO.Swagger.Api;
-using IO.Swagger.Client;
-using IO.Swagger.Model;
-
-namespace Example
-{
-    public class apiGetExample
-    {
-        public void main()
-        {
-
-            var apiInstance = new DefaultApi();
-
-            try
-            {
-                apiInstance.apiGet();
-            }
-            catch (Exception e)
-            {
-                Debug.Print("Exception when calling DefaultApi.apiGet: " + e.Message );
-            }
-        }
-    }
-}
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiGet-0-php">
-                              <pre class="prettyprint"><code class="language-php"><&#63;php
-require_once(__DIR__ . '/vendor/autoload.php');
-
-$api_instance = new Swagger\Client\ApiDefaultApi();
-
-try {
-    $api_instance->apiGet();
-} catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->apiGet: ', $e->getMessage(), PHP_EOL;
-}
-?></code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiGet-0-perl">
-                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
-use WWW::SwaggerClient::Configuration;
-use WWW::SwaggerClient::DefaultApi;
-
-my $api_instance = WWW::SwaggerClient::DefaultApi->new();
-
-eval { 
-    $api_instance->apiGet();
-};
-if ($@) {
-    warn "Exception when calling DefaultApi->apiGet: $@\n";
-}</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiGet-0-python">
-                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
-import time
-import swagger_client
-from swagger_client.rest import ApiException
-from pprint import pprint
-
-# create an instance of the API class
-api_instance = swagger_client.DefaultApi()
-
-try: 
-    api_instance.api_get()
-except ApiException as e:
-    print("Exception when calling DefaultApi->apiGet: %s\n" % e)</code></pre>
-                            </div>
-                          </div>
-
-                          <h2>Parameters</h2>
-
-
-
-
-
-
-                          <h2>Responses</h2>
-                        </article>
-                      </div>
-                      <hr>
-                    <div id="api-Default-apiHelloGet">
-                      <article id="api-Default-apiHelloGet-0" data-group="User" data-name="apiHelloGet" data-version="0">
-                        <div class="pull-left">
-                          <h1>apiHelloGet</h1>
-                          <p></p>
-                        </div>
-                        <div class="pull-right"></div>
-                        <div class="clearfix"></div>
-                        <p></p>
-                        <p class="marked"></p>
-                        <p></p>
-                        <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/hello</span></code></pre>
-                        <p>
-                          <h3>Usage and SDK Samples</h3>
-                        </p>
-                        <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-apiHelloGet-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-apiHelloGet-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-apiHelloGet-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiHelloGet-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-apiHelloGet-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-apiHelloGet-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiHelloGet-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-apiHelloGet-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-apiHelloGet-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-apiHelloGet-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-apiHelloGet-0-python">Python</a></li>
-                        </ul>
-
-                        <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-apiHelloGet-0-curl">
-                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
-"//api/hello"</code></pre>
-                          </div>
-                          <div class="tab-pane" id="examples-Default-apiHelloGet-0-java">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
-import io.swagger.client.auth.*;
-import io.swagger.client.model.*;
-import io.swagger.client.api.DefaultApi;
-
-import java.io.File;
-import java.util.*;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.apiHelloGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiHelloGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-
-                          <div class="tab-pane" id="examples-Default-apiHelloGet-0-android">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.apiHelloGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiHelloGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-  <!--
-  <div class="tab-pane" id="examples-Default-apiHelloGet-0-groovy">
-  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-  </div> -->
-                            <div class="tab-pane" id="examples-Default-apiHelloGet-0-objc">
-                              <pre class="prettyprint"><code class="language-cpp">
-DefaultApi *apiInstance = [[DefaultApi alloc] init];
-
-[apiInstance apiHelloGetWithCompletionHandler: 
-              ^(NSError* error) {
-                            if (error) {
-                                NSLog(@"Error: %@", error);
-                            }
-                        }];
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiHelloGet-0-javascript">
-                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
-
-var api = new UntitledApi.DefaultApi()
-var callback = function(error, data, response) {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-};
-api.apiHelloGet(callback);
-</code></pre>
-                            </div>
-
-                            <!--<div class="tab-pane" id="examples-Default-apiHelloGet-0-angular">
-              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-            </div>-->
-                            <div class="tab-pane" id="examples-Default-apiHelloGet-0-csharp">
-                              <pre class="prettyprint"><code class="language-cs">using System;
-using System.Diagnostics;
-using IO.Swagger.Api;
-using IO.Swagger.Client;
-using IO.Swagger.Model;
-
-namespace Example
-{
-    public class apiHelloGetExample
-    {
-        public void main()
-        {
-
-            var apiInstance = new DefaultApi();
-
-            try
-            {
-                apiInstance.apiHelloGet();
-            }
-            catch (Exception e)
-            {
-                Debug.Print("Exception when calling DefaultApi.apiHelloGet: " + e.Message );
-            }
-        }
-    }
-}
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiHelloGet-0-php">
-                              <pre class="prettyprint"><code class="language-php"><&#63;php
-require_once(__DIR__ . '/vendor/autoload.php');
-
-$api_instance = new Swagger\Client\ApiDefaultApi();
-
-try {
-    $api_instance->apiHelloGet();
-} catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->apiHelloGet: ', $e->getMessage(), PHP_EOL;
-}
-?></code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiHelloGet-0-perl">
-                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
-use WWW::SwaggerClient::Configuration;
-use WWW::SwaggerClient::DefaultApi;
-
-my $api_instance = WWW::SwaggerClient::DefaultApi->new();
-
-eval { 
-    $api_instance->apiHelloGet();
-};
-if ($@) {
-    warn "Exception when calling DefaultApi->apiHelloGet: $@\n";
-}</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiHelloGet-0-python">
-                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
-import time
-import swagger_client
-from swagger_client.rest import ApiException
-from pprint import pprint
-
-# create an instance of the API class
-api_instance = swagger_client.DefaultApi()
-
-try: 
-    api_instance.api_hello_get()
-except ApiException as e:
-    print("Exception when calling DefaultApi->apiHelloGet: %s\n" % e)</code></pre>
-                            </div>
-                          </div>
-
-                          <h2>Parameters</h2>
-
-
-
-
-
-
-                          <h2>Responses</h2>
-                        </article>
-                      </div>
-                      <hr>
-                    <div id="api-Default-apiJsonKotlinxSerializationGet">
-                      <article id="api-Default-apiJsonKotlinxSerializationGet-0" data-group="User" data-name="apiJsonKotlinxSerializationGet" data-version="0">
-                        <div class="pull-left">
-                          <h1>apiJsonKotlinxSerializationGet</h1>
-                          <p></p>
-                        </div>
-                        <div class="pull-right"></div>
-                        <div class="clearfix"></div>
-                        <p></p>
-                        <p class="marked"></p>
-                        <p></p>
-                        <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/json/kotlinx-serialization</span></code></pre>
-                        <p>
-                          <h3>Usage and SDK Samples</h3>
-                        </p>
-                        <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-apiJsonKotlinxSerializationGet-0-python">Python</a></li>
-                        </ul>
-
-                        <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-apiJsonKotlinxSerializationGet-0-curl">
-                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
-"//api/json/kotlinx-serialization"</code></pre>
-                          </div>
-                          <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-java">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
-import io.swagger.client.auth.*;
-import io.swagger.client.model.*;
-import io.swagger.client.api.DefaultApi;
-
-import java.io.File;
-import java.util.*;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.apiJsonKotlinxSerializationGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiJsonKotlinxSerializationGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-
-                          <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-android">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.apiJsonKotlinxSerializationGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiJsonKotlinxSerializationGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-  <!--
-  <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-groovy">
-  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-  </div> -->
-                            <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-objc">
-                              <pre class="prettyprint"><code class="language-cpp">
-DefaultApi *apiInstance = [[DefaultApi alloc] init];
-
-[apiInstance apiJsonKotlinxSerializationGetWithCompletionHandler: 
-              ^(NSError* error) {
-                            if (error) {
-                                NSLog(@"Error: %@", error);
-                            }
-                        }];
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-javascript">
-                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
-
-var api = new UntitledApi.DefaultApi()
-var callback = function(error, data, response) {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-};
-api.apiJsonKotlinxSerializationGet(callback);
-</code></pre>
-                            </div>
-
-                            <!--<div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-angular">
-              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-            </div>-->
-                            <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-csharp">
-                              <pre class="prettyprint"><code class="language-cs">using System;
-using System.Diagnostics;
-using IO.Swagger.Api;
-using IO.Swagger.Client;
-using IO.Swagger.Model;
-
-namespace Example
-{
-    public class apiJsonKotlinxSerializationGetExample
-    {
-        public void main()
-        {
-
-            var apiInstance = new DefaultApi();
-
-            try
-            {
-                apiInstance.apiJsonKotlinxSerializationGet();
-            }
-            catch (Exception e)
-            {
-                Debug.Print("Exception when calling DefaultApi.apiJsonKotlinxSerializationGet: " + e.Message );
-            }
-        }
-    }
-}
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-php">
-                              <pre class="prettyprint"><code class="language-php"><&#63;php
-require_once(__DIR__ . '/vendor/autoload.php');
-
-$api_instance = new Swagger\Client\ApiDefaultApi();
-
-try {
-    $api_instance->apiJsonKotlinxSerializationGet();
-} catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->apiJsonKotlinxSerializationGet: ', $e->getMessage(), PHP_EOL;
-}
-?></code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-perl">
-                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
-use WWW::SwaggerClient::Configuration;
-use WWW::SwaggerClient::DefaultApi;
-
-my $api_instance = WWW::SwaggerClient::DefaultApi->new();
-
-eval { 
-    $api_instance->apiJsonKotlinxSerializationGet();
-};
-if ($@) {
-    warn "Exception when calling DefaultApi->apiJsonKotlinxSerializationGet: $@\n";
-}</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiJsonKotlinxSerializationGet-0-python">
-                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
-import time
-import swagger_client
-from swagger_client.rest import ApiException
-from pprint import pprint
-
-# create an instance of the API class
-api_instance = swagger_client.DefaultApi()
-
-try: 
-    api_instance.api_json_kotlinx_serialization_get()
-except ApiException as e:
-    print("Exception when calling DefaultApi->apiJsonKotlinxSerializationGet: %s\n" % e)</code></pre>
-                            </div>
-                          </div>
-
-                          <h2>Parameters</h2>
-
-
-
-
-
-
-                          <h2>Responses</h2>
-                        </article>
-                      </div>
-                      <hr>
-                    <div id="api-Default-apiShortGet">
-                      <article id="api-Default-apiShortGet-0" data-group="User" data-name="apiShortGet" data-version="0">
-                        <div class="pull-left">
-                          <h1>apiShortGet</h1>
-                          <p></p>
-                        </div>
-                        <div class="pull-right"></div>
-                        <div class="clearfix"></div>
-                        <p></p>
-                        <p class="marked"></p>
-                        <p></p>
-                        <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/api/short</span></code></pre>
-                        <p>
-                          <h3>Usage and SDK Samples</h3>
-                        </p>
-                        <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-apiShortGet-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-apiShortGet-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-apiShortGet-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiShortGet-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-apiShortGet-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-apiShortGet-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-apiShortGet-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-apiShortGet-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-apiShortGet-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-apiShortGet-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-apiShortGet-0-python">Python</a></li>
-                        </ul>
-
-                        <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-apiShortGet-0-curl">
-                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
-"//api/short"</code></pre>
-                          </div>
-                          <div class="tab-pane" id="examples-Default-apiShortGet-0-java">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
-import io.swagger.client.auth.*;
-import io.swagger.client.model.*;
-import io.swagger.client.api.DefaultApi;
-
-import java.io.File;
-import java.util.*;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.apiShortGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiShortGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-
-                          <div class="tab-pane" id="examples-Default-apiShortGet-0-android">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.apiShortGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#apiShortGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-  <!--
-  <div class="tab-pane" id="examples-Default-apiShortGet-0-groovy">
-  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-  </div> -->
-                            <div class="tab-pane" id="examples-Default-apiShortGet-0-objc">
-                              <pre class="prettyprint"><code class="language-cpp">
-DefaultApi *apiInstance = [[DefaultApi alloc] init];
-
-[apiInstance apiShortGetWithCompletionHandler: 
-              ^(NSError* error) {
-                            if (error) {
-                                NSLog(@"Error: %@", error);
-                            }
-                        }];
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiShortGet-0-javascript">
-                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
-
-var api = new UntitledApi.DefaultApi()
-var callback = function(error, data, response) {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-};
-api.apiShortGet(callback);
-</code></pre>
-                            </div>
-
-                            <!--<div class="tab-pane" id="examples-Default-apiShortGet-0-angular">
-              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-            </div>-->
-                            <div class="tab-pane" id="examples-Default-apiShortGet-0-csharp">
-                              <pre class="prettyprint"><code class="language-cs">using System;
-using System.Diagnostics;
-using IO.Swagger.Api;
-using IO.Swagger.Client;
-using IO.Swagger.Model;
-
-namespace Example
-{
-    public class apiShortGetExample
-    {
-        public void main()
-        {
-
-            var apiInstance = new DefaultApi();
-
-            try
-            {
-                apiInstance.apiShortGet();
-            }
-            catch (Exception e)
-            {
-                Debug.Print("Exception when calling DefaultApi.apiShortGet: " + e.Message );
-            }
-        }
-    }
-}
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiShortGet-0-php">
-                              <pre class="prettyprint"><code class="language-php"><&#63;php
-require_once(__DIR__ . '/vendor/autoload.php');
-
-$api_instance = new Swagger\Client\ApiDefaultApi();
-
-try {
-    $api_instance->apiShortGet();
-} catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->apiShortGet: ', $e->getMessage(), PHP_EOL;
-}
-?></code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiShortGet-0-perl">
-                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
-use WWW::SwaggerClient::Configuration;
-use WWW::SwaggerClient::DefaultApi;
-
-my $api_instance = WWW::SwaggerClient::DefaultApi->new();
-
-eval { 
-    $api_instance->apiShortGet();
-};
-if ($@) {
-    warn "Exception when calling DefaultApi->apiShortGet: $@\n";
-}</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-apiShortGet-0-python">
-                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
-import time
-import swagger_client
-from swagger_client.rest import ApiException
-from pprint import pprint
-
-# create an instance of the API class
-api_instance = swagger_client.DefaultApi()
-
-try: 
-    api_instance.api_short_get()
-except ApiException as e:
-    print("Exception when calling DefaultApi->apiShortGet: %s\n" % e)</code></pre>
-                            </div>
-                          </div>
-
-                          <h2>Parameters</h2>
-
-
-
-
-
-
-                          <h2>Responses</h2>
-                        </article>
-                      </div>
-                      <hr>
-                    <div id="api-Default-callbackGet">
-                      <article id="api-Default-callbackGet-0" data-group="User" data-name="callbackGet" data-version="0">
-                        <div class="pull-left">
-                          <h1>callbackGet</h1>
-                          <p></p>
-                        </div>
-                        <div class="pull-right"></div>
-                        <div class="clearfix"></div>
-                        <p></p>
-                        <p class="marked"></p>
-                        <p></p>
-                        <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/callback</span></code></pre>
-                        <p>
-                          <h3>Usage and SDK Samples</h3>
-                        </p>
-                        <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-callbackGet-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-callbackGet-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-callbackGet-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-callbackGet-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-callbackGet-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-callbackGet-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-callbackGet-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-callbackGet-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-callbackGet-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-callbackGet-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-callbackGet-0-python">Python</a></li>
-                        </ul>
-
-                        <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-callbackGet-0-curl">
-                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
-"//callback"</code></pre>
-                          </div>
-                          <div class="tab-pane" id="examples-Default-callbackGet-0-java">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
-import io.swagger.client.auth.*;
-import io.swagger.client.model.*;
-import io.swagger.client.api.DefaultApi;
-
-import java.io.File;
-import java.util.*;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.callbackGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#callbackGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-
-                          <div class="tab-pane" id="examples-Default-callbackGet-0-android">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.callbackGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#callbackGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-  <!--
-  <div class="tab-pane" id="examples-Default-callbackGet-0-groovy">
-  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-  </div> -->
-                            <div class="tab-pane" id="examples-Default-callbackGet-0-objc">
-                              <pre class="prettyprint"><code class="language-cpp">
-DefaultApi *apiInstance = [[DefaultApi alloc] init];
-
-[apiInstance callbackGetWithCompletionHandler: 
-              ^(NSError* error) {
-                            if (error) {
-                                NSLog(@"Error: %@", error);
-                            }
-                        }];
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-callbackGet-0-javascript">
-                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
-
-var api = new UntitledApi.DefaultApi()
-var callback = function(error, data, response) {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-};
-api.callbackGet(callback);
-</code></pre>
-                            </div>
-
-                            <!--<div class="tab-pane" id="examples-Default-callbackGet-0-angular">
-              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-            </div>-->
-                            <div class="tab-pane" id="examples-Default-callbackGet-0-csharp">
-                              <pre class="prettyprint"><code class="language-cs">using System;
-using System.Diagnostics;
-using IO.Swagger.Api;
-using IO.Swagger.Client;
-using IO.Swagger.Model;
-
-namespace Example
-{
-    public class callbackGetExample
-    {
-        public void main()
-        {
-
-            var apiInstance = new DefaultApi();
-
-            try
-            {
-                apiInstance.callbackGet();
-            }
-            catch (Exception e)
-            {
-                Debug.Print("Exception when calling DefaultApi.callbackGet: " + e.Message );
-            }
-        }
-    }
-}
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-callbackGet-0-php">
-                              <pre class="prettyprint"><code class="language-php"><&#63;php
-require_once(__DIR__ . '/vendor/autoload.php');
-
-$api_instance = new Swagger\Client\ApiDefaultApi();
-
-try {
-    $api_instance->callbackGet();
-} catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->callbackGet: ', $e->getMessage(), PHP_EOL;
-}
-?></code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-callbackGet-0-perl">
-                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
-use WWW::SwaggerClient::Configuration;
-use WWW::SwaggerClient::DefaultApi;
-
-my $api_instance = WWW::SwaggerClient::DefaultApi->new();
-
-eval { 
-    $api_instance->callbackGet();
-};
-if ($@) {
-    warn "Exception when calling DefaultApi->callbackGet: $@\n";
-}</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-callbackGet-0-python">
-                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
-import time
-import swagger_client
-from swagger_client.rest import ApiException
-from pprint import pprint
-
-# create an instance of the API class
-api_instance = swagger_client.DefaultApi()
-
-try: 
-    api_instance.callback_get()
-except ApiException as e:
-    print("Exception when calling DefaultApi->callbackGet: %s\n" % e)</code></pre>
-                            </div>
-                          </div>
-
-                          <h2>Parameters</h2>
-
-
-
-
-
-
-                          <h2>Responses</h2>
-                        </article>
-                      </div>
-                      <hr>
-                    <div id="api-Default-loginGet">
-                      <article id="api-Default-loginGet-0" data-group="User" data-name="loginGet" data-version="0">
-                        <div class="pull-left">
-                          <h1>loginGet</h1>
-                          <p></p>
-                        </div>
-                        <div class="pull-right"></div>
-                        <div class="clearfix"></div>
-                        <p></p>
-                        <p class="marked"></p>
-                        <p></p>
-                        <br />
-                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/login</span></code></pre>
-                        <p>
-                          <h3>Usage and SDK Samples</h3>
-                        </p>
-                        <ul class="nav nav-tabs nav-tabs-examples">
-                          <li class="active"><a href="#examples-Default-loginGet-0-curl">Curl</a></li>
-                          <li class=""><a href="#examples-Default-loginGet-0-java">Java</a></li>
-                          <li class=""><a href="#examples-Default-loginGet-0-android">Android</a></li>
-                          <!--<li class=""><a href="#examples-Default-loginGet-0-groovy">Groovy</a></li>-->
-                          <li class=""><a href="#examples-Default-loginGet-0-objc">Obj-C</a></li>
-                          <li class=""><a href="#examples-Default-loginGet-0-javascript">JavaScript</a></li>
-                          <!--<li class=""><a href="#examples-Default-loginGet-0-angular">Angular</a></li>-->
-                          <li class=""><a href="#examples-Default-loginGet-0-csharp">C#</a></li>
-                          <li class=""><a href="#examples-Default-loginGet-0-php">PHP</a></li>
-                          <li class=""><a href="#examples-Default-loginGet-0-perl">Perl</a></li>
-                          <li class=""><a href="#examples-Default-loginGet-0-python">Python</a></li>
-                        </ul>
-
-                        <div class="tab-content">
-                          <div class="tab-pane active" id="examples-Default-loginGet-0-curl">
-                           <pre class="prettyprint"><code class="language-bsh">curl -X GET\
-"//login"</code></pre>
-                          </div>
-                          <div class="tab-pane" id="examples-Default-loginGet-0-java">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.*;
-import io.swagger.client.auth.*;
-import io.swagger.client.model.*;
-import io.swagger.client.api.DefaultApi;
-
-import java.io.File;
-import java.util.*;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.loginGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#loginGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-
-                          <div class="tab-pane" id="examples-Default-loginGet-0-android">
-                            <pre class="prettyprint"><code class="language-java">import io.swagger.client.api.DefaultApi;
-
-public class DefaultApiExample {
-
-    public static void main(String[] args) {
-        DefaultApi apiInstance = new DefaultApi();
-        try {
-            apiInstance.loginGet();
-        } catch (ApiException e) {
-            System.err.println("Exception when calling DefaultApi#loginGet");
-            e.printStackTrace();
-        }
-    }
-}</code></pre>
-                          </div>
-  <!--
-  <div class="tab-pane" id="examples-Default-loginGet-0-groovy">
-  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-  </div> -->
-                            <div class="tab-pane" id="examples-Default-loginGet-0-objc">
-                              <pre class="prettyprint"><code class="language-cpp">
-DefaultApi *apiInstance = [[DefaultApi alloc] init];
-
-[apiInstance loginGetWithCompletionHandler: 
-              ^(NSError* error) {
-                            if (error) {
-                                NSLog(@"Error: %@", error);
-                            }
-                        }];
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-loginGet-0-javascript">
-                              <pre class="prettyprint"><code class="language-js">var UntitledApi = require('untitled_api');
-
-var api = new UntitledApi.DefaultApi()
-var callback = function(error, data, response) {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-};
-api.loginGet(callback);
-</code></pre>
-                            </div>
-
-                            <!--<div class="tab-pane" id="examples-Default-loginGet-0-angular">
-              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
-            </div>-->
-                            <div class="tab-pane" id="examples-Default-loginGet-0-csharp">
-                              <pre class="prettyprint"><code class="language-cs">using System;
-using System.Diagnostics;
-using IO.Swagger.Api;
-using IO.Swagger.Client;
-using IO.Swagger.Model;
-
-namespace Example
-{
-    public class loginGetExample
-    {
-        public void main()
-        {
-
-            var apiInstance = new DefaultApi();
-
-            try
-            {
-                apiInstance.loginGet();
-            }
-            catch (Exception e)
-            {
-                Debug.Print("Exception when calling DefaultApi.loginGet: " + e.Message );
-            }
-        }
-    }
-}
-</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-loginGet-0-php">
-                              <pre class="prettyprint"><code class="language-php"><&#63;php
-require_once(__DIR__ . '/vendor/autoload.php');
-
-$api_instance = new Swagger\Client\ApiDefaultApi();
-
-try {
-    $api_instance->loginGet();
-} catch (Exception $e) {
-    echo 'Exception when calling DefaultApi->loginGet: ', $e->getMessage(), PHP_EOL;
-}
-?></code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-loginGet-0-perl">
-                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
-use WWW::SwaggerClient::Configuration;
-use WWW::SwaggerClient::DefaultApi;
-
-my $api_instance = WWW::SwaggerClient::DefaultApi->new();
-
-eval { 
-    $api_instance->loginGet();
-};
-if ($@) {
-    warn "Exception when calling DefaultApi->loginGet: $@\n";
-}</code></pre>
-                            </div>
-
-                            <div class="tab-pane" id="examples-Default-loginGet-0-python">
-                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
-import time
-import swagger_client
-from swagger_client.rest import ApiException
-from pprint import pprint
-
-# create an instance of the API class
-api_instance = swagger_client.DefaultApi()
-
-try: 
-    api_instance.login_get()
-except ApiException as e:
-    print("Exception when calling DefaultApi->loginGet: %s\n" % e)</code></pre>
-                            </div>
-                          </div>
-
-                          <h2>Parameters</h2>
-
-
-
-
-
-
-                          <h2>Responses</h2>
                         </article>
                       </div>
                       <hr>

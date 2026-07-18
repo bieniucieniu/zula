@@ -42,7 +42,6 @@ security:
 ktor:
   deployment:
     port: 8080
-    rootPath: ${APP_ROOT_PATH:}
     watch:
       - classes
   development: true

@@ -20,3 +20,5 @@ devenv.local.yaml
 .pre-commit-config.yaml
 .kotlin/errors
 /.idea/inspectionProfiles
+/.DS_Store
+/.kotlin/sessions

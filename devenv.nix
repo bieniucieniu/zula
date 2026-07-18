@@ -1,6 +1,6 @@
 {
   pkgs,
-  lib,
+  # lib,
   config,
   ...
 }:
@@ -21,8 +21,6 @@ in
 
   # Secrets come from SecretSpec (provider=dotenv → `.env`), not devenv's dotenv module.
   dotenv.disableHint = true;
-
-  languages.java.enable = true;
 
   # --- Service config (disabled in base; enabled by profiles) ---
   services.postgres = {
@@ -49,7 +47,7 @@ in
   # devenv --profile backend up  → Postgres + RabbitMQ
   # devenv --profile all up      → deps + Ktor + web + native
   profiles = {
-    all = {
+    backend = {
       module = {
         processes.server = {
           exec = "${root}/gradlew :server:run";
@@ -61,23 +59,38 @@ in
             };
           };
         };
-
+      };
+    };
+    web = {
+      extends = [ "backend" ];
+      module = {
         processes.web = {
-          exec = "bun run dev";
+          exec = "cd apps/web && bun run dev";
           process-compose = {
             working_dir = "${root}/apps/web";
             depends_on.server.condition = "process_started";
           };
         };
-
+      };
+    };
+    native = {
+      extends = [ "backend" ];
+      module = {
         processes.native = {
-          exec = "bun run dev";
+          exec = "cd apps/native && bun run dev";
           process-compose = {
             working_dir = "${root}/apps/native";
             depends_on.server.condition = "process_started";
           };
         };
       };
+    };
+    all = {
+      extends = [
+        "backend"
+        "web"
+        "native"
+      ];
     };
   };
 
