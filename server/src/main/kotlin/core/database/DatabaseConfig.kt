@@ -2,7 +2,6 @@ package com.zula.core.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zula.lib.utils.stringOrNull
-import com.zula.lib.utils.toBooleanOrNull
 import io.ktor.server.config.*
 
 data class DatabaseConfig(
@@ -31,7 +30,7 @@ data class DatabaseConfig(
             username = config?.stringOrNull("username"),
             password = config?.stringOrNull("password"),
             maximumPoolSize = config?.propertyOrNull("maximumPoolSize")?.getString()?.toIntOrNull() ?: 10,
-            autoMigrate = config?.propertyOrNull("autoMigrate")?.getString()?.toBooleanOrNull() ?: true,
+            autoMigrate = config?.propertyOrNull("autoMigrate")?.getString()?.toBooleanStrictOrNull() ?: true,
         )
     }
 }
