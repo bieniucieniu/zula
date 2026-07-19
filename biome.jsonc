@@ -23,6 +23,18 @@
     "indentWidth": 2,
     "lineWidth": 100
   },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "correctness": {
+        "noUnusedImports": {
+          "level": "warn",
+          "fix": "safe"
+        }
+      }
+    }
+  },
+
   "javascript": {
     "formatter": {
       "quoteStyle": "double",
@@ -41,9 +53,6 @@
     }
   },
   // Formatting only for now
-  "linter": {
-    "enabled": false
-  },
   "assist": {
     "enabled": true,
     "actions": {

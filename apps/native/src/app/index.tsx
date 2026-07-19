@@ -1,15 +1,14 @@
+import { Link, Stack } from "expo-router"
+import { MoonStarIcon, StarIcon, SunIcon } from "lucide-react-native"
+import { Image, type ImageStyle, View } from "react-native"
+import { Uniwind, useUniwind } from "uniwind"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Text } from "@/components/ui/text"
-import { Link, Stack } from "expo-router"
-import { MoonStarIcon, StarIcon, SunIcon } from "lucide-react-native"
-import * as React from "react"
-import { Image, type ImageStyle, View } from "react-native"
-import { Uniwind, useUniwind } from "uniwind"
 
 const LOGO = {
-  light: require("@/assets/images/react-native-reusables-light.png"),
-  dark: require("@/assets/images/react-native-reusables-dark.png"),
+  light: require("@assets/images/react-native-reusables-light.png"),
+  dark: require("@assets/images/react-native-reusables-dark.png"),
 }
 
 const SCREEN_OPTIONS = {
