@@ -1,5 +1,5 @@
 [versions]
-rabbitmq = "1.5.0"
+jobrunr = "8.7.1"
 koin = "4.2.2"
 kotlin = "2.4.10"
 logback = "1.5.35"
@@ -11,7 +11,8 @@ postgres = "42.7.3"
 kubernetesClient = "27.0.0"
 
 [libraries]
-rabbitmq-ktor = { module = "io.github.damirdenis-tudor:ktor-server-rabbitmq", version.ref = "rabbitmq" }
+jobrunr = { module = "org.jobrunr:jobrunr", version.ref = "jobrunr" }
+jobrunr-kotlin = { module = "org.jobrunr:jobrunr-kotlin-support", version.ref = "jobrunr" }
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin" }
 koin-loggerSlf4j = { module = "io.insert-koin:koin-logger-slf4j", version.ref = "koin" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }

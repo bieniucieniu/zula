@@ -53,7 +53,7 @@ FeedService.kt
         └─ POST /feed/items
              ├─ tx: insert feed_items + traits + media rows
              ├─ compute text embedding (sync)
-             ├─ FeedPublisher.kt → feed.item.created (RabbitMQ)
+             ├─ FeedPublisher.kt → feed.item.created (JobRunr)
              └─ queue image embedding (async via FeedConsumer.kt, optional in early MVP)
 ```
 
@@ -319,7 +319,6 @@ install(Koin) {
     modules(
         databaseModule,
         securityModule,
-        rabbitmqModule,
         authModule,
         userModule,
         feedModule,   // features/feed/di/feedModule.kt
@@ -331,9 +330,8 @@ fun Application.configureRouting() {
     feedRouting.register(this)
 }
 
-fun Application.configureRabbitMqConsumers() {
-    val feedConsumer: FeedConsumer by inject()
-    feedConsumer.start()
+fun Application.configureJobRunrHandlers() {
+    // Job handlers resolve via KoinJobActivator; register recurring jobs in core/jobrunr if needed
 }
 ```
 
@@ -651,29 +649,26 @@ interface Embedder {
 
 MVP can use a local model, external API, or a stub returning deterministic vectors for tests. Document the chosen model and dimension in this file.
 
-### 4.5 RabbitMQ integration
+### 4.5 JobRunr integration
 
 **FeedPublisher.kt** — after successful create/status change:
 
 ```kotlin
-class FeedPublisher(private val channel: Channel) {
+class FeedPublisher {
     fun publishFeedItemCreated(feedItemId: Long) {
-        channel.basicPublish("feed", "feed.item.created", /* body */)
+        BackgroundJob.enqueue { /* feed handlers / side effects */ }
     }
 }
 ```
 
-**FeedConsumer.kt** — async media embedding completion:
+**FeedConsumer.kt** — async media embedding completion (method called from JobRunr job):
 
 ```kotlin
 class FeedConsumer(
-    private val channel: Channel,
     private val feedService: FeedService,
 ) {
-    fun start() {
-        channel.basicConsume("media.embedding.completed") { _, body ->
-            // parse event → feedService.updateMediaEmbedding(...)
-        }
+    fun onMediaEmbeddingCompleted(itemId: String) {
+        // feedService.updateMediaEmbedding(...)
     }
 }
 ```
@@ -804,8 +799,8 @@ curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/v1/feed/for-yo
 | `core/openapi/src/main/kotlin/.../dto/feed/` | Feed DTOs |
 | `features/feed/src/main/kotlin/.../FeedRouting.kt` | HTTP routes |
 | `features/feed/src/main/kotlin/.../FeedService.kt` | Business logic |
-| `features/feed/src/main/kotlin/.../FeedPublisher.kt` | RabbitMQ publish |
-| `features/feed/src/main/kotlin/.../FeedConsumer.kt` | RabbitMQ consume |
+| `features/feed/src/main/kotlin/.../FeedPublisher.kt` | JobRunr publish (`BackgroundJob.enqueue`) |
+| `features/feed/src/main/kotlin/.../FeedConsumer.kt` | JobRunr job handlers |
 | `features/feed/src/main/kotlin/.../di/feedModule.kt` | Koin module |
 | `features/feed/src/test/kotlin/...` | Feature tests |
 | `core/embed/` | Embedding client |
@@ -820,7 +815,7 @@ curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/v1/feed/for-yo
 3. **Traits are explainable filters**; embeddings handle fuzzy relevance.
 4. **Keyset pagination only** — `id` for chrono (UUIDv7 order), `(score, id)` for ranked.
 5. **Fixed query budget** — batch `IN ?` for traits and media; no per-item DB calls.
-6. **Embeddings on write** for text; async for images via RabbitMQ.
+6. **Embeddings on write** for text; async for images via JobRunr.
 7. **No Redis** until Postgres profiling shows need.
 
 ---

@@ -17,7 +17,7 @@ Cross-cutting rules referenced by all module docs.
 Follow [architecture.md](./architecture.md#ktor-project-layout):
 
 - **`app`** — composition root (`Application.kt`, Koin bootstrap, route mounting)
-- **`core:*`** — database, security, openapi, rabbitmq
+- **`core:*`** — database, security, openapi, jobrunr
 - **`features:*`** — domain silos with `*Routing.kt`, `*Service.kt`, `*Consumer.kt` / `*Publisher.kt`
 
 ---

@@ -37,63 +37,63 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result
 }
 
-export type getRabbitmqResponseDefault = {
+export type getJobsPingResponseDefault = {
   data: unknown
   status: number
 }
-export type getRabbitmqResponseError = getRabbitmqResponseDefault & {
+export type getJobsPingResponseError = getJobsPingResponseDefault & {
   headers: Headers
 }
 
-export type getRabbitmqResponse = getRabbitmqResponseError
+export type getJobsPingResponse = getJobsPingResponseError
 
-export const getGetRabbitmqUrl = () => {
-  return `/rabbitmq`
+export const getGetJobsPingUrl = () => {
+  return `/jobs/ping`
 }
 
-export const getRabbitmq = async (options?: RequestInit): Promise<getRabbitmqResponse> => {
-  return customInstance<getRabbitmqResponse>(getGetRabbitmqUrl(), {
+export const getJobsPing = async (options?: RequestInit): Promise<getJobsPingResponse> => {
+  return customInstance<getJobsPingResponse>(getGetJobsPingUrl(), {
     ...options,
     method: "GET",
   })
 }
 
-export const getGetRabbitmqQueryKey = () => {
-  return [`/rabbitmq`] as const
+export const getGetJobsPingQueryKey = () => {
+  return [`/jobs/ping`] as const
 }
 
-export const getGetRabbitmqQueryOptions = <
-  TData = Awaited<ReturnType<typeof getRabbitmq>>,
+export const getGetJobsPingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
   TError = unknown,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRabbitmq>>, TError, TData>>
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = queryOptions?.queryKey ?? getGetRabbitmqQueryKey()
+  const queryKey = queryOptions?.queryKey ?? getGetJobsPingQueryKey()
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRabbitmq>>> = ({ signal }) =>
-    getRabbitmq({ signal, ...requestOptions })
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobsPing>>> = ({ signal }) =>
+    getJobsPing({ signal, ...requestOptions })
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getRabbitmq>>,
+    Awaited<ReturnType<typeof getJobsPing>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type GetRabbitmqQueryResult = NonNullable<Awaited<ReturnType<typeof getRabbitmq>>>
-export type GetRabbitmqQueryError = unknown
+export type GetJobsPingQueryResult = NonNullable<Awaited<ReturnType<typeof getJobsPing>>>
+export type GetJobsPingQueryError = unknown
 
-export function useGetRabbitmq<TData = Awaited<ReturnType<typeof getRabbitmq>>, TError = unknown>(
+export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, TError = unknown>(
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRabbitmq>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getRabbitmq>>,
+          Awaited<ReturnType<typeof getJobsPing>>,
           TError,
-          Awaited<ReturnType<typeof getRabbitmq>>
+          Awaited<ReturnType<typeof getJobsPing>>
         >,
         "initialData"
       >
@@ -103,14 +103,14 @@ export function useGetRabbitmq<TData = Awaited<ReturnType<typeof getRabbitmq>>, 
 ): DefinedUseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>
 }
-export function useGetRabbitmq<TData = Awaited<ReturnType<typeof getRabbitmq>>, TError = unknown>(
+export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRabbitmq>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getRabbitmq>>,
+          Awaited<ReturnType<typeof getJobsPing>>,
           TError,
-          Awaited<ReturnType<typeof getRabbitmq>>
+          Awaited<ReturnType<typeof getJobsPing>>
         >,
         "initialData"
       >
@@ -120,9 +120,9 @@ export function useGetRabbitmq<TData = Awaited<ReturnType<typeof getRabbitmq>>, 
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>
 }
-export function useGetRabbitmq<TData = Awaited<ReturnType<typeof getRabbitmq>>, TError = unknown>(
+export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRabbitmq>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
@@ -130,16 +130,16 @@ export function useGetRabbitmq<TData = Awaited<ReturnType<typeof getRabbitmq>>, 
   queryKey: DataTag<QueryKey, TData, TError>
 }
 
-export function useGetRabbitmq<TData = Awaited<ReturnType<typeof getRabbitmq>>, TError = unknown>(
+export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRabbitmq>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & {
   queryKey: DataTag<QueryKey, TData, TError>
 } {
-  const queryOptions = getGetRabbitmqQueryOptions(options)
+  const queryOptions = getGetJobsPingQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>

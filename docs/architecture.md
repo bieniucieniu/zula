@@ -25,7 +25,7 @@ zula/                              # root Gradle project (rootProject.name = "zu
         │   │   │   ├── database/  # SQLDelight .sq, HikariCP, migrations
         │   │   │   ├── security/  # OAuth2, JWT validation
         │   │   │   ├── openapi/   # API specs & Swagger UI
-        │   │   │   ├── rabbitmq/  # AMQP connection & channel manager
+        │   │   │   ├── jobrunr/   # JobRunr + Postgres job storage
         │   │   │   └── contracts/ # Cross-feature Koin interfaces
         │   │   └── features/      # domain packages
         │   │       ├── auth/
@@ -57,7 +57,7 @@ Common tasks (from repo root):
 
 ## Ktor project layout
 
-Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, and RabbitMQ**. Package layout under `server/src/main/kotlin/` (`core/*`, `features/*`).
+Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, and JobRunr**. Package layout under `server/src/main/kotlin/` (`core/*`, `features/*`).
 
 ---
 
@@ -69,10 +69,10 @@ Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, 
 
 - loads Koin modules (`core/*` + `features/*` packages)
 - configures content negotiation, status pages, security
-- starts background RabbitMQ consumers
+- starts JobRunr background job server (Postgres-backed)
 - mounts global + feature routes
 
-`application.yaml` lists `configure*` modules in boot order (HTTP → serialization → security → Koin → RabbitMQ → routing).
+`application.yaml` lists `configure*` modules in boot order (HTTP → serialization → OpenAPI → Koin → database → JobRunr → security → routing).
 
 ### 2. `core/*` (infrastructure)
 
@@ -81,7 +81,7 @@ Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, 
 | **`core/database`** | `.sq` schemas; SQLDelight-generated DAOs; HikariCP factory; safe migration runner at startup |
 | **`core/security`** | OAuth2 client configs, JWT issuer/validator, Ktor `Authentication` installs |
 | **`core/openapi`** | OpenAPI YAML, route metadata, Swagger UI at `/swagger` |
-| **`core/rabbitmq`** | Single `ConnectionFactory` + channel pool; all features borrow channels from here |
+| **`core/jobrunr`** | JobRunr fluent config; Postgres storage via Hikari; optional dashboard; `GET /jobs/ping` smoke |
 
 ### 3. `features/*` (domain silos)
 
@@ -90,8 +90,8 @@ Each feature is three layers:
 | Layer | File pattern | Responsibility |
 |-------|--------------|----------------|
 | **Routing** | `*Routing.kt` | HTTP paths via Ktor DSL; request parsing; OpenAPI route docs |
-| **Service** | `*Service.kt` | Pure business logic; transaction wrappers; coordinates DB + MQ |
-| **Integration** | `*Consumer.kt` / `*Publisher.kt` | RabbitMQ listeners on `Dispatchers.IO`; outbound event publishing |
+| **Service** | `*Service.kt` | Pure business logic; transaction wrappers; coordinates DB + jobs |
+| **Integration** | `*Consumer.kt` / `*Publisher.kt` | JobRunr handlers / `BackgroundJob.enqueue` publishers |
 
 Example (`server/src/main/kotlin/features/feed/`):
 
@@ -122,7 +122,7 @@ flowchart TB
         db[(SQLDelight + PostgreSQL)]
         sec[OAuth2 + JWT]
         oapi[OpenAPI / Swagger]
-        mq[RabbitMQ]
+        jobs[JobRunr]
     end
 
     subgraph features [features — domain]
@@ -148,7 +148,7 @@ flowchart TB
     db --> pg
     media --> s3
     feed --> s3
-    features --> mq
+    features --> jobs
 ```
 
 ---
@@ -219,7 +219,7 @@ GET /api/v1/reviews/seller/{id}    → reviews tab (user)
 
 Current (flat `server/src/main/kotlin/`; target: `core/*` + `features/*` packages):
 
-- `core/database`, `core/security`, `core/rabbitmq` Koin modules
+- `core/database`, `core/security`, `core/jobrunr` (fluent boot; no Koin module required)
 - `features/auth`, `features/user` Koin modules
 - **Cross-feature contracts** — Koin interfaces in `core/contracts`
 

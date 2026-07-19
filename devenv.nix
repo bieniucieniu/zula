@@ -34,15 +34,8 @@ in
     ];
   };
 
-  services.rabbitmq = {
-    enable = true;
-    listenAddress = "127.0.0.1";
-    port = 5672;
-    managementPlugin.enable = true;
-  };
-
   # --- Profiles ---
-  # devenv --profile backend up  → Postgres + RabbitMQ
+  # devenv --profile backend up  → Postgres
   # devenv --profile all up      → deps + Ktor + web + native
   profiles = {
     backend = {
@@ -53,7 +46,6 @@ in
             working_dir = root;
             depends_on = {
               postgres.condition = "process_healthy";
-              rabbitmq.condition = "process_started";
             };
           };
         };

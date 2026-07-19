@@ -3,7 +3,6 @@ package com.zula.app
 import com.zula.core.database.DatabaseConfig
 import com.zula.core.database.databaseModule
 import com.zula.core.openapi.openApiModule
-import com.zula.core.rabbitmq.rabbitmqModule
 import com.zula.core.security.*
 import com.zula.features.auth.authModule
 import com.zula.features.chat.chatModule
@@ -37,7 +36,6 @@ fun Application.configureKoin() {
                 )
             },
             openApiModule,
-            rabbitmqModule,
             authModule,
             userModule,
             feedModule,

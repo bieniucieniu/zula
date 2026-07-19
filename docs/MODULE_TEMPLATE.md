@@ -39,7 +39,7 @@ Feature layout:
 |-------|------|---------|
 | Routing | `{Name}Routing.kt` | HTTP paths, OpenAPI metadata |
 | Service | `{Name}Service.kt` | Business logic, transactions |
-| Integration | `{Name}Consumer.kt` / `{Name}Publisher.kt` | RabbitMQ boundaries |
+| Integration | `{Name}Consumer.kt` / `{Name}Publisher.kt` | JobRunr boundaries (`BackgroundJob` enqueue / handlers) |
 
 ---
 

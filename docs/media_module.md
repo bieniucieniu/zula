@@ -120,7 +120,7 @@ mediaService.releaseKey(objectKey)
 
 ### Garbage collection
 
-`MediaGcConsumer` runs daily (RabbitMQ delayed message or Ktor scheduler):
+`MediaGcConsumer` runs daily (JobRunr recurring job or Ktor scheduler):
 
 1. **Abandoned uploads** — `status = pending` AND `created_at < now() - 24h` → delete MinIO object → delete row
 2. **Soft-deleted** — `status = deleted` AND `ref_count = 0` AND `delete_after < now()` → delete MinIO object → delete row

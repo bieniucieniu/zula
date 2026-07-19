@@ -100,7 +100,7 @@ Participants only for read/write. [auth_and_permissions.md](./auth_and_permissio
 
 - [ ] Template validation (swap vs meetup)
 - [ ] `ProposeMeetup`, `ConfirmMeetup`
-- [ ] Expiry job for stale proposals (RabbitMQ consumer or scheduled task)
+- [ ] Expiry job for stale proposals (JobRunr recurring/delayed job)
 
 ### Phase trade-C — Feed linkage
 
