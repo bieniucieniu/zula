@@ -13,3 +13,6 @@ todos.json
 
 # typescript
 *.tsbuildinfo
+
+*storybook.log
+storybook-static

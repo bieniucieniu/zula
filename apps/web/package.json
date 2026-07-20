@@ -7,7 +7,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@zula/api": "workspace:*",
@@ -52,6 +54,14 @@
     "jsdom": "^28",
     "typescript": "^6",
     "vite": "^8",
-    "vitest": "^4"
+    "vitest": "^4",
+    "storybook": "^10.5.2",
+    "@storybook/react-vite": "^10.5.2",
+    "@chromatic-com/storybook": "^5.2.1",
+    "@storybook/addon-vitest": "^10.5.2",
+    "@storybook/addon-mcp": "^0.7.0",
+    "@vitest/browser-playwright": "^4",
+    "@vitest/coverage-v8": "^4",
+    "playwright": "^1.61.1"
   }
 }
