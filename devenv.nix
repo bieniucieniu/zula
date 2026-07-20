@@ -13,7 +13,7 @@ in
   packages = [
     pkgs.git
     pkgs.secretspec
-    pkgs.postgresql
+    pkgs.postgresql_18
     pkgs.curl
     pkgs.jq
     pkgs.bun
@@ -29,7 +29,8 @@ in
 
   services.postgres = {
     enable = true;
-    listen_addresses = "127.0.0.1";
+    package = pkgs.postgresql_18;
+    extensions = extensions: [ extensions.pgvector ];
     port = 5432;
     settings.wal_level = "logical";
     initialDatabases = [
@@ -65,6 +66,7 @@ in
         '';
       }
     ];
+
   };
 
   # --- Profiles ---
@@ -132,7 +134,7 @@ in
       extends = [ "backend" ];
       module = {
         processes.web = {
-          exec = "cd apps/web && bun i --freeze-lockfile && bun run dev";
+          exec = "cd apps/web && bun run dev";
           process-compose = {
             working_dir = "${root}/apps/web";
             depends_on.server.condition = "process_healthy";
@@ -144,7 +146,7 @@ in
       extends = [ "backend" ];
       module = {
         processes.native = {
-          exec = "cd apps/native && bun i --freeze-lockfile && bun run dev";
+          exec = "cd apps/native && bun run dev";
           process-compose = {
             working_dir = "${root}/apps/native";
             depends_on.server.condition = "process_healthy";
@@ -164,14 +166,13 @@ in
   env = secrets;
 
   scripts.pg = {
-    packages = [ pkgs.postgresql ];
     exec = ''
       export PGHOST="''${PGHOST:-127.0.0.1}"
       export PGPORT="''${PGPORT:-5432}"
       export PGUSER="''${DATABASE_USERNAME:-zula}"
       export PGDATABASE="''${PGDATABASE:-zula}"
       export PGPASSWORD="''${DATABASE_PASSWORD:-''${PGPASSWORD:-zula}}"
-      exec ${pkgs.postgresql}/bin/psql "$@"
+      exec psql "$@"
     '';
   };
 
