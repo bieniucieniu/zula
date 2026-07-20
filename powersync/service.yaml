@@ -22,5 +22,10 @@ client_auth:
 sync_config:
   path: /config/sync-config.yaml
 
+system:
+  logging:
+    level: debug # silly | debug | verbose | http | info | warn | error
+    format: json
+
 telemetry:
   disable_telemetry_sharing: true

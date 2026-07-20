@@ -52,6 +52,7 @@ ktor:
       - com.zula.core.openapi.OpenApiKt.configureOpenApi
       - com.zula.app.KoinKt.configureKoin
       - com.zula.core.database.DatabaseKt.configureDatabase
+      - com.zula.core.health.HealthKt.configureHealth
       - com.zula.core.jobrunr.JobRunrKt.configureJobRunr
       - com.zula.core.security.SecurityKt.configureSecurity
       - com.zula.app.RoutingKt.configureRouting

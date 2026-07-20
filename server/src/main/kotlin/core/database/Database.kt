@@ -22,6 +22,7 @@ fun Application.configureDatabase() {
     if (config.autoMigrate) {
         val driver: SqlDriver = get()
         migrateSchema(driver)
+        ensurePowersyncReplicationGrants(driver)
         log.info("Database schema at version ${Database.Schema.version}")
     } else {
         log.info("Database auto-migrate disabled (AUTO_MIGRATE=false)")
@@ -42,7 +43,6 @@ internal fun migrateSchema(driver: SqlDriver) {
     ensureSchemaVersionTable(driver)
     val target = Database.Schema.version
     val current = readSchemaVersion(driver)
-    print("target $target, current $current\n")
 
     when {
         current < 0 -> {
@@ -100,6 +100,32 @@ private fun ensureSchemaVersionTable(driver: SqlDriver) {
             version BIGINT NOT NULL
         );
         ALTER TABLE zula_schema_version REPLICA IDENTITY FULL
+        """.trimIndent(),
+        0,
+    )
+}
+
+/**
+ * PowerSync snapshots with SELECT as powersync_role. Tables created by the app user
+ * after initdb need explicit grants; ALTER DEFAULT PRIVILEGES must be FOR that role.
+ */
+private fun ensurePowersyncReplicationGrants(driver: SqlDriver) {
+    driver.execute(
+        null,
+        // language=PostgreSQL
+        """
+        DO $$
+        BEGIN
+          IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'powersync_role') THEN
+            GRANT USAGE ON SCHEMA public TO powersync_role;
+            GRANT SELECT ON ALL TABLES IN SCHEMA public TO powersync_role;
+            GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO powersync_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
+              GRANT SELECT ON TABLES TO powersync_role;
+            ALTER DEFAULT PRIVILEGES IN SCHEMA public
+              GRANT SELECT ON SEQUENCES TO powersync_role;
+          END IF;
+        END $$
         """.trimIndent(),
         0,
     )

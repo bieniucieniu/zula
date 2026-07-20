@@ -40,6 +40,7 @@ in
         # PowerSync logical replication (first Postgres init only).
         # https://devenv.sh/services/postgres/#servicespostgresinitialdatabasesinitialsql
         # Runs as cluster superuser (unix socket during setup) before initialScript.
+        # DEFAULT PRIVILEGES must be FOR ROLE <app user> — tables are created by Ktor as that role.
         initialSQL = ''
           CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD '${
             secrets.PS_REPLICATION_PASSWORD or "powersync"
@@ -48,8 +49,10 @@ in
           GRANT USAGE ON SCHEMA public TO powersync_role;
           GRANT SELECT ON ALL TABLES IN SCHEMA public TO powersync_role;
           GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO powersync_role;
-          ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO powersync_role;
-          ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON SEQUENCES TO powersync_role;
+          ALTER DEFAULT PRIVILEGES FOR ROLE "${secrets.DATABASE_USERNAME or "zula"}" IN SCHEMA public
+            GRANT SELECT ON TABLES TO powersync_role;
+          ALTER DEFAULT PRIVILEGES FOR ROLE "${secrets.DATABASE_USERNAME or "zula"}" IN SCHEMA public
+            GRANT SELECT ON SEQUENCES TO powersync_role;
           CREATE PUBLICATION powersync FOR ALL TABLES;
         '';
       }
@@ -78,6 +81,18 @@ in
             depends_on = {
               postgres.condition = "process_healthy";
             };
+            readiness_probe = {
+              http_get = {
+                host = "127.0.0.1";
+                port = 8080;
+                path = "/health";
+              };
+              # Gradle cold start can take a while.
+              initial_delay_seconds = 15;
+              period_seconds = 5;
+              timeout_seconds = 5;
+              failure_threshold = 36;
+            };
           };
         };
         processes.powersync = {
@@ -92,7 +107,7 @@ in
             working_dir = "${root}/powersync";
             depends_on = {
               postgres.condition = "process_healthy";
-              server.condition = "process_started";
+              server.condition = "process_healthy";
             };
             readiness_probe = {
               http_get = {
@@ -117,10 +132,10 @@ in
       extends = [ "backend" ];
       module = {
         processes.web = {
-          exec = "cd apps/web && bun run dev";
+          exec = "cd apps/web && bun i --freeze-lockfile && bun run dev";
           process-compose = {
             working_dir = "${root}/apps/web";
-            depends_on.server.condition = "process_started";
+            depends_on.server.condition = "process_healthy";
           };
         };
       };
@@ -129,10 +144,10 @@ in
       extends = [ "backend" ];
       module = {
         processes.native = {
-          exec = "cd apps/native && bun run dev";
+          exec = "cd apps/native && bun i --freeze-lockfile && bun run dev";
           process-compose = {
             working_dir = "${root}/apps/native";
-            depends_on.server.condition = "process_started";
+            depends_on.server.condition = "process_healthy";
           };
         };
       };

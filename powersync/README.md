@@ -12,6 +12,8 @@ Client schema: `packages/powersync` (`@zula/powersync`).
 
 Postgres (devenv): `zula` (source), `zula_powersync` (buckets).  
 Replication role + publication: `services.postgres.initialDatabases.*.initialSQL` in [`devenv.nix`](../devenv.nix).
+`ALTER DEFAULT PRIVILEGES FOR ROLE <app user>` so tables created by Ktor migrations are selectable by `powersync_role`.
+Server also re-grants `SELECT` on all public tables after migrate (fixes DBs already initialized).
 
 Deploy/k8s uses a separate config — not these local files.
 
