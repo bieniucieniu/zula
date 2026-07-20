@@ -1,5 +1,5 @@
 {
-  "name": "minimal",
+  "name": "zula-native",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {

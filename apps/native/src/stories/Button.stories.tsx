@@ -2,13 +2,14 @@ import type { Meta, StoryObj } from "@storybook/react-native"
 import { View } from "react-native"
 import { fn } from "storybook/test"
 import { Button } from "@/components/ui/button"
+import { Text } from "@/components/ui/text"
 
 const meta = {
   title: "Example/Button",
   component: Button,
   decorators: [
     (Story) => (
-      <View style={{ flex: 1, alignItems: "flex-start" }}>
+      <View className="flex-1 items-center justify-center">
         <Story />
       </View>
     ),
@@ -26,27 +27,27 @@ type Story = StoryObj<typeof meta>
 export const Primary: Story = {
   args: {
     variant: "default",
-    children: "Button",
+    children: <Text>Button</Text>,
   },
 }
 
 export const Secondary: Story = {
   args: {
     variant: "secondary",
-    children: "Button",
+    children: <Text>Button</Text>,
   },
 }
 
 export const Large: Story = {
   args: {
     size: "lg",
-    children: "Button",
+    children: <Text>Button</Text>,
   },
 }
 
 export const Small: Story = {
   args: {
     size: "sm",
-    children: "Button",
+    children: <Text>Button</Text>,
   },
 }
