@@ -176,14 +176,14 @@ in
   };
 
   scripts.gen-api.exec = ''
-    cd "${root}/packages/api"
-    bun run gen
+    cd "${root}"
+    bun run gen:api
     bun run format
   '';
 
   scripts.gen-powersync.exec = ''
-    cd "${root}/packages/powersync"
-    bun run gen
+    cd "${root}"
+    bun run gen:powersync
   '';
 
   enterShell = ''
