@@ -18,6 +18,7 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 | [secrets.md](./secrets.md) | APP_URL / API_URL, Infisical, K8s routing |
 | [trust_events.md](./trust_events.md) | `user_trust_ledger.event_type` catalog |
 | [clients.md](./clients.md) | Web, Android, iOS — OpenAPI & markdown |
+| [powersync.md](./powersync.md) | Self-hosted PowerSync, Sync Streams, API fallback |
 | [implementation_plan.md](./implementation_plan.md) | Cross-module waves and exit criteria |
 | [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md) | Standard module doc shape |
 
