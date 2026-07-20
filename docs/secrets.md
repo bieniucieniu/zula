@@ -34,8 +34,8 @@ Cloudflare tunnel (manual): both hosts → Traefik `:80`.
 
 ```properties
 # packages/client-config/dev.properties (Android emulator default)
-API_URL=http://10.0.2.2:8080/api/v1
-APP_URL=http://10.0.2.2:8080
+API_URL=http://10.0.2.2:8000/api/v1
+APP_URL=http://10.0.2.2:8000
 ```
 
 Override via root `.env` for **iOS debug** (simulator or LAN IP), then run `gen-client-config`. Values must use `http://` or `https://` with `/api/v1` path.

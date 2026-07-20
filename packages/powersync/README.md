@@ -12,7 +12,7 @@ Runs:
 
 ```text
 powersync generate schema --output=ts --output-path=src/generated/schema.ts \
-  --directory=../../powersync --api-url=http://127.0.0.1:8081
+  --directory=../../powersync --api-url=http://127.0.0.1:8080
 ```
 
 ## Exports

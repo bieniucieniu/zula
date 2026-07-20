@@ -71,7 +71,7 @@ in
 
   # --- Profiles ---
   # devenv --profile backend up     → Postgres + Ktor
-  # devenv --profile powersync up   → backend + PowerSync (:8081)
+  # devenv --profile powersync up   → backend + PowerSync (:8080)
   # devenv --profile all up         → deps + Ktor + web + native
   profiles = {
     backend = {
@@ -86,7 +86,7 @@ in
             readiness_probe = {
               http_get = {
                 host = "127.0.0.1";
-                port = 8080;
+                port = 8000;
                 path = "/health";
               };
               # Gradle cold start can take a while.
@@ -114,7 +114,7 @@ in
             readiness_probe = {
               http_get = {
                 host = "127.0.0.1";
-                port = 8081;
+                port = 8080;
                 path = "/probes/readiness";
               };
               initial_delay_seconds = 10;
@@ -193,7 +193,7 @@ in
       toString (config.secretspec.profile or "unset")
     }"
     echo "  deps:    devenv --profile backend up   # or: zula-deps"
-    echo "  sync:    devenv --profile powersync up # postgres + ktor + PowerSync :8081"
+    echo "  sync:    devenv --profile powersync up # postgres + ktor :8000 + PowerSync :8080"
     echo "  all:     devenv --profile all up       # or: zula-all"
     echo "  api:     gen-api                       # orval + biome format (server must be up)"
     echo "  psync:   gen-powersync                 # AppSchema from running PowerSync"
@@ -220,8 +220,8 @@ in
     test -n "$PS_STORAGE_USERNAME"
     test -n "$PS_STORAGE_PASSWORD"
     # Defaults from secretspec.toml — must match powersync/docker-compose.yaml :-defaults
-    # and published host port 8081.
-    test "$PS_URL" = "http://127.0.0.1:8081"
+    # and published host port 8080.
+    test "$PS_URL" = "http://127.0.0.1:8080"
     test "$PS_REPLICATION_PASSWORD" = "powersync"
     test "$PS_STORAGE_USERNAME" = "powersync"
     test "$PS_STORAGE_PASSWORD" = "powersync"

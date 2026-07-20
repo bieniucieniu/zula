@@ -29,7 +29,7 @@ Regenerate clients after backend route/DTO changes.
 ## Web API access
 
 - Browser uses **REST JSON** at `/api/v1/*` via Orval fetch client (`VITE_API_URL`, default `/api/v1`).
-- Local dev: Vite proxies `/api` → Ktor server `http://127.0.0.1:8080`.
+- Local dev: Vite proxies `/api` → Ktor server `http://127.0.0.1:8000`.
 - Production: ingress routes `/api/**` to the backend HTTP server; web nginx serves the SPA at `/`.
 
 Mobile clients use the same REST API at `API_URL` (must be `http(s)://host[:port]/api/v1`).

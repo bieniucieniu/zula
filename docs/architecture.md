@@ -46,7 +46,7 @@ Common tasks (from repo root):
 
 | Task | Description |
 |------|-------------|
-| `./gradlew :server:run` | Run API on port 8080 |
+| `./gradlew :server:run` | Run API on port 8000 |
 | `./gradlew :server:build` | Build server JAR |
 | `./gradlew :server:test` | Server tests |
 | `./gradlew test` | Same as `:server:test` today (only backend subproject) |

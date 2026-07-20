@@ -7,7 +7,7 @@
     "./schema": "./src/generated/schema.ts"
   },
   "scripts": {
-    "gen": "powersync generate schema --output=ts --output-path=src/generated/schema.ts --directory=../../powersync --api-url=http://127.0.0.1:8081",
+    "gen": "powersync generate schema --output=ts --output-path=src/generated/schema.ts --directory=../../powersync --api-url=http://127.0.0.1:8080",
     "format": "biome format --write ."
   },
   "dependencies": {

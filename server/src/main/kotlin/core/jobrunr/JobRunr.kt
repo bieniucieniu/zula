@@ -34,7 +34,7 @@ fun Application.configureJobRunr() {
             environment.config.propertyOrNull("jobrunr.dashboardPort")
                 ?.getString()
                 ?.toIntOrNull()
-                ?: 8000
+                ?: 8008
 
         JobRunr.configure()
             .useJobActivator(KoinJobActivator)

@@ -773,7 +773,7 @@ Invalidation is simple at MVP: feed reads hit source tables. Profile changes may
 # - POST /feed/traits/{id}/follow → GET /feed/for-you returns ranked items
 # - New user with no profile → GET /feed/for-you behaves like GET /feed
 # - Block author → their items absent from both feeds
-curl -H "Authorization: Bearer $TOKEN" "http://localhost:8080/api/v1/feed/for-you?limit=20"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8000/api/v1/feed/for-you?limit=20"
 ```
 
 ### Pagination tests to add

@@ -13,7 +13,7 @@ Local-first sync for web + native via self-hosted PowerSync Service.
 ## Devenv
 
 ```bash
-devenv --profile powersync up   # postgres + Ktor + powersync compose :8081
+devenv --profile powersync up   # postgres + Ktor + powersync compose :8080
 bun run gen:powersync
 ```
 
@@ -116,6 +116,6 @@ async uploadData(db) {
 
 | Variable | Purpose |
 |----------|---------|
-| `PS_URL` | Service origin (local `http://127.0.0.1:8081`) |
+| `PS_URL` | Service origin (local `http://127.0.0.1:8080`) |
 | `PS_REPLICATION_PASSWORD` | `powersync_role` password |
 | `PS_STORAGE_USERNAME` / `PS_STORAGE_PASSWORD` | Bucket DB (`zula_powersync`) |

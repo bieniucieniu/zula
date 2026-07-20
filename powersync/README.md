@@ -7,7 +7,7 @@ Client schema: `packages/powersync` (`@zula/powersync`).
 | Path | Role |
 |------|------|
 | `sync-config.yaml` | Sync Streams |
-| `docker-compose.yaml` | Local PowerSync on `:8081`; builds URI env from secretspec `PS_*` |
+| `docker-compose.yaml` | Local PowerSync on `:8080`; builds URI env from secretspec `PS_*` |
 | `service.yaml` | `!env PS_DATA_SOURCE_URI` / `PS_STORAGE_URI` / `PS_JWKS_URI` |
 
 Postgres (devenv): `zula` (source), `zula_powersync` (buckets).  
@@ -28,10 +28,10 @@ Compose builds container env from secretspec (defaults = `secretspec.toml`):
 
 | secretspec | Used for |
 |------------|----------|
-| `PS_URL` | Client origin (`http://127.0.0.1:8081` ↔ compose port `8081`) |
+| `PS_URL` | Client origin (`http://127.0.0.1:8080` ↔ compose port `8080`) |
 | `PS_REPLICATION_PASSWORD` | `PS_DATA_SOURCE_URI` (`powersync_role`) |
 | `PS_STORAGE_USERNAME` / `PS_STORAGE_PASSWORD` | `PS_STORAGE_URI` |
-| _(compose default)_ | `PS_JWKS_URI` → `http://host.docker.internal:8080/.well-known/jwks.json` |
+| _(compose default)_ | `PS_JWKS_URI` → `http://host.docker.internal:8000/.well-known/jwks.json` |
 
 `devenv enterTest` asserts those secretspec defaults are set.
 

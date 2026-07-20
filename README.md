@@ -17,7 +17,7 @@ zula/
 
 | Task                      | Description                     |
 |---------------------------|---------------------------------|
-| `./gradlew :server:run`   | Run the API server on port 8080 |
+| `./gradlew :server:run`   | Run the API server on port 8000 |
 | `./gradlew :server:build` | Build the server JAR            |
 | `./gradlew :server:test`  | Run server tests                |
 

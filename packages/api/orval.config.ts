@@ -3,7 +3,7 @@ import { defineConfig } from "orval"
 export default defineConfig({
   api: {
     input: {
-      target: "http://localhost:8080/swagger/documentation.yaml",
+      target: "http://localhost:8000/swagger/documentation.yaml",
     },
     output: {
       mode: "tags-split",

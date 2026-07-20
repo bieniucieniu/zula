@@ -7,7 +7,7 @@ database:
 
 jobrunr:
   dashboardEnabled: ${JOBRUNR_DASHBOARD:false}
-  dashboardPort: ${JOBRUNR_DASHBOARD_PORT:8000}
+  dashboardPort: ${JOBRUNR_DASHBOARD_PORT:8008}
 
 security:
   appUrl: ${APP_URL:}
@@ -41,7 +41,7 @@ security:
 
 ktor:
   deployment:
-    port: 8080
+    port: 8000
     watch:
       - classes
   development: true
