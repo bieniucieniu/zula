@@ -34,7 +34,7 @@ Regenerate clients after backend route/DTO changes.
 
 Mobile clients use the same REST API at `API_URL` (must be `http(s)://host[:port]/api/v1`).
 
-Optional local-first sync: [`@zula/powersync`](../packages/powersync/) + [powersync.md](./powersync.md). Prefer REST fallback when PowerSync is down (`DataSourceMode`).
+Optional local-first sync: [`@zula/powersync`](../packages/powersync/) + [powersync.md](./powersync.md).
 
 Contracts: `core/openapi/`.
 

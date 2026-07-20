@@ -4,13 +4,11 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/generated/schema.ts",
-    "./data-source": "./src/data-source.ts"
+    "./schema": "./src/generated/schema.ts"
   },
   "scripts": {
-    "gen": "bun run ./scripts/gen-schema.ts",
-    "format": "biome format --write .",
-    "test": "bun test"
+    "gen": "powersync generate schema --output=ts --output-path=src/generated/schema.ts --directory=../../powersync --api-url=http://127.0.0.1:8081",
+    "format": "biome format --write ."
   },
   "dependencies": {
     "@powersync/common": "^1.46.0"
