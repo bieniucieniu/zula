@@ -7,8 +7,8 @@ Client schema: `packages/powersync` (`@zula/powersync`).
 | Path | Role |
 |------|------|
 | `sync-config.yaml` | Sync Streams (shared) |
-| `dev/docker-compose.yaml` | Local PowerSync on `:8081` |
-| `dev/service.yaml` | Dev URIs **hardcoded** (`PS_*` baked in) |
+| `dev/docker-compose.yaml` | Local PowerSync on `:8081`; builds `PS_*` from secretspec `POWERSYNC_*` |
+| `dev/service.yaml` | `!env PS_DATA_SOURCE_URI` / `PS_STORAGE_URI` / `PS_JWKS_URI` |
 | `prod/docker-compose.yaml` | Smoke-test reference only — **k8s is real deploy** |
 | `prod/service.yaml` | Prod config via `!env PS_*` (k8s Secret/ConfigMap) |
 

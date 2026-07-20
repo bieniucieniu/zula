@@ -1,4 +1,5 @@
-# Dev PowerSync Service. URIs hardcoded in ./service.yaml.
+# Dev PowerSync Service.
+# Injects PS_* into the container from secretspec POWERSYNC_* (defaults match secretspec.toml).
 # Needs: devenv postgres (wal_level=logical + initialSQL), Ktor JWKS on :8080.
 # Always recreate/remove the container (PowerSync caches config across restarts).
 services:
@@ -7,9 +8,14 @@ services:
     restart: "no"
     command: ["start", "-r", "unified"]
     ports:
+      # Keep in sync with secretspec POWERSYNC_URL default (http://127.0.0.1:8081).
       - "8081:8080"
     environment:
       POWERSYNC_CONFIG_PATH: /config/service.yaml
+      # Built from POWERSYNC_* (host env via devenv secretspec). Defaults = secretspec.toml.
+      PS_DATA_SOURCE_URI: postgresql://powersync_role:${POWERSYNC_REPLICATION_PASSWORD:-powersync}@host.docker.internal:5432/zula
+      PS_STORAGE_URI: postgresql://${POWERSYNC_STORAGE_USERNAME:-powersync}:${POWERSYNC_STORAGE_PASSWORD:-powersync}@host.docker.internal:5432/zula_powersync
+      PS_JWKS_URI: ${PS_JWKS_URI:-http://host.docker.internal:8080/.well-known/jwks.json}
     volumes:
       - ./service.yaml:/config/service.yaml:ro
       - ../sync-config.yaml:/config/sync-config.yaml:ro

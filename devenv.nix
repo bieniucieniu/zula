@@ -200,7 +200,19 @@ in
     test -n "$DATABASE_JDBC_URL"
     test -n "$APP_URL"
     test -n "$PROVIDER_TOKEN_ENCRYPTION_KEY"
+
+    echo "Checking PowerSync secretspec defaults (compose builds PS_* from these)"
     test -n "$POWERSYNC_URL"
+    test -n "$POWERSYNC_REPLICATION_PASSWORD"
+    test -n "$POWERSYNC_STORAGE_USERNAME"
+    test -n "$POWERSYNC_STORAGE_PASSWORD"
+    # Defaults from secretspec.toml — must match powersync/dev/docker-compose.yaml :-defaults
+    # and published host port 8081.
+    test "$POWERSYNC_URL" = "http://127.0.0.1:8081"
+    test "$POWERSYNC_REPLICATION_PASSWORD" = "powersync"
+    test "$POWERSYNC_STORAGE_USERNAME" = "powersync"
+    test "$POWERSYNC_STORAGE_PASSWORD" = "powersync"
+
     echo "Checking docker compose accessibility (warn-only if absent on CI without Docker)"
     if command -v docker >/dev/null 2>&1; then
       docker compose version
