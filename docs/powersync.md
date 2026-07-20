@@ -23,10 +23,12 @@ Linux: `docker-client` from devenv packages. Mac: Docker Desktop on PATH (Nix pa
 
 | Env | Config | Secrets |
 |-----|--------|---------|
-| **dev** | `powersync/dev/service.yaml` | Hardcoded local URIs |
+| **dev** | `powersync/dev/service.yaml` (`!env PS_*`) | secretspec `POWERSYNC_*` → compose → `PS_*` |
 | **prod** | `powersync/prod/service.yaml` | `!env PS_*` via k8s Secret/ConfigMap |
 
 `powersync/prod/docker-compose.yaml` is a smoke-test reference only — production runs on Kubernetes.
+
+`devenv enterTest` asserts secretspec PowerSync defaults (`POWERSYNC_URL`, replication/storage user+password) match compose `:-` fallbacks.
 
 ## Sync Streams (profiles)
 
