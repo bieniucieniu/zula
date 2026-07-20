@@ -84,9 +84,9 @@ in
       extends = [ "backend" ];
       module = {
         processes.powersync = {
-          exec = "docker compose -f ${root}/powersync/docker-compose.yaml up --abort-on-container-exit";
+          exec = "docker compose -f ${root}/powersync/dev/docker-compose.yaml up --abort-on-container-exit";
           process-compose = {
-            working_dir = "${root}/powersync";
+            working_dir = "${root}/powersync/dev";
             depends_on = {
               postgres.condition = "process_healthy";
               server.condition = "process_started";
@@ -103,7 +103,7 @@ in
               failure_threshold = 12;
             };
             shutdown = {
-              command = "docker compose -f ${root}/powersync/docker-compose.yaml down";
+              command = "docker compose -f ${root}/powersync/dev/docker-compose.yaml down";
               timeout_seconds = 30;
             };
           };

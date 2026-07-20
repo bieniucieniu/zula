@@ -6,18 +6,27 @@ Local-first sync for web + native via self-hosted PowerSync Service.
 
 | Path | Role |
 |------|------|
-| [`powersync/`](../powersync/) | Service config, Sync Streams, Docker Compose |
+| [`powersync/`](../powersync/) | Sync Streams + `dev/` / `prod/` service + compose |
 | [`packages/powersync`](../packages/powersync/) | Shared `@zula/powersync` AppSchema |
 | [`devenv.nix`](../devenv.nix) `services.postgres` | `zula` + `zula_powersync`, `wal_level=logical`, replication `initialSQL` |
 
 ## Devenv
 
 ```bash
-devenv --profile powersync up   # postgres + Ktor + PowerSync :8081
-cd packages/powersync && bun run gen
+devenv --profile powersync up   # postgres + Ktor + powersync/dev compose :8081
+bun run gen:powersync
 ```
 
 Linux: `docker-client` from devenv packages. Mac: Docker Desktop on PATH (Nix package omitted).
+
+## Config split
+
+| Env | Config | Secrets |
+|-----|--------|---------|
+| **dev** | `powersync/dev/service.yaml` | Hardcoded local URIs |
+| **prod** | `powersync/prod/service.yaml` | `!env PS_*` via k8s Secret/ConfigMap |
+
+`powersync/prod/docker-compose.yaml` is a smoke-test reference only — production runs on Kubernetes.
 
 ## Sync Streams (profiles)
 
