@@ -11,9 +11,9 @@ import kotlinx.serialization.json.Json
 
 /**
  * Field-keyed validation errors for forms.
- * Key = field path; values = stable error codes (not localized messages).
+ * Key = field path; values = [ProblemErrorCode] (not localized messages).
  */
-typealias ProblemDetailsErrors = Map<String, List<String>>
+typealias ProblemDetailsErrors = Map<String, List<ProblemErrorCode>>
 
 /**
  * RFC 9457 Problem Details for HTTP APIs (`application/problem+json`).
@@ -48,7 +48,7 @@ fun HttpException.toProblemDetails(instance: String? = null) = problemDetails(
     status = status,
     detail = message,
     instance = instance,
-    errors = errors,
+    errors = this.errors,
 )
 
 private val problemJson = Json {

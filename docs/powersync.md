@@ -60,7 +60,7 @@ Authorization: Bearer <access JWT>
 
 Server returns `200` + per-op results. Permanent rejects (`ok: false`) still complete the batch — do not block the upload queue. Retryable failures use whole-request `5xx` (StatusPages Problem Details).
 
-Failed ops embed RFC 9457 Problem Details (optional `errors` map = field → error codes for forms):
+Failed ops embed RFC 9457 Problem Details (optional `errors` map = field → [`ProblemErrorCode`](../packages/api/src/problemDetails.ts) string enums):
 
 ```json
 {
@@ -85,6 +85,8 @@ Failed ops embed RFC 9457 Problem Details (optional `errors` map = field → err
   ]
 }
 ```
+
+Wire codes: `required`, `too_short`, `too_long`, `invalid`, `format`, `mismatch`, `taken`, `not_found`, `expired`, `forbidden`, `unauthorized`, `conflict`.
 
 | table | ops | Handler |
 |-------|-----|---------|

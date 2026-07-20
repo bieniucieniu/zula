@@ -22,8 +22,11 @@ class StatusPagesErrorHandlerTest {
                     badRequest(
                         "Validation failed",
                         errors = mapOf(
-                            "displayName" to listOf("required", "too_short"),
-                            "bio" to listOf("too_long"),
+                            "displayName" to listOf(
+                                ProblemErrorCode.REQUIRED,
+                                ProblemErrorCode.TOO_SHORT,
+                            ),
+                            "bio" to listOf(ProblemErrorCode.TOO_LONG),
                         ),
                     )
                 }
@@ -60,9 +63,22 @@ class StatusPagesErrorHandlerTest {
             status = HttpStatusCode.BadRequest,
             detail = "Validation failed",
             instance = "/api/users",
-            errors = mapOf("email" to listOf("invalid")),
+            errors = mapOf("email" to listOf(ProblemErrorCode.INVALID)),
         )
-        assertEquals(mapOf("email" to listOf("invalid")), problem.errors)
+        assertEquals(mapOf("email" to listOf(ProblemErrorCode.INVALID)), problem.errors)
         assertEquals("/api/users", problem.instance)
+    }
+
+    @Test
+    fun `ProblemErrorCode wire values are snake_case`() {
+        val encoded = kotlinx.serialization.json.Json.encodeToString(
+            kotlinx.serialization.builtins.ListSerializer(ProblemErrorCode.serializer()),
+            listOf(
+                ProblemErrorCode.REQUIRED,
+                ProblemErrorCode.TOO_SHORT,
+                ProblemErrorCode.NOT_FOUND,
+            ),
+        )
+        assertEquals("""["required","too_short","not_found"]""", encoded)
     }
 }
