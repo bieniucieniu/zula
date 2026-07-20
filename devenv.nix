@@ -84,13 +84,7 @@ in
       extends = [ "backend" ];
       module = {
         processes.powersync = {
-          exec = ''
-            set -euo pipefail
-            export PS_DATA_SOURCE_URI="''${PS_DATA_SOURCE_URI:-postgresql://powersync_role:''${POWERSYNC_REPLICATION_PASSWORD:-powersync}@host.docker.internal:5432/zula}"
-            export PS_STORAGE_URI="''${PS_STORAGE_URI:-postgresql://''${POWERSYNC_STORAGE_USERNAME:-powersync}:''${POWERSYNC_STORAGE_PASSWORD:-powersync}@host.docker.internal:5432/zula_powersync}"
-            export PS_JWKS_URI="''${PS_JWKS_URI:-http://host.docker.internal:8080/.well-known/jwks.json}"
-            docker compose -f "${root}/powersync/docker-compose.yaml" up --abort-on-container-exit
-          '';
+          exec = "docker compose -f ${root}/powersync/docker-compose.yaml up --abort-on-container-exit";
           process-compose = {
             working_dir = "${root}/powersync";
             depends_on = {
