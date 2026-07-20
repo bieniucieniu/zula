@@ -37,11 +37,27 @@ in
         name = "zula";
         user = secrets.DATABASE_USERNAME or "zula";
         pass = secrets.DATABASE_PASSWORD or "zula";
+        # PowerSync logical replication (first Postgres init only).
+        # https://devenv.sh/services/postgres/#servicespostgresinitialdatabasesinitialsql
+        # Runs as cluster superuser (unix socket during setup) before initialScript.
+        initialSQL = ''
+          CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD '${secrets.POWERSYNC_REPLICATION_PASSWORD or "powersync"}';
+          GRANT CONNECT ON DATABASE zula TO powersync_role;
+          GRANT USAGE ON SCHEMA public TO powersync_role;
+          GRANT SELECT ON ALL TABLES IN SCHEMA public TO powersync_role;
+          GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO powersync_role;
+          ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO powersync_role;
+          ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON SEQUENCES TO powersync_role;
+          CREATE PUBLICATION powersync FOR ALL TABLES;
+        '';
       }
       {
         name = "zula_powersync";
         user = secrets.POWERSYNC_STORAGE_USERNAME or "powersync";
         pass = secrets.POWERSYNC_STORAGE_PASSWORD or "powersync";
+        initialSQL = ''
+          GRANT CONNECT ON DATABASE zula_powersync TO powersync_role;
+        '';
       }
     ];
   };
@@ -67,18 +83,6 @@ in
     powersync = {
       extends = [ "backend" ];
       module = {
-        processes.powersync-db-init = {
-          exec = "${root}/powersync/init-db.sh";
-          process-compose = {
-            working_dir = root;
-            depends_on = {
-              postgres.condition = "process_healthy";
-            };
-            availability = {
-              restart = "no";
-            };
-          };
-        };
         processes.powersync = {
           exec = ''
             set -euo pipefail
@@ -103,7 +107,6 @@ in
             working_dir = "${root}/powersync";
             depends_on = {
               postgres.condition = "process_healthy";
-              powersync-db-init.condition = "process_completed_successfully";
               server.condition = "process_started";
             };
             readiness_probe = {
