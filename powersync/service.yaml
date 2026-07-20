@@ -1,5 +1,5 @@
-# Dev PowerSync Service — URIs from env (compose injects secretspec PS_*).
-# Prod: see ../prod/service.yaml (k8s).
+# Local PowerSync Service — URIs from env (compose injects secretspec PS_*).
+# Deploy/k8s: separate config — not this file.
 replication:
   connections:
     - type: postgresql
