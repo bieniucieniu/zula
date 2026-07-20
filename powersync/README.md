@@ -7,7 +7,7 @@ Client schema: `packages/powersync` (`@zula/powersync`).
 | Path | Role |
 |------|------|
 | `sync-config.yaml` | Sync Streams (shared) |
-| `dev/docker-compose.yaml` | Local PowerSync on `:8081`; builds `PS_*` from secretspec `POWERSYNC_*` |
+| `dev/docker-compose.yaml` | Local PowerSync on `:8081`; builds URI env from secretspec `PS_*` |
 | `dev/service.yaml` | `!env PS_DATA_SOURCE_URI` / `PS_STORAGE_URI` / `PS_JWKS_URI` |
 | `prod/docker-compose.yaml` | Smoke-test reference only — **k8s is real deploy** |
 | `prod/service.yaml` | Prod config via `!env PS_*` (k8s Secret/ConfigMap) |
@@ -22,11 +22,14 @@ devenv --profile powersync up   # uses powersync/dev/compose
 bun run gen:powersync
 ```
 
-`dev/service.yaml` hardcodes:
+`dev/docker-compose.yaml` builds container env from secretspec (defaults = `secretspec.toml`):
 
-- source DB → `host.docker.internal:5432/zula` (`powersync_role`)
-- storage → `…/zula_powersync`
-- JWKS → `http://host.docker.internal:8080/.well-known/jwks.json`
+| secretspec | Used for |
+|------------|----------|
+| `PS_URL` | Client origin (`http://127.0.0.1:8081` ↔ compose port `8081`) |
+| `PS_REPLICATION_PASSWORD` | `PS_DATA_SOURCE_URI` (`powersync_role`) |
+| `PS_STORAGE_USERNAME` / `PS_STORAGE_PASSWORD` | `PS_STORAGE_URI` |
+| _(compose default)_ | `PS_JWKS_URI` → `http://host.docker.internal:8080/.well-known/jwks.json` |
 
 ## Prod (k8s)
 

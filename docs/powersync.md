@@ -23,12 +23,12 @@ Linux: `docker-client` from devenv packages. Mac: Docker Desktop on PATH (Nix pa
 
 | Env | Config | Secrets |
 |-----|--------|---------|
-| **dev** | `powersync/dev/service.yaml` (`!env PS_*`) | secretspec `POWERSYNC_*` → compose → `PS_*` |
+| **dev** | `powersync/dev/service.yaml` (`!env PS_*`) | secretspec `PS_*` → compose builds URIs |
 | **prod** | `powersync/prod/service.yaml` | `!env PS_*` via k8s Secret/ConfigMap |
 
 `powersync/prod/docker-compose.yaml` is a smoke-test reference only — production runs on Kubernetes.
 
-`devenv enterTest` asserts secretspec PowerSync defaults (`POWERSYNC_URL`, replication/storage user+password) match compose `:-` fallbacks.
+`devenv enterTest` asserts secretspec PowerSync defaults (`PS_URL`, replication/storage user+password) match compose `:-` fallbacks.
 
 ## Sync Streams (profiles)
 
@@ -48,6 +48,6 @@ JWKS: Ktor `/.well-known/jwks.json`. Audience: `zula`.
 
 | Variable | Purpose |
 |----------|---------|
-| `POWERSYNC_URL` | Service origin (local `http://127.0.0.1:8081`) |
-| `POWERSYNC_REPLICATION_PASSWORD` | `powersync_role` password |
-| `POWERSYNC_STORAGE_USERNAME` / `PASSWORD` | Bucket DB (`zula_powersync`) |
+| `PS_URL` | Service origin (local `http://127.0.0.1:8081`) |
+| `PS_REPLICATION_PASSWORD` | `powersync_role` password |
+| `PS_STORAGE_USERNAME` / `PS_STORAGE_PASSWORD` | Bucket DB (`zula_powersync`) |

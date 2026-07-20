@@ -41,7 +41,7 @@ in
         # https://devenv.sh/services/postgres/#servicespostgresinitialdatabasesinitialsql
         # Runs as cluster superuser (unix socket during setup) before initialScript.
         initialSQL = ''
-          CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD '${secrets.POWERSYNC_REPLICATION_PASSWORD or "powersync"}';
+          CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD '${secrets.PS_REPLICATION_PASSWORD or "powersync"}';
           GRANT CONNECT ON DATABASE zula TO powersync_role;
           GRANT USAGE ON SCHEMA public TO powersync_role;
           GRANT SELECT ON ALL TABLES IN SCHEMA public TO powersync_role;
@@ -53,8 +53,8 @@ in
       }
       {
         name = "zula_powersync";
-        user = secrets.POWERSYNC_STORAGE_USERNAME or "powersync";
-        pass = secrets.POWERSYNC_STORAGE_PASSWORD or "powersync";
+        user = secrets.PS_STORAGE_USERNAME or "powersync";
+        pass = secrets.PS_STORAGE_PASSWORD or "powersync";
         initialSQL = ''
           GRANT CONNECT ON DATABASE zula_powersync TO powersync_role;
         '';
@@ -187,7 +187,7 @@ in
     echo "  db:      psql                          # interactive (needs devenv up)"
     echo "  jdbc:    $DATABASE_JDBC_URL"
     echo "  app:     $APP_URL"
-    echo "  powersync: $POWERSYNC_URL"
+    echo "  powersync: $PS_URL"
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
       echo "  docker:  ok ($(docker compose version 2>/dev/null | head -n1))"
     else
@@ -201,17 +201,17 @@ in
     test -n "$APP_URL"
     test -n "$PROVIDER_TOKEN_ENCRYPTION_KEY"
 
-    echo "Checking PowerSync secretspec defaults (compose builds PS_* from these)"
-    test -n "$POWERSYNC_URL"
-    test -n "$POWERSYNC_REPLICATION_PASSWORD"
-    test -n "$POWERSYNC_STORAGE_USERNAME"
-    test -n "$POWERSYNC_STORAGE_PASSWORD"
+    echo "Checking PowerSync secretspec defaults (compose builds PS_* URIs from these)"
+    test -n "$PS_URL"
+    test -n "$PS_REPLICATION_PASSWORD"
+    test -n "$PS_STORAGE_USERNAME"
+    test -n "$PS_STORAGE_PASSWORD"
     # Defaults from secretspec.toml — must match powersync/dev/docker-compose.yaml :-defaults
     # and published host port 8081.
-    test "$POWERSYNC_URL" = "http://127.0.0.1:8081"
-    test "$POWERSYNC_REPLICATION_PASSWORD" = "powersync"
-    test "$POWERSYNC_STORAGE_USERNAME" = "powersync"
-    test "$POWERSYNC_STORAGE_PASSWORD" = "powersync"
+    test "$PS_URL" = "http://127.0.0.1:8081"
+    test "$PS_REPLICATION_PASSWORD" = "powersync"
+    test "$PS_STORAGE_USERNAME" = "powersync"
+    test "$PS_STORAGE_PASSWORD" = "powersync"
 
     echo "Checking docker compose accessibility (warn-only if absent on CI without Docker)"
     if command -v docker >/dev/null 2>&1; then
