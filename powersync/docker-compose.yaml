@@ -1,7 +1,8 @@
-# Dev PowerSync Service.
+# Local PowerSync Service.
 # Injects PS_* into the container from secretspec (defaults match secretspec.toml).
 # Needs: devenv postgres (wal_level=logical + initialSQL), Ktor JWKS on :8080.
 # Always recreate/remove the container (PowerSync caches config across restarts).
+# Deploy/k8s: separate config — not this file.
 services:
   powersync:
     image: journeyapps/powersync-service:latest
@@ -18,7 +19,7 @@ services:
       PS_JWKS_URI: ${PS_JWKS_URI:-http://host.docker.internal:8080/.well-known/jwks.json}
     volumes:
       - ./service.yaml:/config/service.yaml:ro
-      - ../sync-config.yaml:/config/sync-config.yaml:ro
+      - ./sync-config.yaml:/config/sync-config.yaml:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:

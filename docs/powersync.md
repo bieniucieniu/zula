@@ -6,29 +6,22 @@ Local-first sync for web + native via self-hosted PowerSync Service.
 
 | Path | Role |
 |------|------|
-| [`powersync/`](../powersync/) | Sync Streams + `dev/` / `prod/` service + compose |
+| [`powersync/`](../powersync/) | Sync Streams + local service + compose |
 | [`packages/powersync`](../packages/powersync/) | Shared `@zula/powersync` AppSchema |
 | [`devenv.nix`](../devenv.nix) `services.postgres` | `zula` + `zula_powersync`, `wal_level=logical`, replication `initialSQL` |
 
 ## Devenv
 
 ```bash
-devenv --profile powersync up   # postgres + Ktor + powersync/dev compose :8081
+devenv --profile powersync up   # postgres + Ktor + powersync compose :8081
 bun run gen:powersync
 ```
 
 Linux: `docker-client` from devenv packages. Mac: Docker Desktop on PATH (Nix package omitted).
 
-## Config split
+Local `powersync/service.yaml` uses `!env PS_*`; compose builds URIs from secretspec. Deploy/k8s = separate config.
 
-| Env | Config | Secrets |
-|-----|--------|---------|
-| **dev** | `powersync/dev/service.yaml` (`!env PS_*`) | secretspec `PS_*` → compose builds URIs |
-| **prod** | `powersync/prod/service.yaml` | `!env PS_*` via k8s Secret/ConfigMap |
-
-`powersync/prod/docker-compose.yaml` is a smoke-test reference only — production runs on Kubernetes.
-
-`devenv enterTest` asserts secretspec PowerSync defaults (`PS_URL`, replication/storage user+password) match compose `:-` fallbacks.
+`devenv enterTest` asserts secretspec defaults (`PS_URL`, `PS_REPLICATION_PASSWORD`, `PS_STORAGE_USERNAME`, `PS_STORAGE_PASSWORD`) match compose `:-` fallbacks.
 
 ## Sync Streams (profiles)
 

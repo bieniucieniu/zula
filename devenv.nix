@@ -88,11 +88,11 @@ in
           # trap down: always remove the container on exit (process-compose stop or crash).
           exec = ''
             set -eu
-            trap 'docker compose -f ${root}/powersync/dev/docker-compose.yaml down --remove-orphans' EXIT
-            docker compose -f ${root}/powersync/dev/docker-compose.yaml up --abort-on-container-exit --force-recreate --remove-orphans
+            trap 'docker compose -f ${root}/powersync/docker-compose.yaml down --remove-orphans' EXIT
+            docker compose -f ${root}/powersync/docker-compose.yaml up --abort-on-container-exit --force-recreate --remove-orphans
           '';
           process-compose = {
-            working_dir = "${root}/powersync/dev";
+            working_dir = "${root}/powersync";
             depends_on = {
               postgres.condition = "process_healthy";
               server.condition = "process_started";
@@ -109,7 +109,7 @@ in
               failure_threshold = 12;
             };
             shutdown = {
-              command = "docker compose -f ${root}/powersync/dev/docker-compose.yaml down --remove-orphans";
+              command = "docker compose -f ${root}/powersync/docker-compose.yaml down --remove-orphans";
               timeout_seconds = 30;
             };
           };
@@ -206,7 +206,7 @@ in
     test -n "$PS_REPLICATION_PASSWORD"
     test -n "$PS_STORAGE_USERNAME"
     test -n "$PS_STORAGE_PASSWORD"
-    # Defaults from secretspec.toml — must match powersync/dev/docker-compose.yaml :-defaults
+    # Defaults from secretspec.toml — must match powersync/docker-compose.yaml :-defaults
     # and published host port 8081.
     test "$PS_URL" = "http://127.0.0.1:8081"
     test "$PS_REPLICATION_PASSWORD" = "powersync"
@@ -219,9 +219,8 @@ in
     else
       echo "SKIP: docker not installed in this environment"
     fi
-    test -f "${root}/powersync/dev/docker-compose.yaml"
-    test -f "${root}/powersync/dev/service.yaml"
-    test -f "${root}/powersync/prod/service.yaml"
+    test -f "${root}/powersync/docker-compose.yaml"
+    test -f "${root}/powersync/service.yaml"
     test -f "${root}/powersync/sync-config.yaml"
     test -f "${root}/packages/powersync/package.json"
     echo "OK"
