@@ -1,13 +1,14 @@
-# PowerSync Service config (self-hosted). Env vars from docker-compose / .env.
+# Local/dev PowerSync Service config (self-hosted).
+# Deploy: use a separate service config / secrets (not this file).
 replication:
   connections:
     - type: postgresql
-      uri: !env PS_DATA_SOURCE_URI
+      uri: postgresql://powersync_role:powersync@host.docker.internal:5432/zula
       sslmode: disable
 
 storage:
   type: postgresql
-  uri: !env PS_STORAGE_URI
+  uri: postgresql://powersync:powersync@host.docker.internal:5432/zula_powersync
   sslmode: disable
 
 # Container listens on 8080; host maps 8081:8080 (Ktor owns 8080).
@@ -15,7 +16,7 @@ port: 8080
 
 client_auth:
   # Existing Zula JWKS (same RSA keys as session JWTs).
-  jwks_uri: !env PS_JWKS_URI
+  jwks_uri: http://host.docker.internal:8080/.well-known/jwks.json
   audience:
     - zula
 

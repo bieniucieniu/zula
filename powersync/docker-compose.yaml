@@ -1,6 +1,7 @@
 # PowerSync Service only. Source + bucket DBs live in devenv Postgres
 # (zula + zula_powersync). Requires: devenv postgres up with wal_level=logical
 # + initialSQL (powersync_role / publication), Ktor JWKS reachable for auth.
+# Local URIs are hardcoded in service.yaml; deploy uses a separate config.
 services:
   powersync:
     image: journeyapps/powersync-service:latest
@@ -10,9 +11,6 @@ services:
       - "8081:8080"
     environment:
       POWERSYNC_CONFIG_PATH: /config/service.yaml
-      PS_DATA_SOURCE_URI: ${PS_DATA_SOURCE_URI:-postgresql://powersync_role:powersync@host.docker.internal:5432/zula}
-      PS_STORAGE_URI: ${PS_STORAGE_URI:-postgresql://powersync:powersync@host.docker.internal:5432/zula_powersync}
-      PS_JWKS_URI: ${PS_JWKS_URI:-http://host.docker.internal:8080/.well-known/jwks.json}
     volumes:
       - ./service.yaml:/config/service.yaml:ro
       - ./sync-config.yaml:/config/sync-config.yaml:ro

@@ -7,7 +7,7 @@ Service config lives here. Client schema / helpers: `packages/powersync` (`@zula
 | File | Role |
 |------|------|
 | `docker-compose.yaml` | PowerSync Service on host `:8081` |
-| `service.yaml` | Replication, bucket storage, JWKS auth |
+| `service.yaml` | Local/dev replication, storage, JWKS (hardcoded). Deploy = separate config. |
 | `sync-config.yaml` | Sync Streams (source of truth) |
 
 Postgres DBs (devenv): `zula` (source), `zula_powersync` (bucket storage).
