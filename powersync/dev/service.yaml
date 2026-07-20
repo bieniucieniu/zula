@@ -1,5 +1,5 @@
-# Local/dev PowerSync Service config (self-hosted).
-# Deploy: use a separate service config / secrets (not this file).
+# Dev PowerSync Service — hardcoded local URIs (devenv Postgres + Ktor).
+# Prod: see ../prod/service.yaml (k8s / env injection).
 replication:
   connections:
     - type: postgresql
@@ -15,7 +15,6 @@ storage:
 port: 8080
 
 client_auth:
-  # Existing Zula JWKS (same RSA keys as session JWTs).
   jwks_uri: http://host.docker.internal:8080/.well-known/jwks.json
   audience:
     - zula

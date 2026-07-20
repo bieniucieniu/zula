@@ -1,22 +1,50 @@
 # PowerSync (self-hosted)
 
-Service config lives here. Client schema / helpers: `packages/powersync` (`@zula/powersync`).
+Client schema: `packages/powersync` (`@zula/powersync`).
 
 ## Layout
 
-| File | Role |
+| Path | Role |
 |------|------|
-| `docker-compose.yaml` | PowerSync Service on host `:8081` |
-| `service.yaml` | Local/dev replication, storage, JWKS (hardcoded). Deploy = separate config. |
-| `sync-config.yaml` | Sync Streams (source of truth) |
+| `sync-config.yaml` | Sync Streams (shared) |
+| `dev/docker-compose.yaml` | Local PowerSync on `:8081` |
+| `dev/service.yaml` | Dev URIs **hardcoded** (`PS_*` baked in) |
+| `prod/docker-compose.yaml` | Smoke-test reference only — **k8s is real deploy** |
+| `prod/service.yaml` | Prod config via `!env PS_*` (k8s Secret/ConfigMap) |
 
-Postgres DBs (devenv): `zula` (source), `zula_powersync` (bucket storage).
+Postgres (devenv): `zula` (source), `zula_powersync` (buckets).  
+Replication role + publication: `services.postgres.initialDatabases.*.initialSQL` in [`devenv.nix`](../devenv.nix).
 
-Replication role + `powersync` publication: `services.postgres.initialDatabases.*.initialSQL` in [`devenv.nix`](../devenv.nix) (first Postgres init only).
+## Dev
 
-## Fresh Postgres note
+```bash
+devenv --profile powersync up   # uses powersync/dev/compose
+bun run gen:powersync
+```
 
-`wal_level=logical` + second DB only apply on **first** Postgres init. If `.devenv/state/postgres` already exists without them:
+`dev/service.yaml` hardcodes:
+
+- source DB → `host.docker.internal:5432/zula` (`powersync_role`)
+- storage → `…/zula_powersync`
+- JWKS → `http://host.docker.internal:8080/.well-known/jwks.json`
+
+## Prod (k8s)
+
+Ship `prod/service.yaml` + `sync-config.yaml` as ConfigMap/volume. Set:
+
+| Env | Purpose |
+|-----|---------|
+| `PS_DATA_SOURCE_URI` | App Postgres (replication) |
+| `PS_DATA_SOURCE_SSLMODE` | e.g. `require` |
+| `PS_STORAGE_URI` | Bucket-storage Postgres |
+| `PS_STORAGE_SSLMODE` | e.g. `require` |
+| `PS_JWKS_URI` | Public JWKS URL |
+
+Compose under `prod/` is **not** the deployment path — GitOps/k8s is.
+
+## Fresh Postgres
+
+`wal_level=logical` + second DB apply on **first** init only:
 
 ```bash
 devenv down
@@ -24,25 +52,15 @@ rm -rf .devenv/state/postgres
 devenv --profile powersync up
 ```
 
-## Run
-
-```bash
-# Postgres + Ktor + PowerSync
-devenv --profile powersync up
-
-# Schema gen (PowerSync must be up)
-cd packages/powersync && bun run gen
-```
-
 ## Sync design (profiles)
 
 | Stream | Mode | What |
 |--------|------|------|
-| `me` | `auto_subscribe` | Own `users` + `user_profiles` only |
-| `user_profile` | on-demand | Other profile by `user_id` param |
+| `me` | `auto_subscribe` | Own `users` + `user_profiles` |
+| `user_profile` | on-demand | Profile by `user_id` |
 
-On-demand is lazy: nothing syncs until `db.syncStream('user_profile', { user_id }).subscribe()`. After `unsubscribe()`, rows stay for **TTL** (SDK default **24h**), then are removed. Use `{ ttl: 0 }` to drop immediately. Do **not** auto-subscribe all profiles — that would keep stale rows syncing indefinitely.
+On-demand + TTL (default 24h after unsubscribe). Never auto-subscribe all profiles.
 
 ## Auth
 
-`client_auth.jwks_uri` → Ktor `/.well-known/jwks.json`. JWT `aud` must be `zula` (see `JWT_AUDIENCE`).
+JWKS from Ktor; JWT `aud` = `zula`.
