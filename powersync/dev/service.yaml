@@ -1,4 +1,4 @@
-# Dev PowerSync Service — URIs from env (compose injects secretspec POWERSYNC_*).
+# Dev PowerSync Service — URIs from env (compose injects secretspec PS_*).
 # Prod: see ../prod/service.yaml (k8s).
 replication:
   connections:
@@ -11,7 +11,7 @@ storage:
   uri: !env PS_STORAGE_URI
   sslmode: disable
 
-# Container listens on 8080; host maps 8081:8080 (must match POWERSYNC_URL).
+# Container listens on 8080; host maps 8081:8080 (must match PS_URL).
 port: 8080
 
 client_auth:
