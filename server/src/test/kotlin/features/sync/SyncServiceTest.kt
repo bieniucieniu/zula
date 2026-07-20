@@ -7,12 +7,15 @@ import com.zula.features.sync.domain.SyncOpType
 import com.zula.features.user.ProfileWrite
 import com.zula.features.user.UserProfileWriter
 import com.zula.lib.id.Ids
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 
@@ -49,9 +52,13 @@ class SyncServiceTest {
                 ),
             ),
         )
-        assertEquals(1, response.results.size)
-        assertFalse(response.results.single().ok)
-        assertTrue(response.results.single().error!!.contains("unsupported"))
+        val result = response.results.single()
+        assertFalse(result.ok)
+        val problem = assertNotNull(result.problem)
+        assertEquals(HttpStatusCode.BadRequest.value, problem.status)
+        assertEquals("Bad Request", problem.title)
+        assertTrue(problem.detail!!.contains("unsupported"))
+        assertEquals("/api/sync/batch#op/1:unknown_table/${actor}", problem.instance)
     }
 
     @Test
@@ -73,7 +80,9 @@ class SyncServiceTest {
                 ),
             ),
         )
-        assertTrue(response.results.single().ok)
+        val result = response.results.single()
+        assertTrue(result.ok)
+        assertNull(result.problem)
         assertEquals(1, profiles.patches.size)
         assertEquals(actor, profiles.patches.single().actor)
         assertEquals("Neo", profiles.patches.single().write.displayName)
@@ -96,7 +105,8 @@ class SyncServiceTest {
                 ),
             ),
         )
-        assertFalse(response.results.single().ok)
+        val problem = assertNotNull(response.results.single().problem)
+        assertEquals(400, problem.status)
     }
 
     @Test
@@ -116,10 +126,11 @@ class SyncServiceTest {
             ),
         )
         assertFalse(response.results.single().ok)
+        assertNotNull(response.results.single().problem)
     }
 
     @Test
-    fun `client HttpException from writer becomes per-op failure`() {
+    fun `client HttpException from writer becomes per-op problem details`() {
         val actor = Ids.next()
         val service = SyncService(
             object : UserProfileWriter {
@@ -146,8 +157,11 @@ class SyncServiceTest {
         )
         val result = response.results.single()
         assertFalse(result.ok)
-        assertEquals("Can only modify own profile", result.error)
-        assertFalse(result.retryable)
+        val problem = assertNotNull(result.problem)
+        assertEquals(403, problem.status)
+        assertEquals("Forbidden", problem.title)
+        assertEquals("Can only modify own profile", problem.detail)
+        assertEquals("/api/sync/batch#op/3:user_profiles/${actor}", problem.instance)
     }
 
     @Test

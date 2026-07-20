@@ -1,5 +1,6 @@
 package com.zula.features.sync.domain
 
+import com.zula.core.http.ProblemDetails
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -40,10 +41,12 @@ data class SyncOpResult(
     val id: String,
     val op: SyncOpType,
     val ok: Boolean,
-    /** Permanent rejection — client should still complete the batch (do not retry forever). */
-    val error: String? = null,
-    /** If true, client should throw / retry (5xx-class). Usually whole HTTP fails instead. */
-    val retryable: Boolean = false,
+    /**
+     * RFC 9457 Problem Details when [ok] is false.
+     * Clients should treat `status` 4xx as permanent reject; 5xx as retryable
+     * (usually the whole HTTP call fails instead).
+     */
+    val problem: ProblemDetails? = null,
 )
 
 @Serializable

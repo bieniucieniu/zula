@@ -1,6 +1,9 @@
 package com.zula.features.sync
 
 import com.zula.core.http.HttpException
+import com.zula.core.http.ProblemDetails
+import com.zula.core.http.problemDetails
+import com.zula.core.http.toProblemDetails
 import com.zula.features.sync.domain.SyncBatchRequest
 import com.zula.features.sync.domain.SyncBatchResponse
 import com.zula.features.sync.domain.SyncOp
@@ -9,6 +12,7 @@ import com.zula.features.sync.domain.SyncOpType
 import com.zula.features.user.ProfileWrite
 import com.zula.features.user.UserProfileWriter
 import com.zula.lib.id.Ids
+import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -18,8 +22,9 @@ import kotlin.uuid.Uuid
  * Applies a PowerSync upload batch by dispatching each op to domain services.
  * Never writes raw SQL from [SyncOp.opData].
  *
- * Per-op [HttpException] (4xx) become [SyncOpResult.ok]=false so the batch HTTP
- * call still returns 200. Unexpected errors are not caught — StatusPages handles them.
+ * Per-op [HttpException] (4xx) become [SyncOpResult] with embedded [ProblemDetails]
+ * so the batch HTTP call still returns 200. Unexpected errors are not caught —
+ * StatusPages handles them.
  */
 class SyncService(
     private val userProfiles: UserProfileWriter,
@@ -36,31 +41,34 @@ class SyncService(
         return try {
             when (op.table) {
                 "user_profiles" -> applyUserProfile(actorId, op)
-                "users" -> reject(op, "users table is not writable via sync")
-                else -> reject(op, "unsupported table: ${op.table}")
+                "users" -> reject(op, HttpStatusCode.BadRequest, "users table is not writable via sync")
+                else -> reject(op, HttpStatusCode.BadRequest, "unsupported table: ${op.table}")
             }
         } catch (e: HttpException) {
-            // Batch semantics only: map client errors to per-op failure. Re-throw nothing —
-            // sealed HttpException is always 4xx; server faults use other Throwables.
+            // Batch semantics only: map client errors to per-op Problem Details.
             when (e) {
                 is HttpException.BadRequest,
                 is HttpException.Unauthorized,
                 is HttpException.Forbidden,
                 is HttpException.NotFound,
                 is HttpException.Conflict,
-                -> reject(op, e.message ?: e.status.description, retryable = false)
+                -> fail(op, e.toProblemDetails(instance = op.problemInstance()))
             }
         }
     }
 
     private fun applyUserProfile(actorId: Uuid, op: SyncOp): SyncOpResult {
         val profileId = Ids.parseOrNull(op.id)
-            ?: return reject(op, "invalid profile id")
+            ?: return reject(op, HttpStatusCode.BadRequest, "invalid profile id")
         val write = op.opData.toProfileWrite()
         when (op.op) {
             SyncOpType.PUT -> userProfiles.putMyProfile(actorId, profileId, write)
             SyncOpType.PATCH -> userProfiles.patchMyProfile(actorId, profileId, write)
-            SyncOpType.DELETE -> return reject(op, "profile delete via sync is not allowed")
+            SyncOpType.DELETE -> return reject(
+                op,
+                HttpStatusCode.BadRequest,
+                "profile delete via sync is not allowed",
+            )
         }
         return ok(op)
     }
@@ -73,15 +81,28 @@ class SyncService(
         ok = true,
     )
 
-    private fun reject(op: SyncOp, error: String, retryable: Boolean = false) = SyncOpResult(
+    private fun reject(op: SyncOp, status: HttpStatusCode, detail: String) = fail(
+        op,
+        problemDetails(
+            status = status,
+            detail = detail,
+            instance = op.problemInstance(),
+        ),
+    )
+
+    private fun fail(op: SyncOp, problem: ProblemDetails) = SyncOpResult(
         clientId = op.clientId,
         table = op.table,
         id = op.id,
         op = op.op,
         ok = false,
-        error = error,
-        retryable = retryable,
+        problem = problem,
     )
+}
+
+private fun SyncOp.problemInstance(): String {
+    val opRef = clientId?.let { "op/$it" } ?: "op"
+    return "/api/sync/batch#$opRef:$table/$id"
 }
 
 /** PowerSync column names (snake_case) → domain [ProfileWrite]. */
