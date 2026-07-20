@@ -8,6 +8,7 @@ Local-first sync for web + native via self-hosted PowerSync Service.
 |------|------|
 | [`powersync/`](../powersync/) | Service config, Sync Streams, Docker Compose |
 | [`packages/powersync`](../packages/powersync/) | Shared `@zula/powersync` AppSchema + data-source helpers |
+| [`devenv.nix`](../devenv.nix) `services.postgres` | `zula` + `zula_powersync`, `wal_level=logical`, replication `initialSQL` |
 
 ## Devenv
 

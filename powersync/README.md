@@ -9,9 +9,10 @@ Service config lives here. Client schema / helpers: `packages/powersync` (`@zula
 | `docker-compose.yaml` | PowerSync Service on host `:8081` |
 | `service.yaml` | Replication, bucket storage, JWKS auth |
 | `sync-config.yaml` | Sync Streams (source of truth) |
-| `init-db.sh` | Replication role + `powersync` publication |
 
 Postgres DBs (devenv): `zula` (source), `zula_powersync` (bucket storage).
+
+Replication role + `powersync` publication: `services.postgres.initialDatabases.*.initialSQL` in [`devenv.nix`](../devenv.nix) (first Postgres init only).
 
 ## Fresh Postgres note
 
