@@ -1,9 +1,10 @@
 # Dev PowerSync Service. URIs hardcoded in ./service.yaml.
 # Needs: devenv postgres (wal_level=logical + initialSQL), Ktor JWKS on :8080.
+# Always recreate/remove the container (PowerSync caches config across restarts).
 services:
   powersync:
     image: journeyapps/powersync-service:latest
-    restart: unless-stopped
+    restart: "no"
     command: ["start", "-r", "unified"]
     ports:
       - "8081:8080"
