@@ -10,7 +10,14 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
+ * Field-keyed validation errors for forms.
+ * Key = field path; values = stable error codes (not localized messages).
+ */
+typealias ProblemDetailsErrors = Map<String, List<String>>
+
+/**
  * RFC 9457 Problem Details for HTTP APIs (`application/problem+json`).
+ * [errors] is an extension member for form field codes.
  */
 @Serializable
 data class ProblemDetails(
@@ -19,6 +26,7 @@ data class ProblemDetails(
     val status: Int,
     val detail: String? = null,
     val instance: String? = null,
+    val errors: ProblemDetailsErrors? = null,
 )
 
 fun problemDetails(
@@ -26,18 +34,21 @@ fun problemDetails(
     detail: String? = null,
     type: String = "about:blank",
     instance: String? = null,
+    errors: ProblemDetailsErrors? = null,
 ) = ProblemDetails(
     type = type,
     title = status.description,
     status = status.value,
     detail = detail,
     instance = instance,
+    errors = errors,
 )
 
 fun HttpException.toProblemDetails(instance: String? = null) = problemDetails(
     status = status,
     detail = message,
     instance = instance,
+    errors = errors,
 )
 
 private val problemJson = Json {
@@ -49,16 +60,23 @@ suspend fun ApplicationCall.respondProblem(
     status: HttpStatusCode,
     detail: String? = null,
     type: String = "about:blank",
+    errors: ProblemDetailsErrors? = null,
 ) {
-    val body = problemDetails(
-        status = status,
-        detail = detail,
-        type = type,
-        instance = request.path(),
+    respondProblem(
+        problemDetails(
+            status = status,
+            detail = detail,
+            type = type,
+            instance = request.path(),
+            errors = errors,
+        ),
     )
+}
+
+suspend fun ApplicationCall.respondProblem(problem: ProblemDetails) {
     respondText(
-        text = problemJson.encodeToString(body),
+        text = problemJson.encodeToString(problem),
         contentType = ContentType.Application.ProblemJson,
-        status = status,
+        status = HttpStatusCode.fromValue(problem.status),
     )
 }
