@@ -1,6 +1,6 @@
 # PowerSync Service only. Source + bucket DBs live in devenv Postgres
-# (zula + zula_powersync). Requires: devenv postgres up, wal_level=logical,
-# powersync/init-db.sh applied, Ktor JWKS reachable for client auth.
+# (zula + zula_powersync). Requires: devenv postgres up with wal_level=logical
+# + initialSQL (powersync_role / publication), Ktor JWKS reachable for auth.
 services:
   powersync:
     image: journeyapps/powersync-service:latest
