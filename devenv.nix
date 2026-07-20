@@ -41,7 +41,9 @@ in
         # https://devenv.sh/services/postgres/#servicespostgresinitialdatabasesinitialsql
         # Runs as cluster superuser (unix socket during setup) before initialScript.
         initialSQL = ''
-          CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD '${secrets.PS_REPLICATION_PASSWORD or "powersync"}';
+          CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD '${
+            secrets.PS_REPLICATION_PASSWORD or "powersync"
+          }';
           GRANT CONNECT ON DATABASE zula TO powersync_role;
           GRANT USAGE ON SCHEMA public TO powersync_role;
           GRANT SELECT ON ALL TABLES IN SCHEMA public TO powersync_role;
@@ -78,11 +80,6 @@ in
             };
           };
         };
-      };
-    };
-    powersync = {
-      extends = [ "backend" ];
-      module = {
         processes.powersync = {
           # --force-recreate: PowerSync can cache stale service.yaml across restarts.
           # trap down: always remove the container on exit (process-compose stop or crash).

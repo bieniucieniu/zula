@@ -42,13 +42,17 @@ internal fun migrateSchema(driver: SqlDriver) {
     ensureSchemaVersionTable(driver)
     val target = Database.Schema.version
     val current = readSchemaVersion(driver)
+    print("target $target, current $current\n")
 
     when {
-        current == 0L -> {
+        current < 0 -> {
             // .sq CREATE TABLE lives in Schema.create; migrate() is empty without .sqm files.
+            // If create succeeded but version stamp failed (e.g. publication/replica-identity),
+            // tables remain while current stays 0 — stamp only, do not re-create.
             Database.Schema.create(driver)
             writeSchemaVersion(driver, target)
         }
+
         current < target -> {
             Database.Schema.migrate(
                 driver = driver,
@@ -94,11 +98,34 @@ private fun ensureSchemaVersionTable(driver: SqlDriver) {
         """
         CREATE TABLE IF NOT EXISTS zula_schema_version (
             version BIGINT NOT NULL
-        )
+        );
+        ALTER TABLE zula_schema_version REPLICA IDENTITY FULL
         """.trimIndent(),
         0,
     )
 }
+
+private fun relationExists(driver: SqlDriver, name: String): Boolean =
+    driver.executeQuery(
+        null,
+        // language=PostgreSQL
+        """
+        SELECT EXISTS (
+            SELECT 1
+            FROM pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = current_schema()
+              AND c.relname = ?
+              AND c.relkind = 'r'
+        )
+        """.trimIndent(),
+        { cursor ->
+            QueryResult.Value(cursor.next().value && cursor.getBoolean(0) == true)
+        },
+        1,
+    ) {
+        bindString(0, name)
+    }.value
 
 private fun readSchemaVersion(driver: SqlDriver): Long {
     return driver.executeQuery(
@@ -106,7 +133,7 @@ private fun readSchemaVersion(driver: SqlDriver): Long {
         // language=PostgreSQL
         "SELECT version FROM zula_schema_version LIMIT 1",
         { cursor ->
-            QueryResult.Value(if (cursor.next().value) cursor.getLong(0) ?: 0L else 0L)
+            QueryResult.Value(if (cursor.next().value) cursor.getLong(0) ?: -1L else -1L)
         },
         0,
     ).value

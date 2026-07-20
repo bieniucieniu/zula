@@ -17,6 +17,8 @@ permitted_insecure_packages:
 #imports:
 # - ./backend
 
+strict_ports: true
+
 secretspec:
   enable: true
   # Load declared secrets from project `.env` into config.secretspec.secrets
