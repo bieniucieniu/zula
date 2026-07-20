@@ -6,6 +6,7 @@ import com.zula.features.feed.configureFeedRouting
 import com.zula.features.geolocation.configureGeolocationRouting
 import com.zula.features.media.configureMediaRouting
 import com.zula.features.moderation.configureModerationRouting
+import com.zula.features.sync.configureSyncRouting
 import com.zula.features.trade.configureTradeRouting
 import com.zula.features.user.configureUserRouting
 import com.zula.features.validation.configureValidationRouting
@@ -16,6 +17,7 @@ fun Application.configureRouting() {
     routing {
         route("/api") {
             configureAuthRouting()
+            configureSyncRouting()
             configureUserRouting()
             configureFeedRouting()
             configureMediaRouting()

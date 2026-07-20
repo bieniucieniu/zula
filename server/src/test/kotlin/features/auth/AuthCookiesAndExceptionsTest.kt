@@ -21,10 +21,12 @@ class AuthCookiesAndExceptionsTest {
 
     @Test
     fun `http exceptions map to expected status codes`() {
-        val bad = assertFailsWith<HttpException> { badRequest("bad") }
-        val unauth = assertFailsWith<HttpException> { unauthorized("nope") }
+        val bad = assertFailsWith<HttpException.BadRequest> { badRequest("bad") }
+        val unauth = assertFailsWith<HttpException.Unauthorized> { unauthorized("nope") }
         assertEquals(HttpStatusCode.BadRequest, bad.status)
         assertEquals(HttpStatusCode.Unauthorized, unauth.status)
+        assertEquals("bad", bad.message)
+        assertEquals("nope", unauth.message)
     }
 
     @Test

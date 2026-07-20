@@ -37,6 +37,76 @@ Local `powersync/service.yaml` uses `!env PS_*`; compose builds URIs from secret
 
 JWKS: Ktor `/.well-known/jwks.json`. Audience: `zula`.
 
+## Upload (TanStack / PowerSync `uploadData`)
+
+```http
+POST /api/sync/batch
+Authorization: Bearer <access JWT>
+```
+
+```json
+{
+  "ops": [
+    {
+      "clientId": 1,
+      "op": "PATCH",
+      "table": "user_profiles",
+      "id": "<user uuid>",
+      "opData": { "display_name": "Ada", "bio": "…" }
+    }
+  ]
+}
+```
+
+Server returns `200` + per-op results. Permanent rejects (`ok: false`) still complete the batch — do not block the upload queue. Retryable failures use whole-request `5xx` (StatusPages Problem Details).
+
+Failed ops embed RFC 9457 Problem Details:
+
+```json
+{
+  "results": [
+    {
+      "clientId": 1,
+      "table": "user_profiles",
+      "id": "<uuid>",
+      "op": "PATCH",
+      "ok": false,
+      "problem": {
+        "type": "about:blank",
+        "title": "Forbidden",
+        "status": 403,
+        "detail": "Can only modify own profile",
+        "instance": "/api/sync/batch#op/1:user_profiles/<uuid>"
+      }
+    }
+  ]
+}
+```
+
+| table | ops | Handler |
+|-------|-----|---------|
+| `user_profiles` | PUT, PATCH | `UserProfileWriter` (own profile only; `id` = actor) |
+| `users` | — | rejected |
+| other | — | rejected |
+
+Client sketch:
+
+```ts
+async uploadData(db) {
+  const batch = await db.getCrudBatch(100)
+  if (!batch) return
+  await fetch(`${API_URL}/sync/batch`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ops: batch.crud }),
+  })
+  await batch.complete()
+}
+```
+
 ## Env
 
 | Variable | Purpose |

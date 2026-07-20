@@ -117,6 +117,21 @@ SELECT * FROM users WHERE id = ? LIMIT 1;
 findUserByUsername:
 SELECT * FROM users WHERE username = ? LIMIT 1;
 
+getUserProfile:
+SELECT * FROM user_profiles WHERE user_id = ? LIMIT 1;
+
+updateUserProfile:
+UPDATE user_profiles SET
+    display_name = ?,
+    avatar_url = ?,
+    bio = ?,
+    timezone = ?,
+    preferred_language = ?,
+    location_tag = ?,
+    seller_headline = ?,
+    updated_at = ?
+WHERE user_id = ?;
+
 insertAuthChallenge:
 INSERT INTO auth_challenges (
     id, channel, target, code_hash, purpose, expires_at
