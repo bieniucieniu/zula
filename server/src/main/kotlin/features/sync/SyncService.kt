@@ -9,7 +9,6 @@ import com.zula.features.sync.domain.SyncOpType
 import com.zula.features.user.ProfileWrite
 import com.zula.features.user.UserProfileWriter
 import com.zula.lib.id.Ids
-import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -18,6 +17,9 @@ import kotlin.uuid.Uuid
 /**
  * Applies a PowerSync upload batch by dispatching each op to domain services.
  * Never writes raw SQL from [SyncOp.opData].
+ *
+ * Per-op [HttpException] (4xx) become [SyncOpResult.ok]=false so the batch HTTP
+ * call still returns 200. Unexpected errors are not caught — StatusPages handles them.
  */
 class SyncService(
     private val userProfiles: UserProfileWriter,
@@ -38,13 +40,16 @@ class SyncService(
                 else -> reject(op, "unsupported table: ${op.table}")
             }
         } catch (e: HttpException) {
-            if (e.status.value in 500..599) throw e
-            reject(op, e.message ?: e.status.description, retryable = false)
-        } catch (e: Exception) {
-            throw HttpException(
-                e.message ?: "sync op failed",
-                HttpStatusCode.ServiceUnavailable,
-            )
+            // Batch semantics only: map client errors to per-op failure. Re-throw nothing —
+            // sealed HttpException is always 4xx; server faults use other Throwables.
+            when (e) {
+                is HttpException.BadRequest,
+                is HttpException.Unauthorized,
+                is HttpException.Forbidden,
+                is HttpException.NotFound,
+                is HttpException.Conflict,
+                -> reject(op, e.message ?: e.status.description, retryable = false)
+            }
         }
     }
 

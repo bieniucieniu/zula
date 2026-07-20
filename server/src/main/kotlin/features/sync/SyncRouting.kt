@@ -1,9 +1,9 @@
 package com.zula.features.sync
 
+import com.zula.core.http.unauthorized
 import com.zula.core.security.AuthProviderNames
 import com.zula.features.sync.domain.SyncBatchRequest
 import com.zula.lib.id.Ids
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
@@ -22,9 +22,9 @@ fun Route.configureSyncRouting() {
         route("/sync") {
             post("/batch") {
                 val principal: JWTPrincipal = call.principal()
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized)
+                    ?: unauthorized("Authentication required")
                 val userId = principal.payload.subject?.let(Ids::parseOrNull)
-                    ?: return@post call.respond(HttpStatusCode.Unauthorized)
+                    ?: unauthorized("Invalid subject")
                 val body = call.receive<SyncBatchRequest>()
                 call.respond(syncService.applyBatch(userId, body))
             }.describe {

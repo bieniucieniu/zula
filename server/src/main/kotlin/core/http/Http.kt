@@ -5,6 +5,7 @@ import com.ucasoft.ktor.simpleMemoryCache.memoryCache
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.conditionalheaders.*
@@ -38,18 +39,47 @@ fun Application.configureHttp() {
     install(XForwardedHeaders)
     install(SSE)
     install(StatusPages) {
-        exception<HttpException> { call, cause ->
-            call.respondProblem(
-                status = cause.status,
-                detail = cause.message ?: cause.status.description,
-            )
-        }
         exception<Throwable> { call, cause ->
-            call.application.log.error("Unhandled error", cause)
-            call.respondProblem(
-                status = HttpStatusCode.InternalServerError,
-                detail = "Internal Server Error",
-            )
+            when (cause) {
+                is HttpException.BadRequest -> call.respondProblem(
+                    status = cause.status,
+                    detail = cause.message,
+                )
+                is HttpException.Unauthorized -> call.respondProblem(
+                    status = cause.status,
+                    detail = cause.message,
+                )
+                is HttpException.Forbidden -> call.respondProblem(
+                    status = cause.status,
+                    detail = cause.message,
+                )
+                is HttpException.NotFound -> call.respondProblem(
+                    status = cause.status,
+                    detail = cause.message,
+                )
+                is HttpException.Conflict -> call.respondProblem(
+                    status = cause.status,
+                    detail = cause.message,
+                )
+                is BadRequestException,
+                is CannotTransformContentToTypeException,
+                is ContentTransformationException,
+                -> call.respondProblem(
+                    status = HttpStatusCode.BadRequest,
+                    detail = cause.message ?: "Invalid request",
+                )
+                is IllegalArgumentException -> call.respondProblem(
+                    status = HttpStatusCode.BadRequest,
+                    detail = cause.message ?: "Invalid request",
+                )
+                else -> {
+                    call.application.log.error("Unhandled error", cause)
+                    call.respondProblem(
+                        status = HttpStatusCode.InternalServerError,
+                        detail = "Internal Server Error",
+                    )
+                }
+            }
         }
     }
 }

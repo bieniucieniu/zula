@@ -1,6 +1,8 @@
 package com.zula.features.auth
 
 import com.ucasoft.ktor.simpleCache.cacheOutput
+import com.zula.core.http.badRequest
+import com.zula.core.http.unauthorized
 import com.zula.core.security.AuthProviderNames
 import com.zula.core.security.JwtConfig
 import com.zula.core.security.SecurityConfig
@@ -55,7 +57,7 @@ fun Route.configureAuthRouting() {
             call.receive<RefreshRequest>()
         }.getOrNull()
         val refreshToken = refreshBody?.refreshToken ?: call.readRefreshCookie()
-        ?: return@post call.respond(HttpStatusCode.BadRequest, "refreshToken required")
+            ?: badRequest("refreshToken required")
         val tokens = authService.refresh(call, refreshToken)
         call.setAccessCookies(tokens)
 
@@ -101,7 +103,7 @@ fun Route.configureAuthRouting() {
         get("/auth/providers/linked") {
             val principal: JWTPrincipal? = call.principal()
             val userId = principal?.payload?.subject?.let(Ids::parseOrNull)
-                ?: return@get call.respond(HttpStatusCode.Unauthorized)
+                ?: unauthorized("Invalid subject")
             call.respond(authService.listLinkedProviders(userId))
         }.describe {
             operationId = "listLinkedProviders"

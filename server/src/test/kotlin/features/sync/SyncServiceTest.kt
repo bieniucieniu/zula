@@ -1,5 +1,6 @@
 package com.zula.features.sync
 
+import com.zula.core.http.forbidden
 import com.zula.features.sync.domain.SyncBatchRequest
 import com.zula.features.sync.domain.SyncOp
 import com.zula.features.sync.domain.SyncOpType
@@ -10,6 +11,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
@@ -114,6 +116,68 @@ class SyncServiceTest {
             ),
         )
         assertFalse(response.results.single().ok)
+    }
+
+    @Test
+    fun `client HttpException from writer becomes per-op failure`() {
+        val actor = Ids.next()
+        val service = SyncService(
+            object : UserProfileWriter {
+                override fun putMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite) =
+                    forbidden("Can only modify own profile")
+
+                override fun patchMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite) =
+                    forbidden("Can only modify own profile")
+            },
+        )
+        val response = service.applyBatch(
+            actor,
+            SyncBatchRequest(
+                ops = listOf(
+                    SyncOp(
+                        clientId = 3,
+                        op = SyncOpType.PATCH,
+                        table = "user_profiles",
+                        id = actor.toString(),
+                        opData = buildJsonObject { put("display_name", "X") },
+                    ),
+                ),
+            ),
+        )
+        val result = response.results.single()
+        assertFalse(result.ok)
+        assertEquals("Can only modify own profile", result.error)
+        assertFalse(result.retryable)
+    }
+
+    @Test
+    fun `unexpected throwable from writer is not swallowed`() {
+        val actor = Ids.next()
+        val service = SyncService(
+            object : UserProfileWriter {
+                override fun putMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite) {
+                    error("db down")
+                }
+
+                override fun patchMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite) {
+                    error("db down")
+                }
+            },
+        )
+        assertFailsWith<IllegalStateException> {
+            service.applyBatch(
+                actor,
+                SyncBatchRequest(
+                    ops = listOf(
+                        SyncOp(
+                            op = SyncOpType.PATCH,
+                            table = "user_profiles",
+                            id = actor.toString(),
+                        ),
+                    ),
+                ),
+            )
+        }
     }
 }
 
