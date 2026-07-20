@@ -13,5 +13,8 @@ inline fun badRequest(message: Any): Nothing =
 inline fun unauthorized(message: Any): Nothing =
     throw HttpException(message.toString(), HttpStatusCode.Unauthorized)
 
+inline fun forbidden(message: Any): Nothing =
+    throw HttpException(message.toString(), HttpStatusCode.Forbidden)
+
 inline fun conflict(message: Any): Nothing =
     throw HttpException(message.toString(), HttpStatusCode.Conflict)

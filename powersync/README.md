@@ -55,3 +55,7 @@ On-demand + TTL (default 24h after unsubscribe). Never auto-subscribe all profil
 ## Auth
 
 JWKS from Ktor; JWT `aud` = `zula`.
+
+## Upload
+
+`POST /api/sync/batch` — see [docs/powersync.md](../docs/powersync.md). Registry → `UserProfileWriter` for `user_profiles`.
