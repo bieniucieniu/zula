@@ -46,7 +46,3 @@ On-demand is lazy: nothing syncs until `db.syncStream('user_profile', { user_id 
 ## Auth
 
 `client_auth.jwks_uri` → Ktor `/.well-known/jwks.json`. JWT `aud` must be `zula` (see `JWT_AUDIENCE`).
-
-## Clients when PowerSync is down
-
-Prefer REST (`@zula/api`) as fallback. See `packages/powersync` `DataSourceMode` and [docs/powersync.md](../docs/powersync.md).

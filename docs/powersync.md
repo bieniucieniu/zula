@@ -7,7 +7,7 @@ Local-first sync for web + native via self-hosted PowerSync Service.
 | Path | Role |
 |------|------|
 | [`powersync/`](../powersync/) | Service config, Sync Streams, Docker Compose |
-| [`packages/powersync`](../packages/powersync/) | Shared `@zula/powersync` AppSchema + data-source helpers |
+| [`packages/powersync`](../packages/powersync/) | Shared `@zula/powersync` AppSchema |
 | [`devenv.nix`](../devenv.nix) `services.postgres` | `zula` + `zula_powersync`, `wal_level=logical`, replication `initialSQL` |
 
 ## Devenv
@@ -32,18 +32,6 @@ Linux: `docker-client` from devenv packages. Mac: Docker Desktop on PATH (Nix pa
 ## Auth
 
 JWKS: Ktor `/.well-known/jwks.json`. Audience: `zula`.
-
-## When PowerSync is down — API fallback
-
-Clients should support modes (see `@zula/powersync` `DataSourceMode`):
-
-| Mode | Behavior |
-|------|----------|
-| `api` | REST only (`API_URL` / `@zula/api`) |
-| `powersync` | Local SQLite only |
-| `powersync-with-api-fallback` | Prefer sync; if Service unreachable / not first-synced, fetch via API |
-
-`resolveDataSourceConfig()` picks `api` when `POWERSYNC_URL` is unset; otherwise `powersync-with-api-fallback`. Screens that need listings before sync should always keep a REST path.
 
 ## Env
 

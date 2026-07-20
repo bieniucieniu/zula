@@ -4,8 +4,3 @@ export type {
   UserRecord,
   UserProfileRecord,
 } from "./generated/schema"
-export {
-  resolveDataSourceConfig,
-  type DataSourceConfig,
-  type DataSourceMode,
-} from "./data-source"
