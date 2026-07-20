@@ -2,6 +2,7 @@ package com.zula.features.auth
 
 import com.zula.core.http.HttpException
 import com.zula.core.http.ProblemDetails
+import com.zula.core.http.ProblemErrorCode
 import com.zula.core.http.badRequest
 import com.zula.core.http.unauthorized
 import com.zula.core.security.ACCESS_COOKIE_NAME
@@ -30,18 +31,20 @@ class AuthCookiesAndExceptionsTest {
     }
 
     @Test
-    fun `problem details encode rfc9457 shape`() {
+    fun `problem details encode rfc9457 shape with optional field errors`() {
         val problem = ProblemDetails(
             title = HttpStatusCode.BadRequest.description,
             status = 400,
             detail = "bad",
             instance = "/api/v1/auth/authenticate",
+            errors = mapOf("email" to listOf(ProblemErrorCode.INVALID)),
         )
         assertEquals("about:blank", problem.type)
         assertEquals("Bad Request", problem.title)
         assertEquals(400, problem.status)
         assertEquals("bad", problem.detail)
         assertEquals("/api/v1/auth/authenticate", problem.instance)
+        assertEquals(mapOf("email" to listOf(ProblemErrorCode.INVALID)), problem.errors)
     }
 
     @Test

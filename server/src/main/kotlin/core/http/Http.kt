@@ -12,6 +12,7 @@ import io.ktor.server.plugins.conditionalheaders.*
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.request.path
 import io.ktor.server.response.*
 import io.ktor.server.sse.*
 import kotlin.time.Duration.Companion.seconds
@@ -41,25 +42,8 @@ fun Application.configureHttp() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             when (cause) {
-                is HttpException.BadRequest -> call.respondProblem(
-                    status = cause.status,
-                    detail = cause.message,
-                )
-                is HttpException.Unauthorized -> call.respondProblem(
-                    status = cause.status,
-                    detail = cause.message,
-                )
-                is HttpException.Forbidden -> call.respondProblem(
-                    status = cause.status,
-                    detail = cause.message,
-                )
-                is HttpException.NotFound -> call.respondProblem(
-                    status = cause.status,
-                    detail = cause.message,
-                )
-                is HttpException.Conflict -> call.respondProblem(
-                    status = cause.status,
-                    detail = cause.message,
+                is HttpException -> call.respondProblem(
+                    cause.toProblemDetails(instance = call.request.path()),
                 )
                 is BadRequestException,
                 is CannotTransformContentToTypeException,

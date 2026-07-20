@@ -60,7 +60,7 @@ Authorization: Bearer <access JWT>
 
 Server returns `200` + per-op results. Permanent rejects (`ok: false`) still complete the batch — do not block the upload queue. Retryable failures use whole-request `5xx` (StatusPages Problem Details).
 
-Failed ops embed RFC 9457 Problem Details:
+Failed ops embed RFC 9457 Problem Details (optional `errors` map = field → [`ProblemErrorCode`](../packages/api/src/problemDetails.ts) string enums):
 
 ```json
 {
@@ -73,15 +73,20 @@ Failed ops embed RFC 9457 Problem Details:
       "ok": false,
       "problem": {
         "type": "about:blank",
-        "title": "Forbidden",
-        "status": 403,
-        "detail": "Can only modify own profile",
-        "instance": "/api/sync/batch#op/1:user_profiles/<uuid>"
+        "title": "Bad Request",
+        "status": 400,
+        "detail": "Validation failed",
+        "instance": "/api/sync/batch#op/1:user_profiles/<uuid>",
+        "errors": {
+          "display_name": ["required", "too_short"]
+        }
       }
     }
   ]
 }
 ```
+
+Wire codes: `required`, `too_short`, `too_long`, `invalid`, `format`, `mismatch`, `taken`, `not_found`, `expired`, `forbidden`, `unauthorized`, `conflict`.
 
 | table | ops | Handler |
 |-------|-----|---------|
