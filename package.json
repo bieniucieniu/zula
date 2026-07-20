@@ -7,7 +7,9 @@
   ],
   "scripts": {
     "format": "biome format --write .",
-    "format:check": "biome format ."
+    "format:check": "biome format .",
+    "gen:api": "bun run --filter @zula/api gen",
+    "gen:powersync": "bun run --filter @zula/powersync gen"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.4"
