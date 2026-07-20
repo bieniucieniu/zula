@@ -8,10 +8,12 @@
   "scripts": {
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "gen:api": "bun run --filter @zula/api gen",
-    "gen:powersync": "bun run --filter @zula/powersync gen"
+    "gen:api": "orval --config packages/api/orval.config.ts",
+    "gen:powersync": "powersync generate schema --output=ts --output-path=packages/powersync/src/generated/schema.ts --directory=./powersync --api-url=http://127.0.0.1:8081"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.4"
+    "@biomejs/biome": "^2.5.4",
+    "orval": "^8.22.0",
+    "powersync": "^0.9.0"
   }
 }
