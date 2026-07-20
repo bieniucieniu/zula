@@ -13,6 +13,7 @@
     "storybook:android": "cross-env STORYBOOK_ENABLED=true expo start -c --android"
   },
   "dependencies": {
+    "@zula/powersync": "workspace:*",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
