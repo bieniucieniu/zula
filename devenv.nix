@@ -86,18 +86,6 @@ in
         processes.powersync = {
           exec = ''
             set -euo pipefail
-            if ! command -v docker >/dev/null 2>&1; then
-              echo "docker not on PATH (Mac: Docker Desktop; Linux: docker daemon + client)"
-              exit 1
-            fi
-            if ! docker compose version >/dev/null 2>&1; then
-              echo "docker compose not available"
-              exit 1
-            fi
-            if ! docker info >/dev/null 2>&1; then
-              echo "docker daemon not reachable"
-              exit 1
-            fi
             export PS_DATA_SOURCE_URI="''${PS_DATA_SOURCE_URI:-postgresql://powersync_role:''${POWERSYNC_REPLICATION_PASSWORD:-powersync}@host.docker.internal:5432/zula}"
             export PS_STORAGE_URI="''${PS_STORAGE_URI:-postgresql://''${POWERSYNC_STORAGE_USERNAME:-powersync}:''${POWERSYNC_STORAGE_PASSWORD:-powersync}@host.docker.internal:5432/zula_powersync}"
             export PS_JWKS_URI="''${PS_JWKS_URI:-http://host.docker.internal:8080/.well-known/jwks.json}"
