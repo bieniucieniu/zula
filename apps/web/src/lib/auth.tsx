@@ -4,6 +4,8 @@ const SESSION_KEY = "zula.auth.session"
 
 export type AuthSession = {
   email: string
+  /** Ktor JWT for PowerSync + REST. Wired when real auth lands. */
+  accessToken?: string
 }
 
 type AuthContextValue = {

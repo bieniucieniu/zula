@@ -2,11 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
+import { usePowerSync } from "@/lib/powersync"
 
 export const Route = createFileRoute("/")({ component: App })
 
 function App() {
   const { session, ready, logout } = useAuth()
+  const { ready: syncReady } = usePowerSync()
   const navigate = useNavigate()
   const [pending, setPending] = useState(false)
 
@@ -39,6 +41,10 @@ function App() {
       <div className="flex max-w-sm flex-col items-center gap-2 text-center">
         <h1 className="font-heading text-lg font-medium">Signed in</h1>
         <p className="text-sm text-muted-foreground">{session.email}</p>
+        <p className="text-xs text-muted-foreground">
+          PowerSync:{" "}
+          {syncReady ? "connected" : session.accessToken ? "connecting…" : "local only (no JWT)"}
+        </p>
         <Button variant="outline" disabled={pending} onClick={() => void onLogout()}>
           {pending ? "Logging out…" : "Logout"}
         </Button>

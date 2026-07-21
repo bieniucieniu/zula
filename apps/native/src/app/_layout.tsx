@@ -1,6 +1,7 @@
 import "@/global.css"
 
 import { NAV_THEME } from "@/lib/theme"
+import { PowerSyncAuthBridge } from "@/lib/powersync"
 import { ThemeProvider } from "@react-navigation/native"
 import { PortalHost } from "@rn-primitives/portal"
 import { Stack } from "expo-router"
@@ -17,9 +18,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={NAV_THEME[theme ?? "light"]}>
-      <StatusBar style={theme === "dark" ? "light" : "dark"} />
-      <Stack />
-      <PortalHost />
+      <PowerSyncAuthBridge>
+        <StatusBar style={theme === "dark" ? "light" : "dark"} />
+        <Stack />
+        <PortalHost />
+      </PowerSyncAuthBridge>
     </ThemeProvider>
   )
 }
