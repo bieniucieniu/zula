@@ -1,6 +1,5 @@
 export type { AppPowersync, CreateAppPowersyncOptions } from "./client"
 export { createAppPowersync } from "./client"
-export { createAppCollections } from "./collections"
 export type {
   Database,
   UserProfileRecord,
