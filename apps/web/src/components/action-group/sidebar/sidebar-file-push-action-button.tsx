@@ -1,8 +1,8 @@
-import { useCallback, useId, useRef } from 'react'
-import { cn, resolve } from '@/lib/utils'
-import { SidebarMenuSubButton } from '../../ui/sidebar'
-import { useMutationAction } from '../hooks'
-import type { ActionContext, FilePushAction } from '../types'
+import { useCallback, useId, useRef } from "react"
+import { cn, resolve } from "@/lib/utils"
+import { SidebarMenuSubButton } from "../../ui/sidebar"
+import { useMutationAction } from "../hooks"
+import type { ActionContext, FilePushAction } from "../types"
 
 type FileArgs = { file: File }
 
@@ -18,7 +18,7 @@ export function SidebarFilePushActionButton<C, T = void>({
   context: ActionContext & C
   className?: string
   disabled?: boolean
-} & Omit<React.ComponentProps<typeof SidebarMenuSubButton>, 'children'>) {
+} & Omit<React.ComponentProps<typeof SidebarMenuSubButton>, "children">) {
   const inputRef = useRef<HTMLInputElement>(null)
   const {
     localContext,
@@ -33,18 +33,17 @@ export function SidebarFilePushActionButton<C, T = void>({
       const file = e.target.files?.[0]
       if (file) throttle.maybeExecute({ file })
     },
-    [throttle],
+    [throttle]
   )
   const id = `file-input-${useId()}`
   const label = resolve(action.label, localContext)
-  const isDisabled =
-    disabled || mut.isPending || resolve(action.disabled, localContext)
+  const isDisabled = disabled || mut.isPending || resolve(action.disabled, localContext)
   return (
     <SidebarMenuSubButton
       {...props}
       title={resolve(action.tooltip, localContext)}
       className={cn(className, {
-        'pointer-events-none opacity-50': isDisabled,
+        "pointer-events-none opacity-50": isDisabled,
       })}
       onClick={(e) => {
         e.preventDefault()
@@ -61,7 +60,7 @@ export function SidebarFilePushActionButton<C, T = void>({
         disabled={isDisabled}
         className="sr-only"
         accept={action.accept}
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
         onChange={onChangeHandler}
       />
     </SidebarMenuSubButton>

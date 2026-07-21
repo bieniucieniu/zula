@@ -1,9 +1,6 @@
-import { resolve } from '@/lib/utils'
-import { SidebarMenuSubButton } from '../../ui/sidebar'
-import type {
-  ActionContext,
-  FilePullActionLink as FilePullActionLinkType,
-} from '../types'
+import { resolve } from "@/lib/utils"
+import { SidebarMenuSubButton } from "../../ui/sidebar"
+import type { ActionContext, FilePullActionLink as FilePullActionLinkType } from "../types"
 
 export function SidebarFilePullActionLink<C>({
   action,
@@ -13,7 +10,7 @@ export function SidebarFilePullActionLink<C>({
 }: {
   action: FilePullActionLinkType<C>
   context: ActionContext & C
-} & Omit<React.ComponentProps<typeof SidebarMenuSubButton>, 'children'>) {
+} & Omit<React.ComponentProps<typeof SidebarMenuSubButton>, "children">) {
   const label = resolve(action.label, context)
 
   if (resolve(action.disabled, context)) return null

@@ -31,6 +31,8 @@ in
     enable = true;
     package = pkgs.postgresql_18;
     extensions = extensions: [ extensions.pgvector ];
+    # Bridge-network PowerSync (Docker Desktop) reaches Postgres via host.docker.internal.
+    listen_addresses = "127.0.0.1";
     port = 5432;
     settings.wal_level = "logical";
     initialDatabases = [
@@ -81,7 +83,7 @@ in
           process-compose = {
             working_dir = root;
             depends_on = {
-              postgres.condition = "process_healthy";
+            postgres.condition = "process_healthy";
             };
             readiness_probe = {
               http_get = {
@@ -219,8 +221,7 @@ in
     test -n "$PS_REPLICATION_PASSWORD"
     test -n "$PS_STORAGE_USERNAME"
     test -n "$PS_STORAGE_PASSWORD"
-    # Defaults from secretspec.toml — must match powersync/docker-compose.yaml :-defaults
-    # and published host port 8080.
+    # Defaults from secretspec.toml — must match powersync/docker-compose.yaml :-defaults.
     test "$PS_URL" = "http://127.0.0.1:8080"
     test "$PS_REPLICATION_PASSWORD" = "powersync"
     test "$PS_STORAGE_USERNAME" = "powersync"

@@ -361,19 +361,11 @@ export type refreshResponse200 = {
   status: 200
 }
 
-export type refreshResponse400 = {
-  data: string
-  status: 400
-}
-
 export type refreshResponseSuccess = refreshResponse200 & {
   headers: Headers
 }
-export type refreshResponseError = refreshResponse400 & {
-  headers: Headers
-}
 
-export type refreshResponse = refreshResponseSuccess | refreshResponseError
+export type refreshResponse = refreshResponseSuccess
 
 export const getRefreshUrl = () => {
   return `/api/auth/refresh`
@@ -391,7 +383,7 @@ export const refresh = async (
   })
 }
 
-export const getRefreshMutationOptions = <TError = string, TContext = unknown>(options?: {
+export const getRefreshMutationOptions = <TError = unknown, TContext = unknown>(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof refresh>>,
     TError,
@@ -426,9 +418,9 @@ export const getRefreshMutationOptions = <TError = string, TContext = unknown>(o
 
 export type RefreshMutationResult = NonNullable<Awaited<ReturnType<typeof refresh>>>
 export type RefreshMutationBody = RefreshRequest | undefined
-export type RefreshMutationError = string
+export type RefreshMutationError = unknown
 
-export const useRefresh = <TError = string, TContext = unknown>(
+export const useRefresh = <TError = unknown, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof refresh>>,
@@ -734,21 +726,11 @@ export type listLinkedProvidersResponse200 = {
   status: 200
 }
 
-export type listLinkedProvidersResponse401 = {
-  data: void
-  status: 401
-}
-
 export type listLinkedProvidersResponseSuccess = listLinkedProvidersResponse200 & {
   headers: Headers
 }
-export type listLinkedProvidersResponseError = listLinkedProvidersResponse401 & {
-  headers: Headers
-}
 
-export type listLinkedProvidersResponse =
-  | listLinkedProvidersResponseSuccess
-  | listLinkedProvidersResponseError
+export type listLinkedProvidersResponse = listLinkedProvidersResponseSuccess
 
 export const getListLinkedProvidersUrl = () => {
   return `/api/auth/providers/linked`
@@ -769,7 +751,7 @@ export const getListLinkedProvidersQueryKey = () => {
 
 export const getListLinkedProvidersQueryOptions = <
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = void,
+  TError = unknown,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinkedProviders>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -791,11 +773,11 @@ export const getListLinkedProvidersQueryOptions = <
 export type ListLinkedProvidersQueryResult = NonNullable<
   Awaited<ReturnType<typeof listLinkedProviders>>
 >
-export type ListLinkedProvidersQueryError = void
+export type ListLinkedProvidersQueryError = unknown
 
 export function useListLinkedProviders<
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = void,
+  TError = unknown,
 >(
   options: {
     query: Partial<
@@ -815,7 +797,7 @@ export function useListLinkedProviders<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useListLinkedProviders<
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = void,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -835,7 +817,7 @@ export function useListLinkedProviders<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useListLinkedProviders<
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = void,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinkedProviders>>, TError, TData>>
@@ -846,7 +828,7 @@ export function useListLinkedProviders<
 
 export function useListLinkedProviders<
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = void,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinkedProviders>>, TError, TData>>

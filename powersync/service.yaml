@@ -1,5 +1,7 @@
 # Local PowerSync Service — URIs from env (compose injects secretspec PS_*).
 # Deploy/k8s: separate config — not this file.
+_type: self-hosted
+
 replication:
   connections:
     - type: postgresql
@@ -26,6 +28,10 @@ system:
   logging:
     level: debug # silly | debug | verbose | http | info | warn | error
     format: json
+
+api:
+  tokens:
+    - dev-token-do-not-use-in-production
 
 telemetry:
   disable_telemetry_sharing: true

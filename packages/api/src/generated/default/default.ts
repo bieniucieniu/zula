@@ -4,7 +4,7 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-
+import { useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -16,7 +16,8 @@ import type {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query"
-import { useQuery } from "@tanstack/react-query"
+
+import type { GetHealth200, GetHealth503, GetJobsPing202, GetJobsPing503 } from "../model"
 
 import { customInstance } from "../../mutator"
 
@@ -37,15 +38,136 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result
 }
 
-export type getJobsPingResponseDefault = {
-  data: unknown
-  status: number
+export type getHealthResponse200 = {
+  data: GetHealth200
+  status: 200
 }
-export type getJobsPingResponseError = getJobsPingResponseDefault & {
+
+export type getHealthResponse503 = {
+  data: GetHealth503
+  status: 503
+}
+
+export type getHealthResponseSuccess = getHealthResponse200 & {
+  headers: Headers
+}
+export type getHealthResponseError = getHealthResponse503 & {
   headers: Headers
 }
 
-export type getJobsPingResponse = getJobsPingResponseError
+export type getHealthResponse = getHealthResponseSuccess | getHealthResponseError
+
+export const getGetHealthUrl = () => {
+  return `/health`
+}
+
+export const getHealth = async (options?: RequestInit): Promise<getHealthResponse> => {
+  return customInstance<getHealthResponse>(getGetHealthUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetHealthQueryKey = () => {
+  return [`/health`] as const
+}
+
+export const getGetHealthQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHealth>>,
+  TError = GetHealth503,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetHealthQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHealth>>> = ({ signal }) =>
+    getHealth({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getHealth>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getHealth>>>
+export type GetHealthQueryError = GetHealth503
+
+export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getHealth>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getHealth>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetHealthQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getJobsPingResponse202 = {
+  data: GetJobsPing202
+  status: 202
+}
+
+export type getJobsPingResponse503 = {
+  data: GetJobsPing503
+  status: 503
+}
+
+export type getJobsPingResponseSuccess = getJobsPingResponse202 & {
+  headers: Headers
+}
+export type getJobsPingResponseError = getJobsPingResponse503 & {
+  headers: Headers
+}
+
+export type getJobsPingResponse = getJobsPingResponseSuccess | getJobsPingResponseError
 
 export const getGetJobsPingUrl = () => {
   return `/jobs/ping`
@@ -64,7 +186,7 @@ export const getGetJobsPingQueryKey = () => {
 
 export const getGetJobsPingQueryOptions = <
   TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = unknown,
+  TError = GetJobsPing503,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -84,9 +206,12 @@ export const getGetJobsPingQueryOptions = <
 }
 
 export type GetJobsPingQueryResult = NonNullable<Awaited<ReturnType<typeof getJobsPing>>>
-export type GetJobsPingQueryError = unknown
+export type GetJobsPingQueryError = GetJobsPing503
 
-export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, TError = unknown>(
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
       Pick<
@@ -100,10 +225,11 @@ export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, 
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>
-}
-export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, TError = unknown>(
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
       Pick<
@@ -117,28 +243,28 @@ export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, 
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>
-}
-export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, TError = unknown>(
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>
-}
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetJobsPing<TData = Awaited<ReturnType<typeof getJobsPing>>, TError = unknown>(
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>
-} {
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetJobsPingQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {

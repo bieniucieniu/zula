@@ -61,7 +61,11 @@ export const userProfilesCollection = createCollection(
 )
 
 export function usePowerSync() {
-  const ready = useSyncExternalStore(subscribeSyncReady, () => syncReady, () => false)
+  const ready = useSyncExternalStore(
+    subscribeSyncReady,
+    () => syncReady,
+    () => false
+  )
   return { ready, db: powerSyncDb }
 }
 
