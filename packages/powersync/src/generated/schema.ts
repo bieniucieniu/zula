@@ -35,7 +35,7 @@ export type UserProfileRecord = Database["user_profiles"]
 export function typedStreams(db: {
   syncStream: (
     name: string,
-    params?: Record<string, string>,
+    params?: Record<string, string>
   ) => {
     subscribe: (opts?: { ttl?: number }) => Promise<{ unsubscribe: () => void }>
   }
