@@ -4,7 +4,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./connector": "./src/connector.ts",
     "./schema": "./src/generated/schema.ts"
   },
   "scripts": {
