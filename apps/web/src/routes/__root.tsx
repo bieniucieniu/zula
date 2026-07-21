@@ -3,6 +3,7 @@ import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { AuthProvider } from "@/lib/auth"
+import { PowerSyncAuthBridge } from "@/lib/powersync"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
@@ -43,7 +44,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <AuthProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <PowerSyncAuthBridge>
+            <TooltipProvider>{children}</TooltipProvider>
+          </PowerSyncAuthBridge>
         </AuthProvider>
         <TanStackDevtools
           config={{

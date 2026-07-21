@@ -5,6 +5,7 @@ import { Uniwind, useUniwind } from "uniwind"
 import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Text } from "@/components/ui/text"
+import { usePowerSync } from "@/lib/powersync"
 
 const LOGO = {
   light: require("@assets/images/react-native-reusables-light.png"),
@@ -24,6 +25,7 @@ const IMAGE_STYLE: ImageStyle = {
 
 export default function Screen() {
   const { theme } = useUniwind()
+  const { ready: syncReady } = usePowerSync()
 
   return (
     <>
@@ -36,6 +38,9 @@ export default function Screen() {
           </Text>
           <Text className="ios:text-foreground text-muted-foreground font-mono text-sm">
             2. Save to see your changes instantly.
+          </Text>
+          <Text className="ios:text-foreground text-muted-foreground font-mono text-sm">
+            PowerSync (Expo Go / sql-js): {syncReady ? "connected" : "local only (no JWT)"}
           </Text>
         </View>
         <View className="flex-row gap-2">

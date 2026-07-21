@@ -13,8 +13,9 @@
     "storybook:android": "cross-env STORYBOOK_ENABLED=true expo start -c --android"
   },
   "dependencies": {
-    "@zula/powersync": "workspace:*",
     "@gorhom/bottom-sheet": "^5.2.14",
+    "@powersync/adapter-sql-js": "^0.0.18",
+    "@powersync/react-native": "^1.35.9",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-community/slider": "5.0.1",
@@ -47,6 +48,9 @@
     "@storybook/addon-ondevice-controls": "^10.5.0",
     "@storybook/react-native": "^10.5.0",
     "@storybook/react-native-ui-lite": "^10.5.0",
+    "@tanstack/powersync-db-collection": "^0.1.54",
+    "@tanstack/react-db": "^0.1.94",
+    "@zula/powersync": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cross-env": "^10.1.0",
