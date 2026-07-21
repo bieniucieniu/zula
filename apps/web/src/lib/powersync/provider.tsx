@@ -1,4 +1,4 @@
-import { createZulaBackendConnector, typedStreams } from "@zula/powersync"
+import { createAppBackendConnector, typedStreams } from "@zula/powersync"
 import {
   createContext,
   use,
@@ -30,7 +30,7 @@ export function PowerSyncProvider({
 
   const connector = useMemo(
     () =>
-      createZulaBackendConnector({
+      createAppBackendConnector({
         powersyncUrl: powersyncConfig.powersyncUrl,
         syncBatchUrl: powersyncConfig.syncBatchUrl,
         getAccessToken,

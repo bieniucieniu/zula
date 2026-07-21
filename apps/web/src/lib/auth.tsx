@@ -1,6 +1,6 @@
 import { createContext, use, useEffect, useState, type ReactNode } from "react"
 
-const SESSION_KEY = "zula.auth.session"
+const SESSION_KEY = "app.auth.session"
 
 export type AuthSession = {
   email: string

@@ -24,6 +24,6 @@ powersync generate schema --output=ts --output-path=src/generated/schema.ts \
 
 Platform adapters (`@powersync/web`, `@powersync/react-native`) stay in apps.
 
-Shared backend connector: `createZulaBackendConnector` from `@zula/powersync` (or `@zula/powersync/connector`).
+Shared backend connector: `createAppBackendConnector` from `@zula/powersync` (or `@zula/powersync/connector`).
 
 Upload path (backend): `POST /api/sync/batch` — see [docs/powersync.md](../../docs/powersync.md).
