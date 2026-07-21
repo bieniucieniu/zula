@@ -1,0 +1,44 @@
+import type { BaseUIEvent } from "@base-ui/react"
+import { resolve } from "@/lib/utils"
+import { Button } from "../../ui/button"
+import { useMutationAction } from "../hooks"
+import type { ActionContext, ToggleAction } from "../types"
+
+export function ToggleActionButton<C, T = void>({
+  action,
+  onClick,
+  disabled,
+  context,
+  ...props
+}: {
+  action: ToggleAction<C, T>
+  context: ActionContext & C
+} & Omit<React.ComponentProps<typeof Button>, "children">) {
+  const {
+    localContext,
+    mutation: mut,
+    throttle,
+  } = useMutationAction({
+    action,
+    context,
+  })
+  const onClickHandler = (e: BaseUIEvent<React.MouseEvent<HTMLButtonElement>>) => {
+    e.preventDefault()
+    onClick?.(e)
+    throttle.maybeExecute()
+  }
+  const label = resolve(action.label, localContext)
+  return (
+    <Button
+      size={label ? undefined : "icon"}
+      title={resolve(action.tooltip, localContext)}
+      disabled={disabled || mut.isPending || resolve(action.disabled, localContext)}
+      onClick={onClickHandler}
+      {...props}
+    >
+      {resolve(action.icon, localContext)}
+      {label}
+      {resolve(action.indicator, localContext)}
+    </Button>
+  )
+}
