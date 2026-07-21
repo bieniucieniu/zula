@@ -82,6 +82,7 @@
       "devDependencies": {
         "@babel/core": "^7.26.0",
         "@types/react": "~19.1.10",
+        "babel-plugin-react-compiler": "^1.0.0",
         "babel-preset-expo": "~54.0.10",
         "prettier": "^3.8.3",
         "prettier-plugin-tailwindcss": "^0.8.0",
