@@ -5,10 +5,11 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type SyncOpOp = (typeof SyncOpOp)[keyof typeof SyncOpOp]
+export type SyncOpOp = typeof SyncOpOp[keyof typeof SyncOpOp];
+
 
 export const SyncOpOp = {
-  PUT: "PUT",
-  PATCH: "PATCH",
-  DELETE: "DELETE",
-} as const
+  PUT: 'PUT',
+  PATCH: 'PATCH',
+  DELETE: 'DELETE',
+} as const;

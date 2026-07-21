@@ -6,6 +6,6 @@
  */
 
 export type CallbackGoogleParams = {
-  id_token?: string
-  refresh_token?: string
-}
+id_token?: string;
+refresh_token?: string;
+};

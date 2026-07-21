@@ -4,7 +4,7 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import { useMutation, useQuery } from "@tanstack/react-query"
+
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -19,20 +19,25 @@ import type {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query"
-
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { customInstance } from "../mutator"
 import type {
-  AuthTokensResponse,
   AuthenticateRequest,
+  AuthTokensResponse,
   CallbackGoogleParams,
   ChallengeRequest,
   ChallengeResponse,
+  GetHealth200,
+  GetHealth503,
+  GetJobsPing202,
+  GetJobsPing503,
   JwksResponse,
   LinkedProvidersResponse,
   OAuthProvidersResponse,
   RefreshRequest,
-} from "../model"
-
-import { customInstance } from "../../mutator"
+  SyncBatchRequest,
+  SyncBatchResponse,
+} from "./model"
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
@@ -49,6 +54,242 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
     })
   }
   return result
+}
+
+export type getHealthResponse200 = {
+  data: GetHealth200
+  status: 200
+}
+
+export type getHealthResponse503 = {
+  data: GetHealth503
+  status: 503
+}
+
+export type getHealthResponseSuccess = getHealthResponse200 & {
+  headers: Headers
+}
+export type getHealthResponseError = getHealthResponse503 & {
+  headers: Headers
+}
+
+export type getHealthResponse = getHealthResponseSuccess | getHealthResponseError
+
+export const getGetHealthUrl = () => {
+  return `/health`
+}
+
+export const getHealth = async (options?: RequestInit): Promise<getHealthResponse> => {
+  return customInstance<getHealthResponse>(getGetHealthUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetHealthQueryKey = () => {
+  return [`/health`] as const
+}
+
+export const getGetHealthQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHealth>>,
+  TError = GetHealth503,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetHealthQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHealth>>> = ({ signal }) =>
+    getHealth({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getHealth>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getHealth>>>
+export type GetHealthQueryError = GetHealth503
+
+export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getHealth>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getHealth>>,
+          TError,
+          Awaited<ReturnType<typeof getHealth>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetHealthQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getJobsPingResponse202 = {
+  data: GetJobsPing202
+  status: 202
+}
+
+export type getJobsPingResponse503 = {
+  data: GetJobsPing503
+  status: 503
+}
+
+export type getJobsPingResponseSuccess = getJobsPingResponse202 & {
+  headers: Headers
+}
+export type getJobsPingResponseError = getJobsPingResponse503 & {
+  headers: Headers
+}
+
+export type getJobsPingResponse = getJobsPingResponseSuccess | getJobsPingResponseError
+
+export const getGetJobsPingUrl = () => {
+  return `/jobs/ping`
+}
+
+export const getJobsPing = async (options?: RequestInit): Promise<getJobsPingResponse> => {
+  return customInstance<getJobsPingResponse>(getGetJobsPingUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetJobsPingQueryKey = () => {
+  return [`/jobs/ping`] as const
+}
+
+export const getGetJobsPingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetJobsPingQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobsPing>>> = ({ signal }) =>
+    getJobsPing({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getJobsPing>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJobsPingQueryResult = NonNullable<Awaited<ReturnType<typeof getJobsPing>>>
+export type GetJobsPingQueryError = GetJobsPing503
+
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJobsPing>>,
+          TError,
+          Awaited<ReturnType<typeof getJobsPing>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJobsPing>>,
+          TError,
+          Awaited<ReturnType<typeof getJobsPing>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetJobsPingQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
 }
 
 export type getWellKnownJwksResponse200 = {
@@ -356,6 +597,7 @@ export const useAuthenticate = <TError = unknown, TContext = unknown>(
 > => {
   return useMutation(getAuthenticateMutationOptions(options), queryClient)
 }
+
 export type refreshResponse200 = {
   data: AuthTokensResponse
   status: 200
@@ -439,6 +681,7 @@ export const useRefresh = <TError = unknown, TContext = unknown>(
 > => {
   return useMutation(getRefreshMutationOptions(options), queryClient)
 }
+
 export type createChallengeResponse200 = {
   data: ChallengeResponse
   status: 200
@@ -522,6 +765,7 @@ export const useCreateChallenge = <TError = unknown, TContext = unknown>(
 > => {
   return useMutation(getCreateChallengeMutationOptions(options), queryClient)
 }
+
 export type listProvidersResponse200 = {
   data: OAuthProvidersResponse
   status: 200
@@ -721,6 +965,7 @@ export const useLogout = <TError = unknown, TContext = unknown>(
 > => {
   return useMutation(getLogoutMutationOptions(options), queryClient)
 }
+
 export type listLinkedProvidersResponse200 = {
   data: LinkedProvidersResponse
   status: 200
@@ -1083,4 +1328,88 @@ export function useCallbackGoogle<
   }
 
   return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type syncBatchResponse200 = {
+  data: SyncBatchResponse
+  status: 200
+}
+
+export type syncBatchResponseSuccess = syncBatchResponse200 & {
+  headers: Headers
+}
+
+export type syncBatchResponse = syncBatchResponseSuccess
+
+export const getSyncBatchUrl = () => {
+  return `/api/sync/batch`
+}
+
+export const syncBatch = async (
+  syncBatchRequest?: SyncBatchRequest,
+  options?: RequestInit
+): Promise<syncBatchResponse> => {
+  return customInstance<syncBatchResponse>(getSyncBatchUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(syncBatchRequest),
+  })
+}
+
+export const getSyncBatchMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncBatch>>,
+    TError,
+    { data?: SyncBatchRequest },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncBatch>>,
+  TError,
+  { data?: SyncBatchRequest },
+  TContext
+> => {
+  const mutationKey = ["syncBatch"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncBatch>>,
+    { data?: SyncBatchRequest }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return syncBatch(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SyncBatchMutationResult = NonNullable<Awaited<ReturnType<typeof syncBatch>>>
+export type SyncBatchMutationBody = SyncBatchRequest | undefined
+export type SyncBatchMutationError = unknown
+
+export const useSyncBatch = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof syncBatch>>,
+      TError,
+      { data?: SyncBatchRequest },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof syncBatch>>,
+  TError,
+  { data?: SyncBatchRequest },
+  TContext
+> => {
+  return useMutation(getSyncBatchMutationOptions(options), queryClient)
 }

@@ -5,7 +5,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./model": "./src/generated/model/index.ts",
-    "./auth": "./src/generated/auth/auth.ts"
+    "./endpoints": "./src/generated/endpoints.ts"
   },
   "scripts": {
     "gen": "orval --config orval.config.ts",

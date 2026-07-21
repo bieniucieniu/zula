@@ -6,9 +6,9 @@
  */
 
 export interface LinkedProviderResponse {
-  provider: string
-  providerUserId: string
+  provider: string;
+  providerUserId: string;
   /** @nullable */
-  email?: string | null
-  credentialsStatus: string
+  email?: string | null;
+  credentialsStatus: string;
 }

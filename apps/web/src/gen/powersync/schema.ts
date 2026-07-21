@@ -1,4 +1,5 @@
-import { column, Schema, Table, PowerSyncDatabase, SyncStream } from "@powersync/web"
+import { column, type PowerSyncDatabase, Schema, type SyncStream, Table } from "@powersync/web"
+
 // OR: import { column, Schema, Table, PowerSyncDatabase, SyncStream } from '@powersync/react-native';
 
 const users = new Table(

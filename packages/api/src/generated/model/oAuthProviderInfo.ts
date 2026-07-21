@@ -6,9 +6,9 @@
  */
 
 export interface OAuthProviderInfo {
-  id: string
-  clientId: string
-  authorizeUrl: string
-  tokenUrl: string
-  scopes: string[]
+  id: string;
+  clientId: string;
+  authorizeUrl: string;
+  tokenUrl: string;
+  scopes: string[];
 }

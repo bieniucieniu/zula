@@ -4,8 +4,8 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { JwkKey } from "./jwkKey"
+import type { JwkKey } from './jwkKey';
 
 export interface JwksResponse {
-  keys: JwkKey[]
+  keys: JwkKey[];
 }

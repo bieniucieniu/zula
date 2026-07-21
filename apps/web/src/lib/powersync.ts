@@ -1,8 +1,8 @@
 import { PowerSyncDatabase } from "@powersync/web"
-import { createAppPowersync, typedStreams } from "@zula/powersync"
-import { createCollection } from "@tanstack/react-db"
 import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection"
+import { createCollection } from "@tanstack/react-db"
 import { useEffect, useSyncExternalStore } from "react"
+import { AppSchema, typedStreams } from "@/gen/powersync/schema"
 import { useAuth } from "@/lib/auth"
 import { createPowerSyncConnector } from "@/lib/powersync-connector"
 
@@ -34,24 +34,27 @@ const connector = createPowerSyncConnector({
   syncBatchUrl,
 })
 
-export const powerSync = createAppPowersync({
-  createDatabase: (options) =>
-    new PowerSyncDatabase({
-      schema: options.schema,
-      database: { dbFilename: "app.db" },
-    }),
-  connector,
+export const db = new PowerSyncDatabase({
+  schema: AppSchema,
+  database: { dbFilename: "app.db" },
 })
 
-export const { db: powerSyncDb, connect, disconnect } = powerSync
-export const streams = typedStreams(powerSyncDb)
+db.connect(connector)
+
+export const streams = typedStreams(db)
 
 export const usersCollection = createCollection(
-  powerSyncCollectionOptions(powerSync.getCollectionsOptions("users"))
+  powerSyncCollectionOptions({
+    database: db,
+    table: AppSchema.props.users,
+  })
 )
 
 export const userProfilesCollection = createCollection(
-  powerSyncCollectionOptions(powerSync.getCollectionsOptions("user_profiles"))
+  powerSyncCollectionOptions({
+    database: db,
+    table: AppSchema.props.user_profiles,
+  })
 )
 
 export function usePowerSync() {
@@ -60,7 +63,7 @@ export function usePowerSync() {
     () => syncReady,
     () => false
   )
-  return { ready, db: powerSyncDb }
+  return { ready, db }
 }
 
 export function usePowerSyncAuth() {
@@ -74,12 +77,11 @@ export function usePowerSyncAuth() {
     async function run() {
       if (!session?.accessToken) {
         setSyncReady(false)
-        await powerSync.disconnect()
+        await db.disconnect()
         return
       }
 
-      await powerSync.connect()
-      await streams.me().subscribe()
+      await db.connect(connector)
       if (!cancelled) setSyncReady(true)
     }
 
@@ -88,7 +90,7 @@ export function usePowerSyncAuth() {
     return () => {
       cancelled = true
       setSyncReady(false)
-      void powerSync.disconnect()
+      void db.disconnect()
     }
   }, [session?.accessToken])
 }

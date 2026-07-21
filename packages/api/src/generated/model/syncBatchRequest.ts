@@ -4,8 +4,8 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { SyncOp } from "./syncOp"
+import type { SyncOp } from './syncOp';
 
 export interface SyncBatchRequest {
-  ops: SyncOp[]
+  ops: SyncOp[];
 }

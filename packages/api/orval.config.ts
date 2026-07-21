@@ -6,7 +6,7 @@ export default defineConfig({
       target: "http://localhost:8000/swagger/documentation.yaml",
     },
     output: {
-      mode: "tags-split",
+      mode: "split",
       target: "src/generated/endpoints.ts",
       schemas: "src/generated/model",
       client: "react-query",

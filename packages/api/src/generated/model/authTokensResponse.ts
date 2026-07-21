@@ -6,9 +6,9 @@
  */
 
 export interface AuthTokensResponse {
-  accessToken: string
-  expiresIn: number
-  tokenType?: string
+  accessToken: string;
+  expiresIn: number;
+  tokenType?: string;
   /** @nullable */
-  refreshToken?: string | null
+  refreshToken?: string | null;
 }

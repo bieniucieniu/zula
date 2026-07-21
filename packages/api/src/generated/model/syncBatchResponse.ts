@@ -4,8 +4,8 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { SyncOpResult } from "./syncOpResult"
+import type { SyncOpResult } from './syncOpResult';
 
 export interface SyncBatchResponse {
-  results: SyncOpResult[]
+  results: SyncOpResult[];
 }

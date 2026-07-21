@@ -9,7 +9,9 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "gen:api": "orval --config packages/api/orval.config.ts",
-    "gen:powersync": "powersync generate schema --output=ts --output-path=packages/powersync/src/generated/schema.ts --directory=./powersync --api-url=http://127.0.0.1:8080"
+    "powersync": "powersync",
+    "gen:powersync:web": "powersync generate schema --output=ts --output-path=apps/web/src/gen/powersync/schema.ts --directory=./powersync --api-url=http://127.0.0.1:8080",
+    "gen:powersync:native": "powersync generate schema --output=ts --output-path=apps/native/src/gen/powersync/schema.ts --directory=./powersync --api-url=http://127.0.0.1:8080"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",

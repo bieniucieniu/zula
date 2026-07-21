@@ -4,19 +4,19 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { ProblemDetailsErrors } from "./problemDetailsErrors"
+import type { ProblemDetailsErrors } from './problemDetailsErrors';
 
 /**
  * @nullable
  */
 export type ProblemDetails = {
-  type?: string
-  title: string
-  status: number
+  type?: string;
+  title: string;
+  status: number;
   /** @nullable */
-  detail?: string | null
+  detail?: string | null;
   /** @nullable */
-  instance?: string | null
+  instance?: string | null;
   /** @nullable */
-  errors?: ProblemDetailsErrors
-} | null
+  errors?: ProblemDetailsErrors;
+} | null;

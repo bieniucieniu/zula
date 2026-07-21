@@ -4,9 +4,9 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { JsonElement } from "./jsonElement"
+import type { JsonElement } from './jsonElement';
 
 /**
  * @nullable
  */
-export type SyncOpOpData = { [key: string]: JsonElement } | null
+export type SyncOpOpData = {[key: string]: JsonElement} | null;

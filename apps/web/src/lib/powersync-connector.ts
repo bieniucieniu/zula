@@ -1,8 +1,6 @@
-import type {
-  AbstractPowerSyncDatabase,
-  CrudEntry,
-  PowerSyncBackendConnector,
-} from "@powersync/web"
+import type { AbstractPowerSyncDatabase, PowerSyncBackendConnector } from "@powersync/web"
+import { ProblemDetailsError } from "@zula/api"
+import { syncBatch } from "@zula/api/endpoints"
 
 export type PowerSyncConnectorConfig = {
   getAccessToken: () => Promise<string | null>
@@ -30,30 +28,15 @@ export function createPowerSyncConnector(
         throw new Error("Cannot upload sync batch without access token")
       }
 
-      const batch = await database.getCrudBatch(100)
+      const batch = await database.getNextCrudTransaction()
       if (!batch) return
 
-      const response = await fetch(config.syncBatchUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ops: batch.crud.map((entry: CrudEntry) => ({
-            clientId: entry.clientId,
-            op: entry.op,
-            table: entry.table,
-            id: entry.id,
-            opData: entry.opData ?? null,
-            metadata: entry.metadata ?? null,
-          })),
-        }),
+      const out = await syncBatch({ ops: batch.crud })
+      out.data.results.map((result) => {
+        if (result.problem != null) {
+          throw new ProblemDetailsError(result.problem)
+        }
       })
-
-      if (!response.ok) {
-        throw new Error(`Sync upload failed with status ${response.status}`)
-      }
 
       await batch.complete()
     },

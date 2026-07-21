@@ -4,8 +4,8 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { LinkedProviderResponse } from "./linkedProviderResponse"
+import type { LinkedProviderResponse } from './linkedProviderResponse';
 
 export interface LinkedProvidersResponse {
-  providers: LinkedProviderResponse[]
+  providers: LinkedProviderResponse[];
 }

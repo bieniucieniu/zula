@@ -4,8 +4,8 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { OAuthProviderInfo } from "./oAuthProviderInfo"
+import type { OAuthProviderInfo } from './oAuthProviderInfo';
 
 export interface OAuthProvidersResponse {
-  providers: OAuthProviderInfo[]
+  providers: OAuthProviderInfo[];
 }
