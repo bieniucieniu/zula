@@ -12,51 +12,45 @@ bun run gen   # needs devenv --profile powersync up
 
 | Import | Contents |
 |--------|----------|
-| `@zula/powersync` | schema, `createAppPowerSyncDatabase`, `createAppCollections`, connector, connect helpers |
-| `@zula/powersync/react` | `PowerSyncProvider`, `usePowerSync` |
+| `@zula/powersync` | `createAppPowersync`, schema, connector, low-level helpers |
 | `@zula/powersync/schema` | generated schema only |
 
-## App integration
+## Usage
 
-Each platform provides **storage** + **credentials**. Everything else lives here.
+Each app creates one stable instance — usable inside and outside React:
 
 ```ts
-// db.ts — platform-specific storage
-import { PowerSyncDatabase } from "@powersync/web" // or @powersync/react-native
-import { createAppPowerSyncDatabase } from "@zula/powersync"
+import { PowerSyncDatabase } from "@powersync/web"
+import { createAppPowersync } from "@zula/powersync"
 
-export const powerSyncDb = createAppPowerSyncDatabase({
+export const powerSync = createAppPowersync({
   database: { dbFilename: "app.db" }, // or SQLJSOpenFactory for Expo Go
   createDatabase: (options) => new PowerSyncDatabase(options),
-})
-```
-
-```ts
-// credentials.ts — env + auth token
-import type { AppPowerSyncCredentials } from "@zula/powersync"
-
-export async function getAppPowerSyncCredentials(
-  accessToken: string | null | undefined,
-): Promise<AppPowerSyncCredentials | null> {
-  if (!accessToken) return null
-  return {
+  getCredentials: async () => ({
     endpoint: "http://127.0.0.1:8080",
     syncBatchUrl: "/api/v1/sync/batch",
     token: accessToken,
-  }
-}
+  }),
+})
+
+export const {
+  db,
+  usersCollection,
+  userProfilesCollection,
+  streams,
+  connect,
+  disconnect,
+  useSyncReady,
+} = powerSync
 ```
 
-```tsx
-// provider.tsx
-import { PowerSyncProvider } from "@zula/powersync/react"
-import { createAppCollections } from "@zula/powersync"
+Wire auth with a small effect (no provider):
 
-const collections = createAppCollections(powerSyncDb)
-
-<PowerSyncProvider db={powerSyncDb} getCredentials={getCredentials}>
-  {children}
-</PowerSyncProvider>
+```ts
+useEffect(() => {
+  if (token) void powerSync.connect()
+  else void powerSync.disconnect()
+}, [token])
 ```
 
 Upload path (backend): `POST /api/sync/batch` — see [docs/powersync.md](../../docs/powersync.md).
