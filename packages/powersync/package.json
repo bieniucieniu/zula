@@ -5,7 +5,6 @@
   "exports": {
     ".": "./src/index.ts",
     "./connector": "./src/connector.ts",
-    "./react": "./src/react.tsx",
     "./schema": "./src/generated/schema.ts"
   },
   "scripts": {
