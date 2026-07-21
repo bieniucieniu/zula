@@ -1,6 +1,6 @@
 # `@zula/powersync`
 
-Shared PowerSync client schema for `apps/web` and `apps/native`.
+Shared PowerSync client for `apps/web` and `apps/native`. Bundles `AppSchema` + sync helpers.
 
 ## Scripts
 
@@ -8,22 +8,55 @@ Shared PowerSync client schema for `apps/web` and `apps/native`.
 bun run gen   # needs devenv --profile powersync up
 ```
 
-Runs:
-
-```text
-powersync generate schema --output=ts --output-path=src/generated/schema.ts \
-  --directory=../../powersync --api-url=http://127.0.0.1:8080
-```
-
 ## Exports
 
 | Import | Contents |
 |--------|----------|
-| `@zula/powersync` | `AppSchema`, `typedStreams` |
+| `@zula/powersync` | schema, `createAppPowerSyncDatabase`, `createAppCollections`, connector, connect helpers |
+| `@zula/powersync/react` | `PowerSyncProvider`, `usePowerSync` |
 | `@zula/powersync/schema` | generated schema only |
 
-Platform adapters (`@powersync/web`, `@powersync/react-native`) stay in apps.
+## App integration
 
-Shared backend connector: `createAppBackendConnector` from `@zula/powersync` (or `@zula/powersync/connector`).
+Each platform provides **storage** + **credentials**. Everything else lives here.
+
+```ts
+// db.ts — platform-specific storage
+import { PowerSyncDatabase } from "@powersync/web" // or @powersync/react-native
+import { createAppPowerSyncDatabase } from "@zula/powersync"
+
+export const powerSyncDb = createAppPowerSyncDatabase({
+  database: { dbFilename: "app.db" }, // or SQLJSOpenFactory for Expo Go
+  createDatabase: (options) => new PowerSyncDatabase(options),
+})
+```
+
+```ts
+// credentials.ts — env + auth token
+import type { AppPowerSyncCredentials } from "@zula/powersync"
+
+export async function getAppPowerSyncCredentials(
+  accessToken: string | null | undefined,
+): Promise<AppPowerSyncCredentials | null> {
+  if (!accessToken) return null
+  return {
+    endpoint: "http://127.0.0.1:8080",
+    syncBatchUrl: "/api/v1/sync/batch",
+    token: accessToken,
+  }
+}
+```
+
+```tsx
+// provider.tsx
+import { PowerSyncProvider } from "@zula/powersync/react"
+import { createAppCollections } from "@zula/powersync"
+
+const collections = createAppCollections(powerSyncDb)
+
+<PowerSyncProvider db={powerSyncDb} getCredentials={getCredentials}>
+  {children}
+</PowerSyncProvider>
+```
 
 Upload path (backend): `POST /api/sync/batch` — see [docs/powersync.md](../../docs/powersync.md).

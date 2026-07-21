@@ -1,9 +1,9 @@
 import { PowerSyncDatabase } from "@powersync/web"
-import { AppSchema } from "@zula/powersync"
+import { createAppPowerSyncDatabase } from "@zula/powersync"
 
-export const powerSyncDb = new PowerSyncDatabase({
-  schema: AppSchema,
+export const powerSyncDb = createAppPowerSyncDatabase({
   database: {
     dbFilename: "app.db",
   },
+  createDatabase: (options) => new PowerSyncDatabase(options),
 })

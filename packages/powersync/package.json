@@ -5,6 +5,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./connector": "./src/connector.ts",
+    "./react": "./src/react.tsx",
     "./schema": "./src/generated/schema.ts"
   },
   "scripts": {
@@ -14,8 +15,17 @@
   "dependencies": {
     "@powersync/common": "^1.46.0"
   },
+  "peerDependencies": {
+    "@tanstack/powersync-db-collection": ">=0.1.0",
+    "@tanstack/react-db": ">=0.1.0",
+    "react": ">=18"
+  },
   "devDependencies": {
+    "@tanstack/powersync-db-collection": "^0.1.54",
+    "@tanstack/react-db": "^0.1.94",
+    "@types/react": "^19.2.17",
     "powersync": "^0.9.0",
+    "react": "^19.2.7",
     "typescript": "^6"
   }
 }
