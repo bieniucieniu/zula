@@ -4,10 +4,16 @@ import type {
   PowerSyncBackendConnector,
 } from "@powersync/common"
 
-export type AppBackendConnectorOptions = {
-  powersyncUrl: string
+export type AppPowerSyncCredentials = {
+  endpoint: string
+  token: string
   syncBatchUrl: string
-  getAccessToken: () => Promise<string | null>
+}
+
+export type GetAppPowerSyncCredentials = () => Promise<AppPowerSyncCredentials | null>
+
+export type AppBackendConnectorOptions = {
+  getCredentials: GetAppPowerSyncCredentials
 }
 
 function serializeCrudEntry(entry: CrudEntry) {
@@ -24,32 +30,32 @@ function serializeCrudEntry(entry: CrudEntry) {
 export function createAppBackendConnector(
   options: AppBackendConnectorOptions
 ): PowerSyncBackendConnector {
-  const { powersyncUrl, syncBatchUrl, getAccessToken } = options
+  const { getCredentials } = options
 
   return {
     async fetchCredentials() {
-      const token = await getAccessToken()
-      if (!token) return null
+      const credentials = await getCredentials()
+      if (!credentials) return null
 
       return {
-        endpoint: powersyncUrl,
-        token,
+        endpoint: credentials.endpoint,
+        token: credentials.token,
       }
     },
 
     async uploadData(database: AbstractPowerSyncDatabase) {
-      const accessToken = await getAccessToken()
-      if (!accessToken) {
-        throw new Error("Cannot upload sync batch without an access token")
+      const credentials = await getCredentials()
+      if (!credentials) {
+        throw new Error("Cannot upload sync batch without credentials")
       }
 
       const batch = await database.getCrudBatch(100)
       if (!batch) return
 
-      const response = await fetch(syncBatchUrl, {
+      const response = await fetch(credentials.syncBatchUrl, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${credentials.token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
