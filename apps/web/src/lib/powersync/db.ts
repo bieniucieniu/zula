@@ -4,6 +4,6 @@ import { AppSchema } from "@zula/powersync"
 export const powerSyncDb = new PowerSyncDatabase({
   schema: AppSchema,
   database: {
-    dbFilename: "zula.db",
+    dbFilename: "app.db",
   },
 })

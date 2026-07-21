@@ -1,5 +1,5 @@
-export { createZulaBackendConnector } from "./connector"
-export type { ZulaBackendConnectorOptions } from "./connector"
+export { createAppBackendConnector } from "./connector"
+export type { AppBackendConnectorOptions } from "./connector"
 export { AppSchema, typedStreams } from "./generated/schema"
 export type {
   Database,

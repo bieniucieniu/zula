@@ -4,7 +4,7 @@ import type {
   PowerSyncBackendConnector,
 } from "@powersync/common"
 
-export type ZulaBackendConnectorOptions = {
+export type AppBackendConnectorOptions = {
   powersyncUrl: string
   syncBatchUrl: string
   getAccessToken: () => Promise<string | null>
@@ -21,8 +21,8 @@ function serializeCrudEntry(entry: CrudEntry) {
   }
 }
 
-export function createZulaBackendConnector(
-  options: ZulaBackendConnectorOptions
+export function createAppBackendConnector(
+  options: AppBackendConnectorOptions
 ): PowerSyncBackendConnector {
   const { powersyncUrl, syncBatchUrl, getAccessToken } = options
 
