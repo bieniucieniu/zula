@@ -50,7 +50,6 @@
     "@storybook/react-native-ui-lite": "^10.5.0",
     "@tanstack/powersync-db-collection": "^0.1.54",
     "@tanstack/react-db": "^0.1.94",
-    "@zula/powersync": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cross-env": "^10.1.0",
