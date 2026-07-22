@@ -17,9 +17,15 @@ export type PopupSignInOptions = {
   timeoutMs?: number
 }
 
+/** Prefer redirect paths already registered in Google Cloud Console. */
+function defaultRedirectPath(providerId: string): string {
+  if (providerId === "google") return "/api/auth/callback/google"
+  return "/oauth/callback"
+}
+
 export async function signInWithPopup({
   provider,
-  redirectPath = "/oauth/callback",
+  redirectPath = defaultRedirectPath(provider.id),
   popupName = "zula-oauth",
   popupFeatures = "popup,width=500,height=700",
   timeoutMs = 120_000,
@@ -35,6 +41,10 @@ export async function signInWithPopup({
     nonce,
     extraParams: definition?.extraAuthParams,
   })
+
+  if (import.meta.env.DEV) {
+    console.info(`[zula] OAuth authorize ${provider.id}`, { clientId: provider.clientId, redirectUri })
+  }
 
   return new Promise<OAuthSignInResult>((resolve, reject) => {
     const popup = window.open(authorizeUrl, popupName, popupFeatures)
