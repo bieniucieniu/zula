@@ -7,10 +7,6 @@ import com.zula.core.security.jwt.SessionJwtIssuer
 import com.zula.core.security.jwt.keys.JwtKeySetVerifier
 import com.zula.core.security.jwt.keys.KeysManager
 import com.zula.core.security.jwt.keys.KeysManagers
-import com.zula.core.security.oauth.OAuthPaths
-import com.zula.core.security.oauth.OAuthProviderNames
-import com.zula.core.security.oauth.appleOAuthSettings
-import com.zula.core.security.oauth.googleOAuthSettings
 import io.ktor.client.*
 import io.ktor.http.*
 import io.ktor.http.auth.*
@@ -26,12 +22,9 @@ import org.slf4j.LoggerFactory
 fun Application.configureSecurity() {
     val config: SecurityConfig = get()
     val keySetVerifier: JwtKeySetVerifier = get()
-    val oauthClient: HttpClient = get()
     val sessionValidator: JwtSessionValidator = get()
 
     installJwt(config, keySetVerifier, sessionValidator)
-    installGoogleOAuth(config, oauthClient)
-    installAppleOAuth(config, oauthClient)
 }
 
 fun securityModule(builder: SecurityConfigBuilder.() -> Unit): Module =
@@ -104,38 +97,6 @@ private fun Application.installJwt(
 
                 JWTPrincipal(credential.payload)
             }
-        }
-    }
-}
-
-private fun Application.installGoogleOAuth(config: SecurityConfig, oauthClient: HttpClient) {
-    val google = config.oauth.google
-    if (!google.isConfigured) {
-        log.info("Google OAuth disabled, missing client credentials")
-        return
-    }
-
-    authentication {
-        oauth(OAuthProviderNames.GOOGLE) {
-            urlProvider = { oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl) }
-            providerLookup = { googleOAuthSettings(google) }
-            client = oauthClient
-        }
-    }
-}
-
-private fun Application.installAppleOAuth(config: SecurityConfig, oauthClient: HttpClient) {
-    val apple = config.oauth.apple
-    if (!apple.isConfigured) {
-        log.info("Apple OAuth disabled, missing credentials")
-        return
-    }
-
-    authentication {
-        oauth(OAuthProviderNames.APPLE) {
-            urlProvider = { oauthCallbackUrl(OAuthPaths.APPLE_CALLBACK, config.appUrl) }
-            providerLookup = { appleOAuthSettings(apple) }
-            client = oauthClient
         }
     }
 }

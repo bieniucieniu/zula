@@ -77,7 +77,17 @@ data class OAuthConfig(
 data class GoogleOAuthConfig(
     val clientId: String? = null,
     val clientSecret: String? = null,
+    val additionalClientIds: List<String> = emptyList(),
 ) {
+    val idTokenAudiences: List<String>
+        get() = buildList {
+            clientId?.takeIf { it.isNotBlank() }?.let(::add)
+            additionalClientIds.filter { it.isNotBlank() }.forEach(::add)
+        }.distinct()
+
+    val isIdTokenConfigured: Boolean
+        get() = idTokenAudiences.isNotEmpty()
+
     val isConfigured: Boolean
         get() = !clientId.isNullOrBlank() && !clientSecret.isNullOrBlank()
 
@@ -86,6 +96,11 @@ data class GoogleOAuthConfig(
         fun from(config: ApplicationConfig?) = GoogleOAuthConfig(
             clientId = config?.stringOrNull("clientId"),
             clientSecret = config?.stringOrNull("clientSecret"),
+            additionalClientIds = config?.stringOrNull("additionalClientIds")
+                ?.split(',')
+                ?.map { it.trim() }
+                ?.filter { it.isNotEmpty() }
+                ?: emptyList(),
         )
     }
 }
@@ -95,7 +110,17 @@ data class AppleOAuthConfig(
     val teamId: String? = null,
     val keyId: String? = null,
     val privateKeyPem: String? = null,
+    val additionalClientIds: List<String> = emptyList(),
 ) {
+    val idTokenAudiences: List<String>
+        get() = buildList {
+            clientId?.takeIf { it.isNotBlank() }?.let(::add)
+            additionalClientIds.filter { it.isNotBlank() }.forEach(::add)
+        }.distinct()
+
+    val isIdTokenConfigured: Boolean
+        get() = idTokenAudiences.isNotEmpty()
+
     val isConfigured: Boolean
         get() = !clientId.isNullOrBlank() &&
                 !teamId.isNullOrBlank() &&
@@ -109,6 +134,11 @@ data class AppleOAuthConfig(
             teamId = config?.stringOrNull("teamId"),
             keyId = config?.stringOrNull("keyId"),
             privateKeyPem = config?.stringOrNull("privateKeyPem"),
+            additionalClientIds = config?.stringOrNull("additionalClientIds")
+                ?.split(',')
+                ?.map { it.trim() }
+                ?.filter { it.isNotEmpty() }
+                ?: emptyList(),
         )
     }
 }

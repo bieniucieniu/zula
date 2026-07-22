@@ -6,7 +6,7 @@ import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection"
 import { useSyncExternalStore } from "react"
 import { createPowerSyncConnector } from "@/lib/powersync-connector"
 
-const defaultApiUrl = "http://127.0.0.1:8000/api/v1"
+const defaultApiUrl = "http://127.0.0.1:8000/api"
 const powersyncUrl = process.env.EXPO_PUBLIC_PS_URL ?? "http://127.0.0.1:8080"
 const syncBatchUrl = `${process.env.EXPO_PUBLIC_API_URL ?? defaultApiUrl}/sync/batch`
 

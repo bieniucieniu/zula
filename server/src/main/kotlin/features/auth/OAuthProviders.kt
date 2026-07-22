@@ -1,8 +1,6 @@
 package com.zula.features.auth
 
 import com.zula.core.security.OAuthConfig
-import com.zula.core.security.oauth.appleOAuthSettings
-import com.zula.core.security.oauth.googleOAuthSettings
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -20,27 +18,25 @@ data class OAuthProviderInfo(
 )
 
 fun OAuthConfig.configuredProviders(): List<OAuthProviderInfo> = buildList {
-    if (google.isConfigured) {
-        val settings = googleOAuthSettings(google)
+    if (google.isIdTokenConfigured) {
         add(
             OAuthProviderInfo(
-                id = settings.name,
-                clientId = settings.clientId,
-                authorizeUrl = settings.authorizeUrl,
-                tokenUrl = settings.accessTokenUrl,
-                scopes = settings.defaultScopes,
+                id = "google",
+                clientId = google.clientId.orEmpty(),
+                authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
+                tokenUrl = "https://accounts.google.com/o/oauth2/token",
+                scopes = listOf("openid", "email", "profile"),
             ),
         )
     }
-    if (apple.isConfigured) {
-        val settings = appleOAuthSettings(apple)
+    if (apple.isIdTokenConfigured) {
         add(
             OAuthProviderInfo(
-                id = settings.name,
-                clientId = settings.clientId,
-                authorizeUrl = settings.authorizeUrl,
-                tokenUrl = settings.accessTokenUrl,
-                scopes = settings.defaultScopes,
+                id = "apple",
+                clientId = apple.clientId.orEmpty(),
+                authorizeUrl = "https://appleid.apple.com/auth/authorize",
+                tokenUrl = "https://appleid.apple.com/auth/token",
+                scopes = listOf("name", "email"),
             ),
         )
     }

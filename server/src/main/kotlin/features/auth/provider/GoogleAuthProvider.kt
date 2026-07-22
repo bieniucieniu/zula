@@ -2,7 +2,6 @@ package com.zula.features.auth.provider
 
 import com.auth0.jwt.interfaces.DecodedJWT
 import com.zula.core.security.GoogleOAuthConfig
-import com.zula.core.security.oauth.googleOAuthSettings
 import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
 import com.zula.features.auth.domain.Identity
@@ -21,18 +20,17 @@ class GoogleAuthProvider(
         httpClient = httpClient,
         jwksUrl = "https://www.googleapis.com/oauth2/v3/certs",
         issuers = listOf("https://accounts.google.com", "accounts.google.com"),
-        audience = config.clientId.orEmpty(),
+        audiences = config.idTokenAudiences,
     )
 
     override fun info(): OAuthProviderInfo? {
-        if (!config.isConfigured) return null
-        val settings = googleOAuthSettings(config)
+        if (!config.isIdTokenConfigured) return null
         return OAuthProviderInfo(
             id = id,
-            clientId = settings.clientId,
-            authorizeUrl = settings.authorizeUrl,
-            tokenUrl = settings.accessTokenUrl,
-            scopes = settings.defaultScopes,
+            clientId = config.clientId.orEmpty(),
+            authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
+            tokenUrl = "https://accounts.google.com/o/oauth2/token",
+            scopes = listOf("openid", "email", "profile"),
         )
     }
 

@@ -33,11 +33,13 @@ security:
     google:
       clientId: ${GOOGLE_CLIENT_ID:}
       clientSecret: ${GOOGLE_CLIENT_SECRET:}
+      additionalClientIds: ${GOOGLE_ADDITIONAL_CLIENT_IDS:}
     apple:
       clientId: ${APPLE_CLIENT_ID:}
       teamId: ${APPLE_TEAM_ID:}
       keyId: ${APPLE_KEY_ID:}
       privateKeyPem: ${APPLE_PRIVATE_KEY:}
+      additionalClientIds: ${APPLE_ADDITIONAL_CLIENT_IDS:}
 
 ktor:
   deployment:
