@@ -1,7 +1,6 @@
 import { Redirect, Stack } from "expo-router"
 import { ActivityIndicator, View } from "react-native"
-import { useListProviders } from "@zula/api/endpoints"
-import { getProviderDefinition } from "@zula/oauth"
+import { getProviderDefinition, useOAuthProviders } from "@zula/oauth/react"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { useAuth } from "@/lib/auth"
@@ -27,8 +26,8 @@ function ProviderSignInButton({ providerId }: { providerId: string }) {
 
 export default function LoginScreen() {
   const { session, ready } = useAuth()
-  const providersQuery = useListProviders()
-  const providers = providersQuery.data?.data.providers ?? []
+  const providersQuery = useOAuthProviders()
+  const providers = providersQuery.data ?? []
 
   if (!ready || providersQuery.isLoading) {
     return (

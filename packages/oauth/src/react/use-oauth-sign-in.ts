@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { useCallback, useRef } from "react"
 import type { OAuthProviderInfo, OAuthSignInExecutor, OAuthSignInResult } from "../types"
 
 export type UseOAuthSignInOptions = {
@@ -16,28 +17,38 @@ export function useOAuthSignIn({
   onSuccess,
   onError,
 }: UseOAuthSignInOptions) {
-  const [pending, setPending] = useState(false)
+  const onSuccessRef = useRef(onSuccess)
+  const onErrorRef = useRef(onError)
+
+  onSuccessRef.current = onSuccess
+  onErrorRef.current = onError
+
+  const mutation = useMutation({
+    mutationKey: ["oauth", "sign-in", provider?.id],
+    mutationFn: async (activeProvider: OAuthProviderInfo) => signIn(activeProvider),
+    onSuccess: async (result) => {
+      await onSuccessRef.current?.(result)
+    },
+    onError: (error) => {
+      onErrorRef.current?.(
+        error instanceof Error ? error : new Error("OAuth sign-in failed")
+      )
+    },
+  })
 
   const execute = useCallback(async () => {
     if (!enabled || !provider) {
-      onError?.(new Error("OAuth provider not configured"))
+      onErrorRef.current?.(new Error("OAuth provider not configured"))
       return
     }
 
-    setPending(true)
-    try {
-      const result = await signIn(provider)
-      await onSuccess?.(result)
-    } catch (error) {
-      onError?.(error instanceof Error ? error : new Error("OAuth sign-in failed"))
-    } finally {
-      setPending(false)
-    }
-  }, [enabled, provider, signIn, onSuccess, onError])
+    await mutation.mutateAsync(provider)
+  }, [enabled, provider, mutation])
 
   return {
     signIn: execute,
-    pending,
+    pending: mutation.isPending,
     ready: enabled && Boolean(provider?.clientId),
+    mutation,
   }
 }

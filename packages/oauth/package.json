@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@tanstack/react-query": "^5",
+    "@zula/api": "workspace:*",
     "react": ">=18"
   },
   "devDependencies": {

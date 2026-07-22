@@ -1,7 +1,7 @@
 import { authenticateWithIdToken } from "@zula/api"
-import { useListProviders } from "@zula/api/endpoints"
 import { getProviderDefinition } from "@zula/oauth"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
+import { useOAuthProviders } from "@zula/oauth/react"
 import { useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -70,8 +70,8 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
 }
 
 export function OAuthSignInButtons({ disabled, onSuccess }: OAuthSignInButtonsProps) {
-  const providersQuery = useListProviders()
-  const providers = providersQuery.data?.data.providers ?? []
+  const providersQuery = useOAuthProviders()
+  const providers = providersQuery.data ?? []
 
   if (providersQuery.isLoading) {
     return (
