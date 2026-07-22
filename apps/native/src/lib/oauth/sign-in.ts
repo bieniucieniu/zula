@@ -1,9 +1,7 @@
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import type { AuthSessionResult } from "expo-auth-session"
 
-export function idTokenFromAuthSessionResult(
-  result: AuthSessionResult
-): string | null {
+export function idTokenFromAuthSessionResult(result: AuthSessionResult): string | null {
   if (result.type !== "success") return null
   return result.params?.id_token ?? result.authentication?.idToken ?? null
 }

@@ -35,6 +35,4 @@ export type BuildAuthorizeUrlInput = {
   extraParams?: Record<string, string>
 }
 
-export type OAuthSignInExecutor = (
-  provider: OAuthProviderInfo
-) => Promise<OAuthSignInResult>
+export type OAuthSignInExecutor = (provider: OAuthProviderInfo) => Promise<OAuthSignInResult>

@@ -30,9 +30,7 @@ export function useOAuthSignIn({
       await onSuccessRef.current?.(result)
     },
     onError: (error) => {
-      onErrorRef.current?.(
-        error instanceof Error ? error : new Error("OAuth sign-in failed")
-      )
+      onErrorRef.current?.(error instanceof Error ? error : new Error("OAuth sign-in failed"))
     },
   })
 

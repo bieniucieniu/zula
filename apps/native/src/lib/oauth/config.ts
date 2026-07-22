@@ -74,8 +74,7 @@ export function resolveNativeClientIds(
 
   return {
     webClientId,
-    iosClientId:
-      overrides?.iosClientId ?? (env?.ios ? readEnv(env.ios) : undefined),
+    iosClientId: overrides?.iosClientId ?? (env?.ios ? readEnv(env.ios) : undefined),
     androidClientId:
       overrides?.androidClientId ?? (env?.android ? readEnv(env.android) : undefined),
   }

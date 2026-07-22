@@ -1,4 +1,3 @@
-import "@/polyfills/crypto"
 import { SQLJSOpenFactory } from "@powersync/adapter-sql-js"
 import { PowerSyncDatabase } from "@powersync/react-native"
 import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection"

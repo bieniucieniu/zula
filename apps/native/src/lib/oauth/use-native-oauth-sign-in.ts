@@ -100,7 +100,8 @@ function useGoogleIdTokenAuth(
   )
 
   return {
-    ready: enabled && Boolean(provider?.clientId) && Boolean(request) && Boolean(clientIds?.webClientId),
+    ready:
+      enabled && Boolean(provider?.clientId) && Boolean(request) && Boolean(clientIds?.webClientId),
     promptAsync: enabled ? promptAsync : null,
   }
 }
@@ -135,7 +136,8 @@ function useGenericIdTokenAuth(
   )
 
   return {
-    ready: enabled && Boolean(provider?.clientId) && Boolean(request) && Boolean(clientIds?.webClientId),
+    ready:
+      enabled && Boolean(provider?.clientId) && Boolean(request) && Boolean(clientIds?.webClientId),
     promptAsync: enabled ? promptAsync : null,
   }
 }

@@ -206,10 +206,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                             ? "Sending code…"
                             : "Verify and sign in"}
                       </Button>
-                      <OAuthSignInButtons
-                        disabled={isSubmitting}
-                        onSuccess={invalidateSession}
-                      />
+                      <OAuthSignInButtons disabled={isSubmitting} onSuccess={invalidateSession} />
                     </>
                   )}
                 </form.Subscribe>

@@ -1,12 +1,12 @@
+import { useListProviders } from "@zula/api/endpoints"
 import { getProviderDefinition } from "@zula/oauth"
-import { useOAuthProvider } from "@zula/oauth/react"
 import { useCallback } from "react"
 import { useAuth } from "@/lib/auth"
 import { useNativeOAuthSignIn } from "@/lib/oauth/use-native-oauth-sign-in"
 
 export function useProviderOAuthSignIn(providerId: string) {
   const { signInWithIdToken } = useAuth()
-  const { provider, isLoading, ready: providerReady } = useOAuthProvider(providerId)
+  const { data: providers, isLoading } = useListProviders()
   const definition = getProviderDefinition(providerId)
 
   const onSuccess = useCallback(
@@ -19,6 +19,7 @@ export function useProviderOAuthSignIn(providerId: string) {
     },
     [signInWithIdToken]
   )
+  const provider = providers?.data.providers.find((p) => p.id === providerId)
 
   const oauth = useNativeOAuthSignIn({
     provider,
@@ -30,7 +31,7 @@ export function useProviderOAuthSignIn(providerId: string) {
 
   return {
     label: definition?.label ?? providerId,
-    ready: providerReady && oauth.ready,
+    ready: !isLoading && oauth.ready,
     loading: isLoading,
     pending: oauth.pending,
     signIn: oauth.signIn,

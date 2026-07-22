@@ -1,10 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query"
-import {
-  getGetSessionQueryKey,
-  getSession,
-  refresh,
-  useGetSession,
-} from "@zula/api/endpoints"
+import { getGetSessionQueryKey, getSession, refresh, useGetSession } from "@zula/api/endpoints"
 import type { SessionResponse } from "@zula/api"
 import { createContext, use, useEffect, type ReactNode } from "react"
 
@@ -56,9 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // First load: ready once settled. Allow refetch after login while keeping prior session.
   const settled = !sessionQuery.isLoading
 
-  return (
-    <AuthContext value={{ session, ready: settled }}>{children}</AuthContext>
-  )
+  return <AuthContext value={{ session, ready: settled }}>{children}</AuthContext>
 }
 
 export function useAuth() {
@@ -69,6 +62,5 @@ export function useAuth() {
 
 export function useInvalidateSession() {
   const queryClient = useQueryClient()
-  return () =>
-    queryClient.invalidateQueries({ queryKey: getGetSessionQueryKey() })
+  return () => queryClient.invalidateQueries({ queryKey: getGetSessionQueryKey() })
 }

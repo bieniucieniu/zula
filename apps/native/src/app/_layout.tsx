@@ -1,5 +1,5 @@
-import "@/polyfills/crypto"
 import "@/global.css"
+import "react-native-random-uuid"
 
 import { ThemeProvider } from "@react-navigation/native"
 import { PortalHost } from "@rn-primitives/portal"
