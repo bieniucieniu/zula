@@ -4,7 +4,6 @@ import com.ucasoft.ktor.simpleCache.cacheOutput
 import com.zula.core.http.badRequest
 import com.zula.core.http.unauthorized
 import com.zula.core.security.AuthProviderNames
-import com.zula.core.security.JwtConfig
 import com.zula.core.security.SecurityConfig
 import com.zula.core.security.oauth.OAuthProviderNames
 import com.zula.features.auth.domain.*
@@ -24,7 +23,7 @@ import kotlin.time.Duration.Companion.hours
 fun Route.configureAuthRouting() {
     val config: SecurityConfig = application.getKoin().getOrNull() ?: return
     val authService: AuthService by inject()
-    val jwtConfig: JwtConfig by inject()
+    val jwtConfig = config.jwt
 
     cacheOutput(1.hours) {
         get("/auth/providers") {

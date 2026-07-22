@@ -1,17 +1,9 @@
 import { useQueryClient } from "@tanstack/react-query"
-import {
-  getGetSessionQueryKey,
-  getSession,
-  refresh,
-  useGetSession,
-} from "@zula/api/endpoints"
 import type { SessionResponse } from "@zula/api"
-import { createContext, use, type ReactNode } from "react"
+import { getGetSessionQueryKey, useGetSession } from "@zula/api/endpoints"
+import { createContext, type ReactNode, use } from "react"
 
-export type AuthSession = {
-  email: string
-  expiresIn?: number
-}
+export type AuthSession = SessionResponse
 
 type AuthContextValue = {
   session: AuthSession | null
@@ -20,34 +12,16 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function toSession(remote: SessionResponse): AuthSession {
-  return {
-    email: remote.email ?? "",
-    expiresIn: remote.expiresIn,
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const sessionQuery = useGetSession({
     query: {
       retry: false,
-      queryFn: async () => {
-        try {
-          return await getSession()
-        } catch {
-          await refresh({})
-          return await getSession()
-        }
-      },
     },
   })
 
-  const remote = sessionQuery.isSuccess ? sessionQuery.data.data : null
-  const session = remote ? toSession(remote) : null
+  const session = sessionQuery.isSuccess ? sessionQuery.data.data : null
 
-  return (
-    <AuthContext value={{ session, ready: !sessionQuery.isLoading }}>{children}</AuthContext>
-  )
+  return <AuthContext value={{ session, ready: !sessionQuery.isLoading }}>{children}</AuthContext>
 }
 
 export function useAuth() {
