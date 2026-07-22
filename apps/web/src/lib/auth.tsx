@@ -5,7 +5,7 @@ import {
   logout as logoutRequest,
   refresh,
 } from "@zula/api/endpoints"
-import type { AuthTokensResponse, SessionResponse } from "@zula/api"
+import type { SessionResponse } from "@zula/api"
 import { createContext, use, useEffect, useState, type ReactNode } from "react"
 
 const SESSION_KEY = "app.auth.session"
@@ -13,7 +13,6 @@ const SESSION_KEY = "app.auth.session"
 export type AuthSession = {
   email: string
   expiresIn?: number
-  refreshToken?: string
 }
 
 type AuthContextValue = {
@@ -41,7 +40,7 @@ function readStoredSession(): AuthSession | null {
     if (!raw) return null
     const parsed = JSON.parse(raw) as AuthSession
     if (!parsed?.email) return null
-    return parsed
+    return { email: parsed.email, expiresIn: parsed.expiresIn }
   } catch {
     return null
   }
@@ -50,17 +49,19 @@ function readStoredSession(): AuthSession | null {
 function writeStoredSession(session: AuthSession | null) {
   if (typeof window === "undefined") return
   if (session) {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ email: session.email, expiresIn: session.expiresIn })
+    )
   } else {
     sessionStorage.removeItem(SESSION_KEY)
   }
 }
 
-function toSession(tokens: AuthTokensResponse, email: string): AuthSession {
+function toSession(remote: SessionResponse, emailFallback = ""): AuthSession {
   return {
-    email,
-    expiresIn: tokens.expiresIn,
-    refreshToken: tokens.refreshToken ?? undefined,
+    email: remote.email ?? emailFallback,
+    expiresIn: remote.expiresIn,
   }
 }
 
@@ -84,23 +85,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (stored && !cancelled) setSession(stored)
 
       try {
-        const remote = await loadRemoteSession()
+        let remote = await loadRemoteSession()
+
+        if (!remote) {
+          try {
+            await refresh({})
+            remote = await loadRemoteSession()
+          } catch {
+            remote = null
+          }
+        }
+
         if (cancelled) return
 
         if (remote) {
-          const next: AuthSession = {
-            email: remote.email ?? stored?.email ?? "",
-            expiresIn: remote.expiresIn,
-            refreshToken: stored?.refreshToken,
-          }
-          writeStoredSession(next)
-          setSession(next)
-          return
-        }
-
-        if (stored?.refreshToken) {
-          const refreshed = unwrapApiData(await refresh({ refreshToken: stored.refreshToken }))
-          const next = toSession(refreshed, stored.email)
+          const next = toSession(remote, stored?.email ?? "")
           writeStoredSession(next)
           setSession(next)
           return
@@ -109,18 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         writeStoredSession(null)
         setSession(null)
       } catch {
-        if (stored?.refreshToken) {
-          try {
-            const refreshed = unwrapApiData(await refresh({ refreshToken: stored.refreshToken }))
-            const next = toSession(refreshed, stored.email)
-            writeStoredSession(next)
-            if (!cancelled) setSession(next)
-            return
-          } catch {
-            // fall through
-          }
-        }
-
         if (!cancelled) {
           writeStoredSession(null)
           setSession(null)
@@ -178,7 +165,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
     )
 
-    const next = toSession(tokens, trimmed)
+    const next: AuthSession = {
+      email: trimmed,
+      expiresIn: tokens.expiresIn,
+    }
     writeStoredSession(next)
     setSession(next)
   }

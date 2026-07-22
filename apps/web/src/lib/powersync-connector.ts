@@ -22,11 +22,6 @@ export function createPowerSyncConnector(
     },
 
     async uploadData(database: AbstractPowerSyncDatabase) {
-      const token = await config.getAccessToken()
-      if (!token) {
-        throw new Error("Cannot upload sync batch without access token")
-      }
-
       const batch = await database.getNextCrudTransaction()
       if (!batch) return
 
