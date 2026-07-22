@@ -94,8 +94,8 @@ data class GoogleOAuthConfig(
     companion object {
 
         fun from(config: ApplicationConfig?) = GoogleOAuthConfig(
-            clientId = config?.stringOrNull("clientId"),
-            clientSecret = config?.stringOrNull("clientSecret"),
+            clientId = config?.stringOrNull("clientId")?.trim(),
+            clientSecret = config?.stringOrNull("clientSecret")?.trim(),
             additionalClientIds = config?.stringOrNull("additionalClientIds")
                 ?.split(',')
                 ?.map { it.trim() }

@@ -9,6 +9,7 @@ type GoogleIdApi = {
   initialize: (config: {
     client_id: string
     callback: (response: GoogleCredentialResponse) => void
+    error_callback?: (error: { type?: string; message?: string }) => void
     auto_select?: boolean
     cancel_on_tap_outside?: boolean
   }) => void
@@ -36,6 +37,9 @@ declare global {
 }
 
 const GOOGLE_SCRIPT_URL = "https://accounts.google.com/gsi/client"
+const GOOGLE_SCRIPT_REFERRER_POLICY: ReferrerPolicy = import.meta.env.DEV
+  ? "no-referrer-when-downgrade"
+  : "strict-origin-when-cross-origin"
 const MIN_BUTTON_WIDTH = 40
 const MAX_BUTTON_WIDTH = 400
 const DEFAULT_BUTTON_WIDTH = 320
@@ -46,7 +50,9 @@ let credentialHandler: ((response: GoogleCredentialResponse) => void) | null = n
 
 async function getGoogleIdentityApi(): Promise<GoogleIdApi> {
   if (!googleInitPromise) {
-    googleInitPromise = loadScript(GOOGLE_SCRIPT_URL).then(() => {
+    googleInitPromise = loadScript(GOOGLE_SCRIPT_URL, {
+      referrerPolicy: GOOGLE_SCRIPT_REFERRER_POLICY,
+    }).then(() => {
       const api = window.google?.accounts?.id
       if (!api) throw new Error("Google Identity Services unavailable")
       return api
@@ -62,13 +68,25 @@ function resolveButtonWidth(container: HTMLElement): number {
   return Math.min(MAX_BUTTON_WIDTH, Math.max(MIN_BUTTON_WIDTH, measured))
 }
 
-async function ensureGoogleInitialized(clientId: string, api: GoogleIdApi) {
+type GoogleInitOptions = {
+  onError?: (error: Error) => void
+}
+
+async function ensureGoogleInitialized(
+  clientId: string,
+  api: GoogleIdApi,
+  { onError }: GoogleInitOptions = {}
+) {
   if (initializedClientId === clientId) return
 
   api.initialize({
     client_id: clientId,
     callback: (response) => {
       credentialHandler?.(response)
+    },
+    error_callback: (error) => {
+      const message = error.message?.trim() || error.type || "Google sign-in failed"
+      onError?.(new Error(message))
     },
     auto_select: false,
     cancel_on_tap_outside: true,
@@ -90,6 +108,7 @@ export async function renderGoogleIdentityButton({
   onSuccess,
   onError,
 }: GoogleIdentityButtonOptions): Promise<() => void> {
+  const normalizedClientId = clientId.trim()
   const api = await getGoogleIdentityApi()
 
   credentialHandler = (response) => {
@@ -104,7 +123,7 @@ export async function renderGoogleIdentityButton({
     })
   }
 
-  await ensureGoogleInitialized(clientId, api)
+  await ensureGoogleInitialized(normalizedClientId, api, { onError })
 
   const render = () => {
     container.replaceChildren()
@@ -121,7 +140,9 @@ export async function renderGoogleIdentityButton({
   render()
 
   if (import.meta.env.DEV) {
-    console.info(`[zula] Google sign-in expects this origin in Authorized JavaScript origins: ${window.location.origin}`)
+    console.info(
+      `[zula] Google GIS clientId=${normalizedClientId} origin=${window.location.origin}`
+    )
   }
 
   const observer = new ResizeObserver(() => {

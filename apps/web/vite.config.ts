@@ -29,6 +29,10 @@ const config = defineConfig({
     }),
   ],
   server: {
+    // GIS needs Referer on http://localhost; see Google Identity Services setup guide.
+    headers: {
+      "Referrer-Policy": "no-referrer-when-downgrade",
+    },
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8000",
