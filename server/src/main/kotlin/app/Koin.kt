@@ -39,6 +39,7 @@ fun Application.configureKoin() {
                     google = GoogleOAuthConfig.from(security?.configOrNull("oauth.google")),
                     apple = AppleOAuthConfig.from(security?.configOrNull("oauth.apple"))
                 )
+                devAuth = DevAuthConfig.from(security?.configOrNull("devAuth"))
             },
             openApiModule,
             authModule,

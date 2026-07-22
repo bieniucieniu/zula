@@ -7,6 +7,7 @@ export {
   setApiBaseUrl,
 } from "./mutator"
 export {
+  authenticateWithDevBypass,
   authenticateWithIdToken,
   decodeJwtPayload,
   sessionIdFromAccessToken,

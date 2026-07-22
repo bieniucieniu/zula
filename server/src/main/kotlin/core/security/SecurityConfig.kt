@@ -8,14 +8,32 @@ data class SecurityConfig(
     val appUrl: String?,
     val jwt: JwtConfig,
     val oauth: OAuthConfig,
+    val devAuth: DevAuthConfig = DevAuthConfig(),
 )
 
 class SecurityConfigBuilder {
     var appUrl: String? = null
     lateinit var jwt: JwtConfig
     lateinit var oauth: OAuthConfig
+    var devAuth: DevAuthConfig = DevAuthConfig()
 
-    fun build(): SecurityConfig = SecurityConfig(appUrl, jwt, oauth)
+    fun build(): SecurityConfig = SecurityConfig(appUrl, jwt, oauth, devAuth)
+}
+
+data class DevAuthConfig(
+    val secret: String? = null,
+    val defaultEmail: String = "dev@zula.local",
+) {
+    val enabled: Boolean
+        get() = !secret.isNullOrBlank()
+
+    companion object {
+        fun from(config: ApplicationConfig?) = DevAuthConfig(
+            secret = config?.stringOrNull("secret")?.trim()?.takeIf { it.isNotEmpty() },
+            defaultEmail = config?.stringOrNull("defaultEmail")?.trim()?.takeIf { it.isNotEmpty() }
+                ?: "dev@zula.local",
+        )
+    }
 }
 
 data class JwtConfig(

@@ -6,6 +6,8 @@
     "apps/*"
   ],
   "scripts": {
+    "build": "tsdown -W 'packages/*'",
+    "build:packages": "bun run --filter '@zula/*' build",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "gen:api": "orval --config packages/api/orval.config.ts",
@@ -19,7 +21,9 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",
     "orval": "^8.22.0",
-    "powersync": "^0.9.0"
+    "powersync": "^0.9.0",
+    "tsdown": "^0.22.13",
+    "unrun": "^0.3.1"
   },
   "overrides": {
     "react": "19.1.0",

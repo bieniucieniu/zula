@@ -26,6 +26,11 @@ sealed class AuthCredential {
     data class MagicLink(
         val token: String,
     ) : AuthCredential()
+
+    data class DevBypass(
+        val secret: String,
+        val email: String?,
+    ) : AuthCredential()
 }
 
 @Serializable
@@ -98,11 +103,17 @@ object AuthMethods {
     const val OAUTH = "oauth"
     const val EMAIL_OTP = "email_otp"
     const val MAGIC_LINK = "magic_link"
+    const val DEV = "dev"
 
     fun isPasswordless(provider: String): Boolean =
-        provider == EMAIL_OTP || provider == MAGIC_LINK || provider == "email" || provider == "phone"
+        provider == DEV ||
+            provider == EMAIL_OTP ||
+            provider == MAGIC_LINK ||
+            provider == "email" ||
+            provider == "phone"
 
     fun amrFor(provider: String): String = when (provider) {
+        DEV -> DEV
         EMAIL_OTP, "email", "phone" -> EMAIL_OTP
         MAGIC_LINK -> MAGIC_LINK
         else -> OAUTH

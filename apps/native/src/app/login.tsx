@@ -1,10 +1,12 @@
-import { Redirect, Stack } from "expo-router"
-import { ActivityIndicator, View } from "react-native"
+import { useListProviders } from "@zula/api/endpoints"
 import { getProviderDefinition } from "@zula/oauth"
-import { useOAuthProviders } from "@zula/oauth/react"
+import { Redirect, Stack } from "expo-router"
+import { useState } from "react"
+import { ActivityIndicator, View } from "react-native"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { useAuth } from "@/lib/auth"
+import { isDevAuthEnabled } from "@/lib/dev-auth"
 import { useProviderOAuthSignIn } from "@/lib/oauth-sign-in"
 
 function ProviderSignInButton({ providerId }: { providerId: string }) {
@@ -20,17 +22,20 @@ function ProviderSignInButton({ providerId }: { providerId: string }) {
 
   return (
     <Button disabled={oauth.pending} onPress={() => void oauth.signIn()}>
-      <Text>
-        {oauth.pending ? "Signing in…" : `Continue with ${oauth.label}`}
-      </Text>
+      <Text>{oauth.pending ? "Signing in…" : `Continue with ${oauth.label}`}</Text>
     </Button>
   )
 }
 
 export default function LoginScreen() {
-  const { session, ready } = useAuth()
-  const providersQuery = useOAuthProviders()
-  const providers = providersQuery.data ?? []
+  const { session, ready, signInWithDevBypass } = useAuth()
+  const [devPending, setDevPending] = useState(false)
+  const providersQuery = useListProviders({
+    query: {
+      retry: 0,
+    },
+  })
+  const providers = providersQuery.data?.data.providers ?? []
 
   if (!ready || providersQuery.isLoading) {
     return (
@@ -60,6 +65,24 @@ export default function LoginScreen() {
             OAuth sign-in is not configured for this build.
           </Text>
         )}
+        {isDevAuthEnabled() ? (
+          <Button
+            disabled={devPending}
+            variant="outline"
+            onPress={() => {
+              setDevPending(true)
+              void signInWithDevBypass()
+                .catch((error: unknown) => {
+                  console.error("Dev sign-in failed", error)
+                })
+                .finally(() => {
+                  setDevPending(false)
+                })
+            }}
+          >
+            <Text>{devPending ? "Signing in…" : "Dev sign in"}</Text>
+          </Button>
+        ) : null}
       </View>
     </>
   )

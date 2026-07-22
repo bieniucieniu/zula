@@ -1,14 +1,18 @@
-import "@/polyfills/crypto"
 import AsyncStorage from "@react-native-async-storage/async-storage"
-import {
-  authenticateWithIdToken,
-  setAccessToken,
-  type StoredOAuthSession,
-} from "@zula/api"
-import { getSession, logout as apiLogout } from "@zula/api/endpoints"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
+import { authenticateWithDevBypass, authenticateWithIdToken, type StoredOAuthSession, setAccessToken } from "@zula/api"
+import { logout as apiLogout, getSession } from "@zula/api/endpoints"
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import { configureApiClient } from "@/lib/api"
+import { getDevAuthEmail, getDevAuthSecret } from "@/lib/dev-auth"
 import { setPowerSyncAccessToken } from "@/lib/powersync"
 
 const SESSION_STORAGE_KEY = "zula.oauth.session"
@@ -28,6 +32,7 @@ type AuthContextValue = {
     idToken: string
     providerRefreshToken?: string | null
   }) => Promise<void>
+  signInWithDevBypass: () => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -70,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sessionQuery = useQuery({
     queryKey: ["auth", "session"],
     enabled: bootstrapped,
-    retry: false,
+    retry: 0,
     queryFn: async () => {
       const { data } = await getSession()
       return data
@@ -86,11 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [sessionQuery.data, sessionQuery.isError])
 
   const signInWithIdToken = useCallback(
-    async (input: {
-      provider: string
-      idToken: string
-      providerRefreshToken?: string | null
-    }) => {
+    async (input: { provider: string; idToken: string; providerRefreshToken?: string | null }) => {
       const stored = await readStoredSession()
       const next = await authenticateWithIdToken({
         provider: input.provider,
@@ -104,6 +105,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [queryClient]
   )
+
+  const signInWithDevBypass = useCallback(async () => {
+    const secret = getDevAuthSecret()
+    if (!secret) {
+      throw new Error("Dev auth is not configured")
+    }
+
+    const stored = await readStoredSession()
+    const next = await authenticateWithDevBypass({
+      secret,
+      email: getDevAuthEmail(),
+      sessionId: stored?.sessionId,
+    })
+    await writeStoredSession(next)
+    await queryClient.invalidateQueries({ queryKey: ["auth", "session"] })
+  }, [queryClient])
 
   const signOut = useCallback(async () => {
     try {
@@ -123,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         ready,
         signInWithIdToken,
+        signInWithDevBypass,
         signOut,
       }}
     >

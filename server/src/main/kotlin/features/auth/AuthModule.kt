@@ -48,6 +48,17 @@ val authModule = module {
 
             val magicLink = MagicLinkAuthProvider(repo)
             put("magic_link", magicLink)
+
+            val devAuth = security.devAuth
+            if (devAuth.enabled) {
+                put(
+                    "dev",
+                    DevAuthProvider(
+                        secret = devAuth.secret!!,
+                        defaultEmail = devAuth.defaultEmail,
+                    ),
+                )
+            }
         }
     }
 

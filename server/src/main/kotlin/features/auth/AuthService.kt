@@ -245,6 +245,12 @@ class AuthService(
         request.provider == AuthMethods.MAGIC_LINK && request.magicLinkToken != null ->
             AuthCredential.MagicLink(request.magicLinkToken)
 
+        request.provider == AuthMethods.DEV && request.code != null ->
+            AuthCredential.DevBypass(
+                secret = request.code,
+                email = request.deviceInfo,
+            )
+
         request.idToken != null ->
             AuthCredential.OAuthIdToken(
                 idToken = request.idToken,

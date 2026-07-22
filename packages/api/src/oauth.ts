@@ -61,3 +61,19 @@ export async function authenticateWithIdToken(input: {
   const { data } = await authenticate(body)
   return toStoredOAuthSession(data)
 }
+
+/** Local-only bypass when server has AUTH_DEV_BYPASS_SECRET set. */
+export async function authenticateWithDevBypass(input: {
+  secret: string
+  email?: string
+  sessionId?: string | null
+}) {
+  const body: AuthenticateRequest = {
+    provider: "dev",
+    code: input.secret,
+    deviceInfo: input.email,
+    sessionId: input.sessionId,
+  }
+  const { data } = await authenticate(body)
+  return toStoredOAuthSession(data)
+}
