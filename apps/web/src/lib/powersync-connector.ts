@@ -5,7 +5,6 @@ import { syncBatch } from "@zula/api/endpoints"
 export type PowerSyncConnectorConfig = {
   getAccessToken: () => Promise<string | null>
   powersyncUrl: string
-  syncBatchUrl: string
 }
 
 export function createPowerSyncConnector(
@@ -23,16 +22,11 @@ export function createPowerSyncConnector(
     },
 
     async uploadData(database: AbstractPowerSyncDatabase) {
-      const token = await config.getAccessToken()
-      if (!token) {
-        throw new Error("Cannot upload sync batch without access token")
-      }
-
       const batch = await database.getNextCrudTransaction()
       if (!batch) return
 
-      const out = await syncBatch({ ops: batch.crud })
-      out.data.results.map((result) => {
+      const { data } = await syncBatch({ ops: batch.crud })
+      data.results.map((result) => {
         if (result.problem != null) {
           throw new ProblemDetailsError(result.problem)
         }

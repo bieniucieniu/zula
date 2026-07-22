@@ -1,5 +1,6 @@
 package com.zula.app
 
+import com.zula.core.security.jwt.configureJwksRouting
 import com.zula.features.auth.configureAuthRouting
 import com.zula.features.chat.configureChatRouting
 import com.zula.features.feed.configureFeedRouting
@@ -15,9 +16,10 @@ import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     routing {
-        configureAuthRouting()
+        configureJwksRouting()
 
         route("/api") {
+            configureAuthRouting()
             configureSyncRouting()
             configureUserRouting()
             configureFeedRouting()

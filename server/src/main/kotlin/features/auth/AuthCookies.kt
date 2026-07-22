@@ -8,7 +8,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import org.koin.ktor.ext.get
 
-
 fun ApplicationCall.setAccessCookies(tokens: AuthTokensResponse) {
     setAccessCookie(tokens.accessToken, tokens.expiresIn)
     if (tokens.refreshToken != null) {

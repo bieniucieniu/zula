@@ -50,6 +50,18 @@ data class AuthTokensResponse(
 )
 
 @Serializable
+data class SessionResponse(
+    val expiresIn: Long,
+    /** @nullable */
+    val email: String? = null,
+)
+
+@Serializable
+data class PowerSyncTokenResponse(
+    val accessToken: String,
+)
+
+@Serializable
 data class RefreshRequest(
     val refreshToken: String? = null,
 )

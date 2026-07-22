@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TanStackDevtools } from "@tanstack/react-devtools"
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
@@ -5,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { AuthProvider } from "@/lib/auth"
 import { usePowerSyncAuth } from "@/lib/powersync"
 import appCss from "../styles.css?url"
+
+const queryClient = new QueryClient()
 
 export const Route = createRootRoute({
   head: () => ({
@@ -48,10 +51,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <AuthProvider>
-          <PowerSyncConnector />
-          <TooltipProvider>{children}</TooltipProvider>
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <PowerSyncConnector />
+            <TooltipProvider>{children}</TooltipProvider>
+          </AuthProvider>
+        </QueryClientProvider>
         <TanStackDevtools
           config={{
             position: "bottom-right",

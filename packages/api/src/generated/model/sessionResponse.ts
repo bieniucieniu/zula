@@ -5,6 +5,8 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface JsonElement {
-  [key: string]: unknown
+export interface SessionResponse {
+  expiresIn: number
+  /** @nullable */
+  email?: string | null
 }

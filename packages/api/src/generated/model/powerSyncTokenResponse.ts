@@ -5,7 +5,6 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type CallbackGoogleParams = {
-id_token?: string;
-refresh_token?: string;
-};
+export interface PowerSyncTokenResponse {
+  accessToken: string
+}

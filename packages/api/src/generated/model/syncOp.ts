@@ -4,17 +4,17 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { SyncOpOp } from './syncOpOp';
-import type { SyncOpOpData } from './syncOpOpData';
+import type { SyncOpOp } from "./syncOpOp"
+import type { SyncOpOpData } from "./syncOpOpData"
 
 export interface SyncOp {
   /** @nullable */
-  clientId?: number | null;
-  op: SyncOpOp;
-  table: string;
-  id: string;
+  clientId?: number | null
+  op: SyncOpOp
+  table: string
+  id: string
   /** @nullable */
-  opData?: SyncOpOpData;
+  opData?: SyncOpOpData
   /** @nullable */
-  metadata?: string | null;
+  metadata?: string | null
 }

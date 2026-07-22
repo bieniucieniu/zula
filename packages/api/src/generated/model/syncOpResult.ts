@@ -4,15 +4,15 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-import type { ProblemDetails } from './problemDetails';
-import type { SyncOpResultOp } from './syncOpResultOp';
+import type { ProblemDetails } from "./problemDetails"
+import type { SyncOpResultOp } from "./syncOpResultOp"
 
 export interface SyncOpResult {
   /** @nullable */
-  clientId?: number | null;
-  table: string;
-  id: string;
-  op: SyncOpResultOp;
-  ok: boolean;
-  problem?: ProblemDetails | null;
+  clientId?: number | null
+  table: string
+  id: string
+  op: SyncOpResultOp
+  ok: boolean
+  problem?: ProblemDetails | null
 }

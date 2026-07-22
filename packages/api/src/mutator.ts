@@ -1,4 +1,5 @@
 let apiBaseUrl: string | ((url: string, options: RequestInit) => string) = ""
+
 export function getApiBaseUrl(url: string, options: RequestInit): string {
   if (typeof apiBaseUrl === "function") {
     return apiBaseUrl(url, options)
@@ -21,6 +22,7 @@ export function setApiBaseUrl(url: string | ((url: string, options: RequestInit)
 export const customInstance = async <T>(url: string, options: RequestInit): Promise<T> => {
   const res = await fetch(`${getApiBaseUrl(url, options)}`, {
     ...options,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
@@ -34,5 +36,5 @@ export const customInstance = async <T>(url: string, options: RequestInit): Prom
     throw data ?? new Error(res.statusText)
   }
 
-  return data as T
+  return { data, status: res.status, headers: res.headers } as T
 }

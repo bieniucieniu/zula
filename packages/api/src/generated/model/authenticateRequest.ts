@@ -6,21 +6,21 @@
  */
 
 export interface AuthenticateRequest {
-  provider: string;
+  provider: string
   /** @nullable */
-  idToken?: string | null;
+  idToken?: string | null
   /** @nullable */
-  providerRefreshToken?: string | null;
+  providerRefreshToken?: string | null
   /** @nullable */
-  scopes?: string | null;
+  scopes?: string | null
   /** @nullable */
-  challengeId?: string | null;
+  challengeId?: string | null
   /** @nullable */
-  code?: string | null;
+  code?: string | null
   /** @nullable */
-  magicLinkToken?: string | null;
+  magicLinkToken?: string | null
   /** @nullable */
-  sessionId?: string | null;
+  sessionId?: string | null
   /** @nullable */
-  deviceInfo?: string | null;
+  deviceInfo?: string | null
 }

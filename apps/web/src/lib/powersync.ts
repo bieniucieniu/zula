@@ -1,16 +1,14 @@
 import { PowerSyncDatabase } from "@powersync/web"
 import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection"
 import { createCollection } from "@tanstack/react-db"
+import { getPowerSyncToken } from "@zula/api/endpoints"
 import { useEffect, useSyncExternalStore } from "react"
 import { AppSchema, typedStreams } from "@/gen/powersync/schema"
 import { useAuth } from "@/lib/auth"
 import { createPowerSyncConnector } from "@/lib/powersync-connector"
 
-const defaultApiUrl = "/api/v1"
 const powersyncUrl = import.meta.env.VITE_PS_URL ?? "http://127.0.0.1:8080"
-const syncBatchUrl = `${import.meta.env.VITE_API_URL ?? defaultApiUrl}/sync/batch`
 
-let accessToken: string | null | undefined
 let syncReady = false
 const syncListeners = new Set<() => void>()
 
@@ -24,14 +22,18 @@ function subscribeSyncReady(listener: () => void) {
   return () => syncListeners.delete(listener)
 }
 
-async function getAccessToken() {
-  return accessToken ?? null
+async function fetchPowerSyncAccessToken(): Promise<string | null> {
+  try {
+    const { data } = await getPowerSyncToken()
+    return data.accessToken
+  } catch {
+    return null
+  }
 }
 
 const connector = createPowerSyncConnector({
-  getAccessToken,
+  getAccessToken: fetchPowerSyncAccessToken,
   powersyncUrl,
-  syncBatchUrl,
 })
 
 export const db = new PowerSyncDatabase({
@@ -72,10 +74,8 @@ export function usePowerSyncAuth() {
   useEffect(() => {
     let cancelled = false
 
-    accessToken = session?.accessToken
-
     async function run() {
-      if (!session?.accessToken) {
+      if (!session) {
         setSyncReady(false)
         await db.disconnect()
         return
@@ -92,5 +92,5 @@ export function usePowerSyncAuth() {
       setSyncReady(false)
       void db.disconnect()
     }
-  }, [session?.accessToken])
+  }, [session])
 }

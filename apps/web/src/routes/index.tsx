@@ -1,13 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useLogout } from "@zula/api/endpoints"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth"
+import { useAuth, useInvalidateSession } from "@/lib/auth"
 import { usePowerSync } from "@/lib/powersync"
 
 export const Route = createFileRoute("/")({ component: App })
 
 function App() {
-  const { session, ready, logout } = useAuth()
+  const { session, ready } = useAuth()
+  const invalidateSession = useInvalidateSession()
+  const logout = useLogout()
   const { ready: syncReady } = usePowerSync()
   const navigate = useNavigate()
   const [pending, setPending] = useState(false)
@@ -29,10 +32,13 @@ function App() {
   async function onLogout() {
     setPending(true)
     try {
-      await logout()
-      await navigate({ to: "/login" })
+      await logout.mutateAsync({})
+    } catch {
+      // still clear local session query
     } finally {
+      await invalidateSession()
       setPending(false)
+      await navigate({ to: "/login" })
     }
   }
 
@@ -42,8 +48,7 @@ function App() {
         <h1 className="font-heading text-lg font-medium">Signed in</h1>
         <p className="text-sm text-muted-foreground">{session.email}</p>
         <p className="text-xs text-muted-foreground">
-          PowerSync:{" "}
-          {syncReady ? "connected" : session.accessToken ? "connecting…" : "local only (no JWT)"}
+          PowerSync: {syncReady ? "connected" : session ? "connecting…" : "local only (no JWT)"}
         </p>
         <Button variant="outline" disabled={pending} onClick={() => void onLogout()}>
           {pending ? "Logging out…" : "Logout"}
