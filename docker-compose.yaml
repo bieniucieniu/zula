@@ -1,0 +1,81 @@
+services:
+  pg-db:
+    env_file:
+      - .env
+    image: pgvector/pgvector:pg18
+    restart: always
+    environment:
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_DB=zula
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - pg_data:/var/lib/postgresql
+      - ./docker/postgres/database-init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    command: ["postgres", "-c", "wal_level=logical"]
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${DATABASE_USERNAME} -d zula
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  pg-storage:
+    env_file:
+      - .env
+    image: postgres:18
+    restart: always
+    environment:
+      - POSTGRES_USER=${PS_STORAGE_USERNAME}
+      - POSTGRES_DB=zula-ps
+      - POSTGRES_PASSWORD=${PS_STORAGE_PASSWORD}
+      - PGPORT=5433
+    volumes:
+      - pg_storage_data:/var/lib/postgresql
+      - ./docker/postgres/storage-init:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5433"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PS_STORAGE_USERNAME} -d zula-ps"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  powersync:
+    restart: unless-stopped
+    image: journeyapps/powersync-service:latest
+    command: ["start", "-r", "unified"]
+    env_file:
+      - .env
+    environment:
+      PS_DATA_SOURCE_URI: postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD:-powersync}@pg-db:5432/zula
+      PS_STORAGE_URI: postgresql://${PS_STORAGE_USERNAME}:${PS_STORAGE_PASSWORD:-powersync}@pg-storage:5433/zula-ps
+      PS_JWKS_URI: ${PS_JWKS_URI:-http://host.docker.internal:8000/.well-known/jwks.json}
+      POWERSYNC_CONFIG_PATH: /config/service.yaml
+      NODE_OPTIONS: --max-old-space-size=1000
+    volumes:
+      - ./powersync/service.yaml:/config/service.yaml
+      - ./powersync/sync-config.yaml:/config/sync-config.yaml
+
+    healthcheck:
+      test:
+        - "CMD"
+        - "node"
+        - "-e"
+        - "fetch('http://localhost:${PS_PORT:-8080}/probes/liveness').then(r =>
+          r.ok ? process.exit(0) : process.exit(1)).catch(() =>
+          process.exit(1))"
+      interval: 5s
+      timeout: 1s
+      retries: 15
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      pg-db:
+        condition: service_healthy
+      pg-storage:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  pg_storage_data:
