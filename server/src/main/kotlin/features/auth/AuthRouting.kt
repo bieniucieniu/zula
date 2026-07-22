@@ -7,11 +7,7 @@ import com.zula.core.security.AuthProviderNames
 import com.zula.core.security.JwtConfig
 import com.zula.core.security.SecurityConfig
 import com.zula.core.security.oauth.OAuthProviderNames
-import com.zula.features.auth.domain.AuthenticateRequest
-import com.zula.features.auth.domain.ChallengeRequest
-import com.zula.features.auth.domain.PowerSyncTokenResponse
-import com.zula.features.auth.domain.RefreshRequest
-import com.zula.features.auth.domain.SessionResponse
+import com.zula.features.auth.domain.*
 import com.zula.lib.id.Ids
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -20,7 +16,7 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.routing.openapi.describe
+import io.ktor.server.routing.openapi.*
 import org.koin.ktor.ext.getKoin
 import org.koin.ktor.ext.inject
 import kotlin.time.Duration.Companion.hours
@@ -56,7 +52,7 @@ fun Route.configureAuthRouting() {
             call.receive<RefreshRequest>()
         }.getOrNull()
         val refreshToken = refreshBody?.refreshToken ?: call.readRefreshCookie()
-            ?: badRequest("refreshToken required")
+        ?: badRequest("refreshToken required")
         val tokens = authService.refresh(call, refreshToken)
         call.setAccessCookies(tokens)
 
@@ -142,77 +138,49 @@ fun Route.configureAuthRouting() {
             tag("auth")
         }
     }
+    fun Route.configureOAuthRoutes(
+        providerName: String,
+        provider: String,
+    ) {
+        authenticate(providerName) {
+            get("/auth/login/$provider") {
+                // Unauthenticated requests are challenged by the OAuth plugin.
+            }.describe {
+                operationId = "${provider}Login"
+                tag("auth")
+            }
 
-    if (config.oauth.google.isConfigured) {
-        configureOAuthRoutes(
-            providerName = OAuthProviderNames.GOOGLE,
-            loginPath = "/auth/login/google",
-            callbackPath = "/auth/callback/google",
-            provider = "google",
-            loginOperationId = "loginGoogle",
-            callbackOperationId = "callbackGoogle",
-            authService = authService,
-        )
-    }
-
-    if (config.oauth.apple.isConfigured) {
-        configureOAuthRoutes(
-            providerName = OAuthProviderNames.APPLE,
-            loginPath = "/auth/login/apple",
-            callbackPath = "/auth/callback/apple",
-            provider = "apple",
-            loginOperationId = "loginApple",
-            callbackOperationId = "callbackApple",
-            authService = authService,
-        )
-    }
-}
-
-private fun Route.configureOAuthRoutes(
-    providerName: String,
-    loginPath: String,
-    callbackPath: String,
-    provider: String,
-    loginOperationId: String,
-    callbackOperationId: String,
-    authService: AuthService,
-) {
-    authenticate(providerName) {
-        get(loginPath) {
-            // Unauthenticated requests are challenged by the OAuth plugin.
-        }.describe {
-            operationId = loginOperationId
-            tag("auth")
-        }
-
-        get(callbackPath) {
-            call.completeOAuthLogin(authService, provider)
-        }.describe {
-            operationId = callbackOperationId
-            tag("auth")
+            get("/auth/callback/$provider") {
+                val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
+                val idToken = principal?.extraParameters?.get("id_token")
+                if (idToken != null) {
+                    val tokens = authService.authenticate(
+                        call,
+                        AuthenticateRequest(
+                            provider = provider,
+                            idToken = idToken,
+                            providerRefreshToken = principal.extraParameters["refresh_token"],
+                        ),
+                    )
+                    call.setAccessCookies(tokens)
+                }
+                call.respondRedirect("/")
+            }.describe {
+                operationId = "${provider}Callback"
+                tag("auth")
+            }
         }
     }
+
+    if (config.oauth.google.isConfigured)
+        configureOAuthRoutes(OAuthProviderNames.GOOGLE, "google")
+
+
+    if (config.oauth.apple.isConfigured)
+        configureOAuthRoutes(OAuthProviderNames.APPLE, "apple")
+
 }
 
-private suspend fun ApplicationCall.completeOAuthLogin(
-    authService: AuthService,
-    provider: String,
-) {
-    val principal: OAuthAccessTokenResponse.OAuth2? = authentication.principal()
-    val idToken = principal?.extraParameters?.get("id_token")
-    if (idToken != null) {
-        val tokens = authService.authenticate(
-            this,
-            AuthenticateRequest(
-                provider = provider,
-                idToken = idToken,
-                providerRefreshToken = principal.extraParameters["refresh_token"],
-            ),
-        )
-        setAccessCookies(tokens)
-    }
-    respondRedirect("/")
-}
 
 private suspend fun ApplicationCall.resolveAccessToken(authService: AuthService): String {
     val principal: JWTPrincipal? = principal<JWTPrincipal>()
@@ -226,6 +194,3 @@ private suspend fun ApplicationCall.resolveAccessToken(authService: AuthService)
     return tokens.accessToken
 }
 
-private fun ApplicationCall.useCookieDelivery(): Boolean =
-    request.queryParameters["delivery"] == "cookie" ||
-            request.headers["X-Auth-Delivery"] == "cookie"
