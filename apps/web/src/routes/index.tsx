@@ -43,7 +43,7 @@ function App() {
         <p className="text-sm text-muted-foreground">{session.email}</p>
         <p className="text-xs text-muted-foreground">
           PowerSync:{" "}
-          {syncReady ? "connected" : session.accessToken ? "connecting…" : "local only (no JWT)"}
+          {syncReady ? "connected" : session ? "connecting…" : "local only (no JWT)"}
         </p>
         <Button variant="outline" disabled={pending} onClick={() => void onLogout()}>
           {pending ? "Logging out…" : "Logout"}

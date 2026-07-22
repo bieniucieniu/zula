@@ -31,7 +31,10 @@ export function createPowerSyncConnector(
       const batch = await database.getNextCrudTransaction()
       if (!batch) return
 
-      const out = await syncBatch({ ops: batch.crud })
+      const out = await syncBatch(
+        { ops: batch.crud },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
       out.data.results.map((result) => {
         if (result.problem != null) {
           throw new ProblemDetailsError(result.problem)

@@ -9,6 +9,7 @@ import com.zula.core.security.SecurityConfig
 import com.zula.core.security.oauth.OAuthProviderNames
 import com.zula.features.auth.domain.AuthenticateRequest
 import com.zula.features.auth.domain.ChallengeRequest
+import com.zula.features.auth.domain.PowerSyncTokenResponse
 import com.zula.features.auth.domain.RefreshRequest
 import com.zula.features.auth.domain.SessionResponse
 import com.zula.lib.id.Ids
@@ -68,29 +69,24 @@ fun Route.configureAuthRouting() {
     authenticate(AuthProviderNames.JWT, optional = true) {
         get("/auth/session") {
             val principal: JWTPrincipal? = call.principal()
-            if (principal != null) {
-                val accessToken = call.readAccessCookie() ?: unauthorized("Missing access token")
-                call.respond(
-                    SessionResponse(
-                        accessToken = accessToken,
-                        expiresIn = jwtConfig.accessTokenTtlSeconds,
-                        email = principal.payload.getClaim("username").asString(),
-                    ),
-                )
-                return@get
-            }
-
-            val refreshToken = call.readRefreshCookie() ?: unauthorized("Not authenticated")
-            val tokens = authService.refresh(call, refreshToken)
-            call.setAccessCookies(tokens)
+            val accessToken = call.resolveAccessToken(authService)
             call.respond(
                 SessionResponse(
-                    accessToken = tokens.accessToken,
-                    expiresIn = tokens.expiresIn,
+                    accessToken = accessToken,
+                    expiresIn = jwtConfig.accessTokenTtlSeconds,
+                    email = principal?.payload?.getClaim("username")?.asString(),
                 ),
             )
         }.describe {
             operationId = "getSession"
+            tag("auth")
+        }
+
+        get("/auth/powersync/token") {
+            val accessToken = call.resolveAccessToken(authService)
+            call.respond(PowerSyncTokenResponse(accessToken = accessToken))
+        }.describe {
+            operationId = "getPowerSyncToken"
             tag("auth")
         }
 
@@ -197,6 +193,18 @@ fun Route.configureAuthRouting() {
             }
         }
     }
+}
+
+private suspend fun ApplicationCall.resolveAccessToken(authService: AuthService): String {
+    val principal: JWTPrincipal? = principal<JWTPrincipal>()
+    if (principal != null) {
+        return readAccessCookie() ?: unauthorized("Missing access token")
+    }
+
+    val refreshToken = readRefreshCookie() ?: unauthorized("Not authenticated")
+    val tokens = authService.refresh(this, refreshToken)
+    setAccessCookies(tokens)
+    return tokens.accessToken
 }
 
 private fun ApplicationCall.useCookieDelivery(): Boolean =

@@ -34,6 +34,22 @@ function unwrapApiData<T>(response: ApiPayload<T>): T {
   return response as T
 }
 
+export type PowerSyncTokenResponse = {
+  accessToken: string
+}
+
+export async function fetchPowerSyncToken(): Promise<string | null> {
+  const res = await fetch(`${import.meta.env.VITE_API_URL ?? defaultApiUrl}/auth/powersync/token`, {
+    credentials: "include",
+  })
+  if (res.status === 401) return null
+  if (!res.ok) {
+    throw new Error(`PowerSync token request failed (${res.status})`)
+  }
+  const body = (await res.json()) as PowerSyncTokenResponse
+  return body.accessToken
+}
+
 export async function fetchSession(): Promise<SessionResponse | null> {
   const res = await fetch(`${import.meta.env.VITE_API_URL ?? defaultApiUrl}/auth/session`, {
     credentials: "include",
