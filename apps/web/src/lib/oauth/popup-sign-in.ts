@@ -1,8 +1,11 @@
-import { randomString } from "../core/crypto"
-import { buildAuthorizeUrl } from "../core/authorize-url"
-import { parseOAuthRedirect } from "../core/parse-response"
-import { getProviderDefinition } from "../providers/registry"
-import type { OAuthProviderInfo, OAuthSignInResult } from "../types"
+import {
+  buildAuthorizeUrl,
+  getProviderDefinition,
+  parseOAuthRedirect,
+  randomString,
+  type OAuthProviderInfo,
+  type OAuthSignInResult,
+} from "@zula/oauth"
 
 const OAUTH_MESSAGE_TYPE = "zula.oauth.callback"
 
@@ -30,7 +33,7 @@ export async function signInWithPopup({
     redirectUri,
     state,
     nonce,
-    extraParams: definition?.web?.extraAuthParams,
+    extraParams: definition?.extraAuthParams,
   })
 
   return new Promise<OAuthSignInResult>((resolve, reject) => {
@@ -101,8 +104,4 @@ export function handleOAuthCallbackPage(): void {
     )
     window.close()
   }
-}
-
-export function getOAuthCallbackRedirectPath() {
-  return "/oauth/callback"
 }

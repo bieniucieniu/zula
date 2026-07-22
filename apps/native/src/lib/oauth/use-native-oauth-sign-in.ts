@@ -1,5 +1,5 @@
+import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import { useEffect, useMemo } from "react"
-import type { OAuthProviderInfo, OAuthSignInResult } from "../types"
 import { createNativeDiscovery, resolveNativeClientIds } from "./config"
 
 type AuthSessionModule = typeof import("expo-auth-session")

@@ -1,9 +1,9 @@
 import { SQLJSOpenFactory } from "@powersync/adapter-sql-js"
 import { PowerSyncDatabase } from "@powersync/react-native"
-import { createAppPowersync, typedStreams } from "@zula/powersync"
-import { createCollection } from "@tanstack/react-db"
 import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection"
+import { createCollection } from "@tanstack/react-db"
 import { useSyncExternalStore } from "react"
+import { AppSchema, typedStreams } from "@/gen/powersync/schema"
 import { createPowerSyncConnector } from "@/lib/powersync-connector"
 
 const defaultApiUrl = "http://127.0.0.1:8000/api"
@@ -38,27 +38,37 @@ const connector = createPowerSyncConnector({
  * Expo Go requires the sql-js adapter — native SQLite adapters won't load in the sandbox.
  * Switch to OP-SQLite or react-native-quick-sqlite for dev/production builds.
  */
-export const powerSync = createAppPowersync({
-  createDatabase: (options) =>
-    new PowerSyncDatabase({
-      schema: options.schema,
-      database: new SQLJSOpenFactory({
-        dbFilename: "app.db",
-      }),
-    }),
-  connector,
+export const db = new PowerSyncDatabase({
+  schema: AppSchema,
+  database: new SQLJSOpenFactory({
+    dbFilename: "app.db",
+  }),
 })
 
-export const { db: powerSyncDb, connect, disconnect } = powerSync
-export const streams = typedStreams(powerSyncDb)
+export const powerSyncDb = db
+export const streams = typedStreams(db)
 
 export const usersCollection = createCollection(
-  powerSyncCollectionOptions(powerSync.getCollectionsOptions("users"))
+  powerSyncCollectionOptions({
+    database: db,
+    table: AppSchema.props.users,
+  })
 )
 
 export const userProfilesCollection = createCollection(
-  powerSyncCollectionOptions(powerSync.getCollectionsOptions("user_profiles"))
+  powerSyncCollectionOptions({
+    database: db,
+    table: AppSchema.props.user_profiles,
+  })
 )
+
+export function connect() {
+  return db.connect(connector)
+}
+
+export function disconnect() {
+  return db.disconnect()
+}
 
 export function usePowerSync() {
   const ready = useSyncExternalStore(
@@ -66,7 +76,7 @@ export function usePowerSync() {
     () => syncReady,
     () => false
   )
-  return { ready, db: powerSyncDb }
+  return { ready, db }
 }
 
 export function setPowerSyncAccessToken(token: string | null | undefined) {
@@ -75,12 +85,11 @@ export function setPowerSyncAccessToken(token: string | null | undefined) {
   void (async () => {
     if (!token) {
       setSyncReady(false)
-      await powerSync.disconnect()
+      await db.disconnect()
       return
     }
 
-    await powerSync.connect()
-    await streams.me().subscribe()
+    await db.connect(connector)
     setSyncReady(true)
   })()
 }

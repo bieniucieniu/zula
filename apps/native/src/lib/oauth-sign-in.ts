@@ -1,8 +1,8 @@
 import { useListProviders } from "@zula/api/endpoints"
 import { getProviderDefinition } from "@zula/oauth"
-import { useNativeOAuthSignIn } from "@zula/oauth/native"
 import { useCallback } from "react"
 import { useAuth } from "@/lib/auth"
+import { useNativeOAuthSignIn } from "@/lib/oauth/use-native-oauth-sign-in"
 
 export function useProviderOAuthSignIn(providerId: string) {
   const { signInWithIdToken } = useAuth()
