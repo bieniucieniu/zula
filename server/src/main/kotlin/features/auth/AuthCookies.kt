@@ -1,8 +1,8 @@
 package com.zula.features.auth
 
 import com.zula.core.security.ACCESS_COOKIE_NAME
-import com.zula.core.security.JwtConfig
 import com.zula.core.security.REFRESH_COOKIE_NAME
+import com.zula.core.security.SecurityConfig
 import com.zula.features.auth.domain.AuthTokensResponse
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -12,8 +12,8 @@ import org.koin.ktor.ext.get
 fun ApplicationCall.setAccessCookies(tokens: AuthTokensResponse) {
     setAccessCookie(tokens.accessToken, tokens.expiresIn)
     if (tokens.refreshToken != null) {
-        val jwtConfig: JwtConfig = get()
-        setRefreshCookie(tokens.refreshToken, jwtConfig.refreshTokenTtlSeconds)
+        val config: SecurityConfig = get()
+        setRefreshCookie(tokens.refreshToken, config.jwt.refreshTokenTtlSeconds)
     }
 }
 

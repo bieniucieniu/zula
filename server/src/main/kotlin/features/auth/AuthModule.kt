@@ -1,6 +1,5 @@
 package com.zula.features.auth
 
-import com.zula.core.security.JwtConfig
 import com.zula.core.security.JwtSessionValidator
 import com.zula.core.security.SecurityConfig
 import com.zula.features.auth.crypto.TokenEncryption
@@ -14,8 +13,8 @@ val authModule = module {
         AuthRepository(get())
     }
     single {
-        val jwtConfig: JwtConfig = get()
-        TokenEncryption(jwtConfig.providerTokenEncryptionKey)
+        val jwtConfig: SecurityConfig = get()
+        TokenEncryption(jwtConfig.jwt.providerTokenEncryptionKey)
     }
     single {
         val security: SecurityConfig = get()
@@ -53,7 +52,13 @@ val authModule = module {
     }
 
     single {
-        AuthService(get(), get(), get(), get(), get())
+        AuthService(
+            get(),
+            get(),
+            get(),
+            get<SecurityConfig>().jwt,
+            get()
+        )
     }
 
     single<JwtSessionValidator> {

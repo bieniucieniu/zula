@@ -15,8 +15,9 @@ import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     routing {
+        configureAuthRouting()
+
         route("/api") {
-            configureAuthRouting()
             configureSyncRouting()
             configureUserRouting()
             configureFeedRouting()

@@ -1,7 +1,7 @@
 package com.zula.core.security
 
-import com.zula.core.security.jwt.JwtKeySet
 import com.zula.core.security.jwt.JwkSetProvider
+import com.zula.core.security.jwt.JwtKeySet
 import com.zula.core.security.jwt.RsaSessionJwtIssuer
 import com.zula.core.security.jwt.SessionJwtIssuer
 import com.zula.core.security.jwt.keys.JwtKeySetVerifier
@@ -11,16 +11,12 @@ import com.zula.core.security.oauth.OAuthPaths
 import com.zula.core.security.oauth.OAuthProviderNames
 import com.zula.core.security.oauth.appleOAuthSettings
 import com.zula.core.security.oauth.googleOAuthSettings
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache.Apache
-import io.ktor.http.HttpHeaders
-import io.ktor.http.auth.HttpAuthHeader
-import io.ktor.http.auth.parseAuthorizationHeader
+import io.ktor.client.*
+import io.ktor.http.*
+import io.ktor.http.auth.*
 import io.ktor.server.application.*
-import io.ktor.server.auth.authentication
-import io.ktor.server.auth.jwt.JWTPrincipal
-import io.ktor.server.auth.jwt.jwt
-import io.ktor.server.auth.oauth
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -71,7 +67,7 @@ fun securityModule(config: SecurityConfig): Module = module {
     }
 
     single {
-        HttpClient(Apache)
+        HttpClient()
     }
 }
 

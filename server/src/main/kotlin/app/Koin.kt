@@ -17,14 +17,18 @@ import com.zula.features.validation.validationModule
 import com.zula.lib.utils.configOrNull
 import com.zula.lib.utils.stringOrNull
 import io.ktor.server.application.*
+import org.koin.core.logger.Level
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
 fun Application.configureKoin() {
     install(Koin) {
-        slf4jLogger()
+        slf4jLogger(level = Level.DEBUG)
         modules(
             databaseModule {
+                runCatching {
+                    log.info("database config: ${environment.config.configOrNull("database")?.toMap().toString()}")
+                }.onFailure { log.error(it.message) }
                 config = DatabaseConfig.from(environment.config.configOrNull("database"))
             },
             securityModule {

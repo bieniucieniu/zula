@@ -5,14 +5,14 @@ import com.zula.lib.utils.stringOrNull
 import io.ktor.server.config.*
 
 data class DatabaseConfig(
-    val jdbcUrl: String = "",
+    val jdbcUrl: String?,
     val username: String? = null,
     val password: String? = null,
     val maximumPoolSize: Int = 10,
     val autoMigrate: Boolean = true,
 ) {
     val isEnabled: Boolean
-        get() = jdbcUrl.isNotBlank()
+        get() = jdbcUrl != null
 
 
     fun toHikariConfig(): HikariConfig =
@@ -26,7 +26,7 @@ data class DatabaseConfig(
 
     companion object {
         fun from(config: ApplicationConfig?) = DatabaseConfig(
-            jdbcUrl = config?.stringOrNull("jdbcUrl").orEmpty(),
+            jdbcUrl = config?.stringOrNull("jdbcUrl"),
             username = config?.stringOrNull("username"),
             password = config?.stringOrNull("password"),
             maximumPoolSize = config?.propertyOrNull("maximumPoolSize")?.getString()?.toIntOrNull() ?: 10,
