@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
-import { useAuth } from "@/lib/auth"
+import { useInvalidateSession } from "@/lib/auth"
 import { useAppForm } from "@/lib/form"
 
 type LoginFormValues = {
@@ -21,7 +21,7 @@ type LoginFormValues = {
 }
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
-  const { setSession } = useAuth()
+  const invalidateSession = useInvalidateSession()
   const createChallenge = useCreateChallenge()
   const authenticate = useAuthenticate()
 
@@ -42,7 +42,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       const challengeId = value.challengeId
       if (!email || !challengeId || code.length < 6) return
 
-      const { data: tokens } = await authenticate.mutateAsync({
+      await authenticate.mutateAsync({
         data: {
           provider: "email_otp",
           challengeId,
@@ -50,10 +50,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
         },
       })
 
-      setSession({
-        email,
-        expiresIn: tokens.expiresIn,
-      })
+      await invalidateSession()
     },
   })
 

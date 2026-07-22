@@ -2,13 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { useLogout } from "@zula/api/endpoints"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth"
+import { useAuth, useInvalidateSession } from "@/lib/auth"
 import { usePowerSync } from "@/lib/powersync"
 
 export const Route = createFileRoute("/")({ component: App })
 
 function App() {
-  const { session, ready, setSession } = useAuth()
+  const { session, ready } = useAuth()
+  const invalidateSession = useInvalidateSession()
   const logout = useLogout()
   const { ready: syncReady } = usePowerSync()
   const navigate = useNavigate()
@@ -32,13 +33,12 @@ function App() {
     setPending(true)
     try {
       await logout.mutateAsync({})
-      setSession(null)
-      await navigate({ to: "/login" })
     } catch {
-      setSession(null)
-      await navigate({ to: "/login" })
+      // still clear local session query
     } finally {
+      await invalidateSession()
       setPending(false)
+      await navigate({ to: "/login" })
     }
   }
 

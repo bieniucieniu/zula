@@ -1,8 +1,12 @@
-import { getSession, refresh } from "@zula/api/endpoints"
+import { useQueryClient } from "@tanstack/react-query"
+import {
+  getGetSessionQueryKey,
+  getSession,
+  refresh,
+  useGetSession,
+} from "@zula/api/endpoints"
 import type { SessionResponse } from "@zula/api"
-import { createContext, use, useEffect, useState, type ReactNode } from "react"
-
-const SESSION_KEY = "app.auth.session"
+import { createContext, use, useEffect, type ReactNode } from "react"
 
 export type AuthSession = {
   email: string
@@ -12,113 +16,59 @@ export type AuthSession = {
 type AuthContextValue = {
   session: AuthSession | null
   ready: boolean
-  setSession: (session: AuthSession | null) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function readStoredSession(): AuthSession | null {
-  if (typeof window === "undefined") return null
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as AuthSession
-    if (!parsed?.email) return null
-    return { email: parsed.email, expiresIn: parsed.expiresIn }
-  } catch {
-    return null
-  }
-}
-
-function writeStoredSession(session: AuthSession | null) {
-  if (typeof window === "undefined") return
-  if (session) {
-    sessionStorage.setItem(
-      SESSION_KEY,
-      JSON.stringify({ email: session.email, expiresIn: session.expiresIn })
-    )
-  } else {
-    sessionStorage.removeItem(SESSION_KEY)
-  }
-}
-
-function toSession(remote: SessionResponse, emailFallback = ""): AuthSession {
+function toSession(remote: SessionResponse): AuthSession {
   return {
-    email: remote.email ?? emailFallback,
+    email: remote.email ?? "",
     expiresIn: remote.expiresIn,
   }
 }
 
-async function loadRemoteSession(): Promise<SessionResponse | null> {
-  try {
-    const { data } = await getSession()
-    return data
-  } catch {
-    return null
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSessionState] = useState<AuthSession | null>(null)
-  const [ready, setReady] = useState(false)
-
-  function setSession(next: AuthSession | null) {
-    writeStoredSession(next)
-    setSessionState(next)
-  }
+  const queryClient = useQueryClient()
+  const sessionQuery = useGetSession({
+    query: {
+      retry: false,
+      queryFn: async () => {
+        try {
+          return await getSession()
+        } catch {
+          await refresh({})
+          return await getSession()
+        }
+      },
+    },
+  })
 
   useEffect(() => {
-    let cancelled = false
-
-    async function bootstrap() {
-      const stored = readStoredSession()
-      if (stored && !cancelled) setSessionState(stored)
-
-      try {
-        let remote = await loadRemoteSession()
-
-        if (!remote) {
-          try {
-            await refresh({})
-            remote = await loadRemoteSession()
-          } catch {
-            remote = null
-          }
-        }
-
-        if (cancelled) return
-
-        if (remote) {
-          const next = toSession(remote, stored?.email ?? "")
-          writeStoredSession(next)
-          setSessionState(next)
-          return
-        }
-
-        writeStoredSession(null)
-        setSessionState(null)
-      } catch {
-        if (!cancelled) {
-          writeStoredSession(null)
-          setSessionState(null)
-        }
-      } finally {
-        if (!cancelled) setReady(true)
-      }
+    if (sessionQuery.isError) {
+      queryClient.setQueryData(getGetSessionQueryKey(), null)
     }
+  }, [sessionQuery.isError, queryClient])
 
-    void bootstrap()
+  const remote = sessionQuery.data?.data
+  const session = remote && !sessionQuery.isError ? toSession(remote) : null
+  const ready = !sessionQuery.isPending && !sessionQuery.isFetching
 
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  // First load: ready once settled. Allow refetch after login while keeping prior session.
+  const settled = !sessionQuery.isLoading
 
-  return <AuthContext value={{ session, ready, setSession }}>{children}</AuthContext>
+  return (
+    <AuthContext value={{ session, ready: settled }}>{children}</AuthContext>
+  )
 }
 
 export function useAuth() {
   const ctx = use(AuthContext)
   if (!ctx) throw new Error("useAuth must be used within AuthProvider")
   return ctx
+}
+
+export function useInvalidateSession() {
+  const queryClient = useQueryClient()
+  return () =>
+    queryClient.invalidateQueries({ queryKey: getGetSessionQueryKey() })
 }
