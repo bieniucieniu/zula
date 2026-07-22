@@ -11,7 +11,10 @@
     "gen:api": "orval --config packages/api/orval.config.ts",
     "powersync": "powersync",
     "gen:powersync:web": "powersync generate schema --output=ts --output-path=apps/web/src/gen/powersync/schema.ts --directory=./powersync --api-url=http://127.0.0.1:8080",
-    "gen:powersync:native": "powersync generate schema --output=ts --output-path=apps/native/src/gen/powersync/schema.ts --directory=./powersync --api-url=http://127.0.0.1:8080"
+    "gen:powersync:native": "powersync generate schema --output=ts --output-path=apps/native/src/gen/powersync/schema.ts --directory=./powersync --api-url=http://127.0.0.1:8080",
+    "deps:docker": "docker compose -f docker/docker-compose.yaml up",
+    "deps:docker:down": "docker compose -f docker/docker-compose.yaml down",
+    "deps:docker:reset": "docker compose -f docker/docker-compose.yaml down -v"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",

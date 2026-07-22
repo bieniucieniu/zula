@@ -194,8 +194,8 @@ in
     echo "  secrets: secretspec provider=${toString (config.secretspec.provider or "unset")} profile=${
       toString (config.secretspec.profile or "unset")
     }"
-    echo "  deps:    devenv --profile backend up   # or: zula-deps"
-    echo "  sync:    devenv --profile powersync up # postgres + ktor :8000 + PowerSync :8080"
+    echo "  deps:    devenv --profile backend up   # postgres + ktor + PowerSync"
+    echo "  docker:  bun run deps:docker            # postgres + PowerSync only (no devenv)"
     echo "  all:     devenv --profile all up       # or: zula-all"
     echo "  api:     gen-api                       # orval + biome format (server must be up)"
     echo "  psync:   gen-powersync                 # AppSchema from running PowerSync"
