@@ -69,12 +69,22 @@ fun Route.configureAuthRouting() {
     authenticate(AuthProviderNames.JWT, optional = true) {
         get("/auth/session") {
             val principal: JWTPrincipal? = call.principal()
-            val accessToken = call.resolveAccessToken(authService)
+            if (principal != null) {
+                call.respond(
+                    SessionResponse(
+                        expiresIn = jwtConfig.accessTokenTtlSeconds,
+                        email = principal.payload.getClaim("username").asString(),
+                    ),
+                )
+                return@get
+            }
+
+            val refreshToken = call.readRefreshCookie() ?: unauthorized("Not authenticated")
+            val tokens = authService.refresh(call, refreshToken)
+            call.setAccessCookies(tokens)
             call.respond(
                 SessionResponse(
-                    accessToken = accessToken,
-                    expiresIn = jwtConfig.accessTokenTtlSeconds,
-                    email = principal?.payload?.getClaim("username")?.asString(),
+                    expiresIn = tokens.expiresIn,
                 ),
             )
         }.describe {

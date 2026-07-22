@@ -9,7 +9,6 @@ import {
   applyAuthTokens,
   configureApiClient,
   fetchSession,
-  getAccessToken,
   setAccessToken,
   unwrapTokens,
 } from "@/lib/api-client"
@@ -19,8 +18,7 @@ const SESSION_KEY = "app.auth.session"
 
 export type AuthSession = {
   email: string
-  accessToken: string
-  expiresIn: number
+  expiresIn?: number
   refreshToken?: string
 }
 
@@ -45,7 +43,7 @@ function readStoredSession(): AuthSession | null {
     const raw = sessionStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const parsed = JSON.parse(raw) as AuthSession
-    if (!parsed?.email || !parsed.accessToken) return null
+    if (!parsed?.email) return null
     return parsed
   } catch {
     return null
@@ -66,7 +64,6 @@ function toSession(tokens: AuthTokensResponse, email: string): AuthSession {
 }
 
 function adoptSession(session: AuthSession) {
-  setAccessToken(session.accessToken)
   writeStoredSession(session)
 }
 
@@ -93,7 +90,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (remote) {
           const next: AuthSession = {
             email: remote.email ?? stored?.email ?? "",
-            accessToken: remote.accessToken,
             expiresIn: remote.expiresIn,
             refreshToken: stored?.refreshToken,
           }
@@ -235,8 +231,4 @@ export function useAuth() {
   const ctx = use(AuthContext)
   if (!ctx) throw new Error("useAuth must be used within AuthProvider")
   return ctx
-}
-
-export function useAuthAccessToken() {
-  return getAccessToken()
 }

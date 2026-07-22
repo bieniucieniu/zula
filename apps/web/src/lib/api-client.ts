@@ -4,9 +4,7 @@ import { setApiBaseUrl, setAccessTokenGetter } from "@zula/api"
 const defaultApiUrl = "/api"
 
 export type SessionResponse = {
-  accessToken: string
   expiresIn: number
-  tokenType?: string
   email?: string | null
 }
 
@@ -65,7 +63,6 @@ export function applyAuthTokens(tokens: AuthTokensResponse, email?: string | nul
   setAccessToken(tokens.accessToken)
   return {
     email: email ?? "",
-    accessToken: tokens.accessToken,
     expiresIn: tokens.expiresIn,
     refreshToken: tokens.refreshToken ?? undefined,
   }
