@@ -21,6 +21,7 @@
     "@tanstack/powersync-db-collection": "^0.1.54",
     "@tanstack/react-db": "latest",
     "@tanstack/react-devtools": "latest",
+    "@tanstack/react-form": "latest",
     "@tanstack/react-pacer": "latest",
     "@tanstack/react-query": "latest",
     "@tanstack/react-query-devtools": "latest",
