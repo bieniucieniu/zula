@@ -1,15 +1,36 @@
 import { Redirect, Stack } from "expo-router"
 import { ActivityIndicator, View } from "react-native"
+import { useListProviders } from "@zula/api/endpoints"
+import { getProviderDefinition } from "@zula/oauth"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { useAuth } from "@/lib/auth"
-import { useGoogleSignIn } from "@/lib/google-auth"
+import { useProviderOAuthSignIn } from "@/lib/oauth-sign-in"
+
+function ProviderSignInButton({ providerId }: { providerId: string }) {
+  const oauth = useProviderOAuthSignIn(providerId)
+
+  if (oauth.loading) {
+    return <ActivityIndicator />
+  }
+
+  if (!oauth.ready) {
+    return null
+  }
+
+  return (
+    <Button onPress={() => void oauth.promptAsync?.()}>
+      <Text>Continue with {oauth.label}</Text>
+    </Button>
+  )
+}
 
 export default function LoginScreen() {
   const { session, ready } = useAuth()
-  const google = useGoogleSignIn()
+  const providersQuery = useListProviders()
+  const providers = providersQuery.data?.data.providers ?? []
 
-  if (!ready) {
+  if (!ready || providersQuery.isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator />
@@ -21,20 +42,20 @@ export default function LoginScreen() {
     return <Redirect href="/" />
   }
 
+  const configuredProviders = providers.filter((provider) => getProviderDefinition(provider.id))
+
   return (
     <>
       <Stack.Screen options={{ title: "Sign in" }} />
       <View className="flex-1 items-center justify-center gap-4 p-6">
         <Text className="text-center text-lg font-medium">Sign in to Zula</Text>
-        {google.loading ? (
-          <ActivityIndicator />
-        ) : google.ready ? (
-          <Button onPress={() => void google.promptAsync()}>
-            <Text>Continue with Google</Text>
-          </Button>
+        {configuredProviders.length > 0 ? (
+          configuredProviders.map((provider) => (
+            <ProviderSignInButton key={provider.id} providerId={provider.id} />
+          ))
         ) : (
           <Text className="text-center text-sm text-muted-foreground">
-            Google sign-in is not configured for this build.
+            OAuth sign-in is not configured for this build.
           </Text>
         )}
       </View>
