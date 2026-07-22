@@ -1,7 +1,7 @@
 import { Redirect, Stack } from "expo-router"
 import { ActivityIndicator, View } from "react-native"
-import { useListProviders } from "@zula/api/endpoints"
 import { getProviderDefinition } from "@zula/oauth"
+import { useOAuthProviders } from "@zula/oauth/react"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { useAuth } from "@/lib/auth"
@@ -19,16 +19,18 @@ function ProviderSignInButton({ providerId }: { providerId: string }) {
   }
 
   return (
-    <Button onPress={() => void oauth.promptAsync?.()}>
-      <Text>Continue with {oauth.label}</Text>
+    <Button disabled={oauth.pending} onPress={() => void oauth.signIn()}>
+      <Text>
+        {oauth.pending ? "Signing in…" : `Continue with ${oauth.label}`}
+      </Text>
     </Button>
   )
 }
 
 export default function LoginScreen() {
   const { session, ready } = useAuth()
-  const providersQuery = useListProviders()
-  const providers = providersQuery.data?.data.providers ?? []
+  const providersQuery = useOAuthProviders()
+  const providers = providersQuery.data ?? []
 
   if (!ready || providersQuery.isLoading) {
     return (

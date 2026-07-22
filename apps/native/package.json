@@ -1,6 +1,6 @@
 {
   "name": "zula-native",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "version": "1.0.0",
   "scripts": {
     "dev": "expo start -c",
@@ -13,6 +13,7 @@
     "storybook:android": "cross-env STORYBOOK_ENABLED=true expo start -c --android"
   },
   "dependencies": {
+    "@babel/runtime": "^8.0.0",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@powersync/adapter-sql-js": "^0.0.18",
     "@powersync/react-native": "^1.35.9",

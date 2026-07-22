@@ -1,10 +1,9 @@
 import { authenticateWithIdToken } from "@zula/api"
-import { useListProviders } from "@zula/api/endpoints"
 import { getProviderDefinition } from "@zula/oauth"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
+import { useOAuthProviders } from "@zula/oauth/react"
 import { useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { useWebOAuthSignIn } from "@/lib/oauth/use-web-oauth-sign-in"
 
 type OAuthSignInButtonsProps = {
@@ -42,20 +41,6 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
 
   if (!oauth.ready) return null
 
-  if (oauth.usesGoogleButton) {
-    return (
-      <div
-        ref={oauth.buttonContainerRef}
-        className={cn(
-          "[&>div]:w-full [&_iframe]:!w-full",
-          (disabled || oauth.pending) && "pointer-events-none opacity-50"
-        )}
-        data-provider={provider.id}
-        aria-disabled={disabled || oauth.pending}
-      />
-    )
-  }
-
   return (
     <Button
       type="button"
@@ -70,8 +55,8 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
 }
 
 export function OAuthSignInButtons({ disabled, onSuccess }: OAuthSignInButtonsProps) {
-  const providersQuery = useListProviders()
-  const providers = providersQuery.data?.data.providers ?? []
+  const providersQuery = useOAuthProviders()
+  const providers = providersQuery.data ?? []
 
   if (providersQuery.isLoading) {
     return (

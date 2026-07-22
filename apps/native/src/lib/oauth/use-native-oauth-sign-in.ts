@@ -1,6 +1,14 @@
+import { useCallback, useEffect } from "react"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
-import { useEffect, useMemo } from "react"
-import { createNativeDiscovery, resolveNativeClientIds } from "./config"
+import { getProviderDefinition } from "@zula/oauth"
+import { useOAuthSignIn } from "@zula/oauth/react"
+import {
+  createNativeDiscovery,
+  getNativeOAuthRedirectUri,
+  getNativeOAuthRedirectUriOptions,
+  resolveNativeClientIds,
+} from "./config"
+import { toOAuthSignInResult } from "./sign-in"
 
 type AuthSessionModule = typeof import("expo-auth-session")
 type GoogleModule = typeof import("expo-auth-session/providers/google")
@@ -27,42 +35,45 @@ export function useNativeOAuthSignIn({
   onError,
 }: UseNativeOAuthSignInOptions) {
   const isGoogle = provider?.id === "google"
-  const clientIds = useMemo(
-    () => (provider ? resolveNativeClientIds(provider) : null),
-    [provider]
-  )
+  const clientIds = provider ? resolveNativeClientIds(provider) : null
+  const redirectUri = getNativeOAuthRedirectUri()
 
   const google = useGoogleIdTokenAuth(provider, clientIds, isGoogle)
-  const generic = useGenericIdTokenAuth(provider, clientIds, !isGoogle)
+  const generic = useGenericIdTokenAuth(provider, clientIds, redirectUri, !isGoogle)
   const active = isGoogle ? google : generic
 
   useEffect(() => {
     void ensureWebBrowserReady()
   }, [])
 
-  useEffect(() => {
-    const response = active.response
-    if (!provider || !response || response.type !== "success") return
+  const signInExecutor = useCallback(
+    async (activeProvider: OAuthProviderInfo) => {
+      await ensureWebBrowserReady()
+      if (!active.promptAsync) {
+        throw new Error("OAuth request not ready")
+      }
 
-    const idToken = response.params?.id_token ?? response.authentication?.idToken
-    if (!idToken) {
-      onError?.(new Error("OAuth response missing id_token"))
-      return
-    }
+      if (__DEV__) {
+        console.info(`[zula] OAuth authorize ${activeProvider.id}`, {
+          clientId: clientIds?.webClientId,
+          iosClientId: clientIds?.iosClientId,
+          androidClientId: clientIds?.androidClientId,
+          redirectUri,
+        })
+      }
 
-    void onSuccess?.({
-      provider: provider.id,
-      idToken,
-      accessToken: response.authentication?.accessToken ?? null,
-      refreshToken: response.authentication?.refreshToken ?? null,
-    })
-  }, [active.response, provider, onSuccess, onError])
+      const result = await active.promptAsync()
+      return toOAuthSignInResult(activeProvider, result)
+    },
+    [active.promptAsync, clientIds, redirectUri]
+  )
 
-  return {
-    ready: Boolean(active.request) && Boolean(clientIds?.webClientId),
-    promptAsync: active.promptAsync,
-    providerId: provider?.id,
-  }
+  return useOAuthSignIn({
+    provider: active.ready ? provider : undefined,
+    signIn: signInExecutor,
+    onSuccess,
+    onError,
+  })
 }
 
 function useGoogleIdTokenAuth(
@@ -71,43 +82,51 @@ function useGoogleIdTokenAuth(
   enabled: boolean
 ) {
   const Google: GoogleModule = require("expo-auth-session/providers/google")
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest(
+  const scopes = provider?.scopes ?? ["openid", "email", "profile"]
+
+  const [request, , promptAsync] = Google.useIdTokenAuthRequest(
     enabled && clientIds
       ? {
           clientId: clientIds.webClientId,
           iosClientId: clientIds.iosClientId,
           androidClientId: clientIds.androidClientId,
+          scopes,
+          selectAccount: true,
         }
       : {
           clientId: "disabled",
-        }
+        },
+    getNativeOAuthRedirectUriOptions()
   )
 
   return {
-    request: enabled && provider ? request : null,
-    response: enabled ? response : null,
-    promptAsync,
+    ready: enabled && Boolean(provider?.clientId) && Boolean(request) && Boolean(clientIds?.webClientId),
+    promptAsync: enabled ? promptAsync : null,
   }
 }
 
 function useGenericIdTokenAuth(
   provider: OAuthProviderInfo | undefined,
   clientIds: ReturnType<typeof resolveNativeClientIds> | null,
+  redirectUri: string,
   enabled: boolean
 ) {
   const AuthSession: AuthSessionModule = require("expo-auth-session")
   const discovery = provider ? createNativeDiscovery(provider) : null
+  const extraParams = provider ? getProviderDefinition(provider.id)?.extraAuthParams : undefined
 
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+  const [request, , promptAsync] = AuthSession.useAuthRequest(
     enabled && provider && clientIds
       ? {
           clientId: clientIds.webClientId,
           scopes: provider.scopes,
           responseType: AuthSession.ResponseType.IdToken,
-          redirectUri: AuthSession.makeRedirectUri(),
+          redirectUri,
+          extraParams,
         }
       : {
           clientId: "disabled",
+          redirectUri,
         },
     discovery ?? {
       authorizationEndpoint: "https://invalid.local/oauth/authorize",
@@ -116,8 +135,7 @@ function useGenericIdTokenAuth(
   )
 
   return {
-    request: enabled && provider ? request : null,
-    response: enabled ? response : null,
-    promptAsync,
+    ready: enabled && Boolean(provider?.clientId) && Boolean(request) && Boolean(clientIds?.webClientId),
+    promptAsync: enabled ? promptAsync : null,
   }
 }

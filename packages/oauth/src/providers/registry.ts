@@ -1,7 +1,14 @@
 import type { OAuthProviderDefinition } from "../types"
 
 const definitions = new Map<string, OAuthProviderDefinition>([
-  ["google", { id: "google", label: "Google" }],
+  [
+    "google",
+    {
+      id: "google",
+      label: "Google",
+      extraAuthParams: { response_mode: "fragment", prompt: "select_account" },
+    },
+  ],
   [
     "apple",
     {

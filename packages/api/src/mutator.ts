@@ -16,7 +16,7 @@ export function setApiBaseUrl(url: string): void
 export function setApiBaseUrl(url: (url: string, options: RequestInit) => string): void
 export function setApiBaseUrl(url: string | ((url: string, options: RequestInit) => string)) {
   if (typeof url === "string") {
-    url = url.replaceAll(/(\\|\/)$/, "")
+    url = url.replace(/[/\\]+$/, "")
   }
   apiBaseUrl = url
 }

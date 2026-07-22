@@ -33,6 +33,10 @@ const config = defineConfig({
       "/api": {
         target: "http://127.0.0.1:8000",
         changeOrigin: true,
+        // OAuth popup returns here; keep it on the SPA, do not proxy to Ktor.
+        bypass(req) {
+          if (req.url?.startsWith("/api/auth/callback")) return req.url
+        },
       },
     },
   },
