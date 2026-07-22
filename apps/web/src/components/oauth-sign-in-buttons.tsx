@@ -4,8 +4,6 @@ import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import { useOAuthProviders } from "@zula/oauth/react"
 import { useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { formatGoogleSignInError } from "@/lib/oauth/google-errors"
 import { useWebOAuthSignIn } from "@/lib/oauth/use-web-oauth-sign-in"
 
 type OAuthSignInButtonsProps = {
@@ -42,29 +40,6 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
   })
 
   if (!oauth.ready) return null
-
-  if (oauth.usesGoogleButton) {
-    return (
-      <div className="flex flex-col gap-2">
-        <div
-          ref={oauth.buttonContainerRef}
-          className={cn(
-            "w-full min-h-10",
-            (disabled || oauth.pending) && "pointer-events-none opacity-50"
-          )}
-          data-provider={provider.id}
-          aria-disabled={disabled || oauth.pending}
-        />
-        {oauth.error ? (
-          <p className="text-xs text-destructive" role="alert">
-            {oauth.error}
-          </p>
-        ) : import.meta.env.DEV ? (
-          <p className="text-xs text-muted-foreground">{oauth.originHint}</p>
-        ) : null}
-      </div>
-    )
-  }
 
   return (
     <Button

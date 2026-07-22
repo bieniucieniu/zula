@@ -20,10 +20,6 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
-        name: "referrer",
-        content: import.meta.env.DEV ? "no-referrer-when-downgrade" : "strict-origin-when-cross-origin",
-      },
-      {
         title: "Zula",
       },
     ],
