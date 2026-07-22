@@ -20,14 +20,21 @@ class OidcIdTokenVerifier(
     private val httpClient: HttpClient,
     private val jwksUrl: String,
     private val issuers: List<String>,
-    private val audience: String,
+    private val audiences: List<String>,
 ) {
     constructor(
         httpClient: HttpClient,
         jwksUrl: String,
         issuer: String,
         audience: String,
-    ) : this(httpClient, jwksUrl, listOf(issuer), audience)
+    ) : this(httpClient, jwksUrl, listOf(issuer), listOf(audience))
+
+    constructor(
+        httpClient: HttpClient,
+        jwksUrl: String,
+        issuers: List<String>,
+        audience: String,
+    ) : this(httpClient, jwksUrl, issuers, listOf(audience))
 
     private val json = Json { ignoreUnknownKeys = true }
     private val keyCache = ConcurrentHashMap<String, Algorithm>()
@@ -43,7 +50,7 @@ class OidcIdTokenVerifier(
         }
         val verifier = JWT.require(algorithm)
             .withIssuer(*issuers.toTypedArray())
-            .withAudience(audience)
+            .withAudience(*audiences.toTypedArray())
             .build()
         return verifier.verify(decoded)
     }

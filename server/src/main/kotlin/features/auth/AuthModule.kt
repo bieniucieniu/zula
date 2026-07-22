@@ -33,11 +33,11 @@ val authModule = module {
         val repo: AuthRepository = get()
 
         AuthProviders {
-            if (security.oauth.google.isConfigured) {
+            if (security.oauth.google.isIdTokenConfigured) {
                 put("google", GoogleAuthProvider(security.oauth.google, http))
             }
 
-            if (security.oauth.apple.isConfigured) {
+            if (security.oauth.apple.isIdTokenConfigured) {
                 put("apple", AppleAuthProvider(security.oauth.apple, http))
             }
 

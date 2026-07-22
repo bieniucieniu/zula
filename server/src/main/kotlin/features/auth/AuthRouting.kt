@@ -6,7 +6,6 @@ import com.zula.core.http.unauthorized
 import com.zula.core.security.AuthProviderNames
 import com.zula.core.security.JwtConfig
 import com.zula.core.security.SecurityConfig
-import com.zula.core.security.oauth.OAuthProviderNames
 import com.zula.features.auth.domain.*
 import com.zula.lib.id.Ids
 import io.ktor.http.*
@@ -138,54 +137,13 @@ fun Route.configureAuthRouting() {
             tag("auth")
         }
     }
-    fun Route.configureOAuthRoutes(
-        providerName: String,
-        provider: String,
-    ) {
-        authenticate(providerName) {
-            get("/auth/login/$provider") {
-                // Unauthenticated requests are challenged by the OAuth plugin.
-            }.describe {
-                operationId = "${provider}Login"
-                tag("auth")
-            }
-
-            get("/auth/callback/$provider") {
-                val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
-                val idToken = principal?.extraParameters?.get("id_token")
-                if (idToken != null) {
-                    val tokens = authService.authenticate(
-                        call,
-                        AuthenticateRequest(
-                            provider = provider,
-                            idToken = idToken,
-                            providerRefreshToken = principal.extraParameters["refresh_token"],
-                        ),
-                    )
-                    call.setAccessCookies(tokens)
-                }
-                call.respondRedirect("/")
-            }.describe {
-                operationId = "${provider}Callback"
-                tag("auth")
-            }
-        }
-    }
-
-    if (config.oauth.google.isConfigured)
-        configureOAuthRoutes(OAuthProviderNames.GOOGLE, "google")
-
-
-    if (config.oauth.apple.isConfigured)
-        configureOAuthRoutes(OAuthProviderNames.APPLE, "apple")
-
 }
 
 
 private suspend fun ApplicationCall.resolveAccessToken(authService: AuthService): String {
     val principal: JWTPrincipal? = principal<JWTPrincipal>()
     if (principal != null) {
-        return readAccessCookie() ?: unauthorized("Missing access token")
+        return resolvePresentAccessToken() ?: unauthorized("Missing access token")
     }
 
     val refreshToken = readRefreshCookie() ?: unauthorized("Not authenticated")

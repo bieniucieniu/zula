@@ -1,7 +1,6 @@
 package com.zula.features.auth.provider
 
 import com.zula.core.security.AppleOAuthConfig
-import com.zula.core.security.oauth.appleOAuthSettings
 import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
 import com.zula.features.auth.domain.Identity
@@ -18,19 +17,18 @@ class AppleAuthProvider(
     private val verifier = OidcIdTokenVerifier(
         httpClient = httpClient,
         jwksUrl = "https://appleid.apple.com/auth/keys",
-        issuer = "https://appleid.apple.com",
-        audience = config.clientId.orEmpty(),
+        issuers = listOf("https://appleid.apple.com"),
+        audiences = config.idTokenAudiences,
     )
 
     override fun info(): OAuthProviderInfo? {
-        if (!config.isConfigured) return null
-        val settings = appleOAuthSettings(config)
+        if (!config.isIdTokenConfigured) return null
         return OAuthProviderInfo(
             id = id,
-            clientId = settings.clientId,
-            authorizeUrl = settings.authorizeUrl,
-            tokenUrl = settings.accessTokenUrl,
-            scopes = settings.defaultScopes,
+            clientId = config.clientId.orEmpty(),
+            authorizeUrl = "https://appleid.apple.com/auth/authorize",
+            tokenUrl = "https://appleid.apple.com/auth/token",
+            scopes = listOf("name", "email"),
         )
     }
 

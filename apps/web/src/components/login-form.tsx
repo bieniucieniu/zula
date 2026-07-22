@@ -1,10 +1,7 @@
 import { revalidateLogic } from "@tanstack/react-form"
-import {
-  getGoogleLoginUrl,
-  useAuthenticate,
-  useCreateChallenge,
-} from "@zula/api/endpoints"
+import { useAuthenticate, useCreateChallenge } from "@zula/api/endpoints"
 import { cn } from "@/lib/utils"
+import { GoogleSignInButton } from "@/components/google-sign-in-button"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -209,16 +206,10 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                             ? "Sending code…"
                             : "Verify and sign in"}
                       </Button>
-                      <Button
-                        variant="outline"
-                        type="button"
+                      <GoogleSignInButton
                         disabled={isSubmitting}
-                        onClick={() => {
-                          window.location.assign(getGoogleLoginUrl())
-                        }}
-                      >
-                        Continue with Google
-                      </Button>
+                        onSuccess={invalidateSession}
+                      />
                     </>
                   )}
                 </form.Subscribe>

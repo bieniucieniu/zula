@@ -1,4 +1,6 @@
 let apiBaseUrl: string | ((url: string, options: RequestInit) => string) = ""
+let accessToken: string | null = null
+let authMode: "cookie" | "bearer" = "cookie"
 
 export function getApiBaseUrl(url: string, options: RequestInit): string {
   if (typeof apiBaseUrl === "function") {
@@ -19,14 +21,31 @@ export function setApiBaseUrl(url: string | ((url: string, options: RequestInit)
   apiBaseUrl = url
 }
 
+export function setApiAuthMode(mode: "cookie" | "bearer") {
+  authMode = mode
+}
+
+export function setAccessToken(token: string | null) {
+  accessToken = token
+}
+
+export function getAccessToken() {
+  return accessToken
+}
+
 export const customInstance = async <T>(url: string, options: RequestInit): Promise<T> => {
+  const headers = new Headers(options.headers)
+  if (!headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json")
+  }
+  if (authMode === "bearer" && accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`)
+  }
+
   const res = await fetch(`${getApiBaseUrl(url, options)}`, {
     ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    credentials: authMode === "cookie" ? "include" : "omit",
+    headers,
   })
 
   const text = await res.text()

@@ -1,3 +1,15 @@
 export type * from "./generated/model"
 export { ProblemDetailsError } from "./problemDetails"
-export { setApiBaseUrl } from "./mutator"
+export {
+  getAccessToken,
+  setAccessToken,
+  setApiAuthMode,
+  setApiBaseUrl,
+} from "./mutator"
+export {
+  authenticateWithIdToken,
+  decodeJwtPayload,
+  sessionIdFromAccessToken,
+  toStoredOAuthSession,
+  type StoredOAuthSession,
+} from "./oauth"
