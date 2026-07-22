@@ -1,6 +1,5 @@
 import type { OAuthSignInResult } from "@zula/oauth"
 import { loadScript } from "./load-script"
-import { getGoogleSignInOriginHint } from "./google-errors"
 
 type GoogleCredentialResponse = {
   credential?: string
