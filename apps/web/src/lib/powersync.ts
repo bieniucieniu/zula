@@ -22,17 +22,10 @@ function subscribeSyncReady(listener: () => void) {
   return () => syncListeners.delete(listener)
 }
 
-function unwrapApiData<T>(response: T | { data: T }): T {
-  if (response && typeof response === "object" && "data" in response) {
-    return (response as { data: T }).data
-  }
-  return response as T
-}
-
 async function fetchPowerSyncAccessToken(): Promise<string | null> {
   try {
-    const response = unwrapApiData(await getPowerSyncToken())
-    return response.accessToken
+    const { data } = await getPowerSyncToken()
+    return data.accessToken
   } catch {
     return null
   }

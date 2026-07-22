@@ -26,13 +26,6 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function unwrapApiData<T>(response: T | { data: T }): T {
-  if (response && typeof response === "object" && "data" in response) {
-    return (response as { data: T }).data
-  }
-  return response as T
-}
-
 function readStoredSession(): AuthSession | null {
   if (typeof window === "undefined") return null
   try {
@@ -67,7 +60,8 @@ function toSession(remote: SessionResponse, emailFallback = ""): AuthSession {
 
 async function loadRemoteSession(): Promise<SessionResponse | null> {
   try {
-    return unwrapApiData(await getSession())
+    const { data } = await getSession()
+    return data
   } catch {
     return null
   }
@@ -128,17 +122,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const trimmed = email.trim()
     if (!trimmed) throw new Error("Email required")
 
-    const response = unwrapApiData(
-      await createChallenge({
-        channel: "email",
-        target: trimmed,
-        purpose: "login",
-      })
-    )
+    const { data } = await createChallenge({
+      channel: "email",
+      target: trimmed,
+      purpose: "login",
+    })
 
     return {
-      challengeId: response.challengeId,
-      devCode: response.token ?? undefined,
+      challengeId: data.challengeId,
+      devCode: data.token ?? undefined,
     }
   }
 
@@ -157,13 +149,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Email and verification code required")
     }
 
-    const tokens = unwrapApiData(
-      await authenticate({
-        provider: "email_otp",
-        challengeId,
-        code: trimmedCode,
-      })
-    )
+    const { data: tokens } = await authenticate({
+      provider: "email_otp",
+      challengeId,
+      code: trimmedCode,
+    })
 
     const next: AuthSession = {
       email: trimmed,

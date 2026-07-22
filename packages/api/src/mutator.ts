@@ -36,5 +36,5 @@ export const customInstance = async <T>(url: string, options: RequestInit): Prom
     throw data ?? new Error(res.statusText)
   }
 
-  return data as T
+  return { data, status: res.status, headers: res.headers } as T
 }
