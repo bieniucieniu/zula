@@ -144,65 +144,74 @@ fun Route.configureAuthRouting() {
     }
 
     if (config.oauth.google.isConfigured) {
-        authenticate(OAuthProviderNames.GOOGLE) {
-            get("/auth/login/google") {
-                call.respondRedirect("/api/auth/callback/google")
-            }.describe {
-                operationId = "loginGoogle"
-                tag("auth")
-            }
-
-            get("/auth/callback/google") {
-                val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
-                val idToken = principal?.extraParameters?.get("id_token")
-                if (idToken != null) {
-                    val tokens = authService.authenticate(
-                        call,
-                        AuthenticateRequest(
-                            provider = "google",
-                            idToken = idToken,
-                            providerRefreshToken = principal.extraParameters["refresh_token"],
-                        ),
-                    )
-                    call.setAccessCookies(tokens)
-                }
-                call.respondRedirect("/")
-            }.describe {
-                operationId = "callbackGoogle"
-                tag("auth")
-            }
-        }
+        configureOAuthRoutes(
+            providerName = OAuthProviderNames.GOOGLE,
+            loginPath = "/auth/login/google",
+            callbackPath = "/auth/callback/google",
+            provider = "google",
+            loginOperationId = "loginGoogle",
+            callbackOperationId = "callbackGoogle",
+            authService = authService,
+        )
     }
 
     if (config.oauth.apple.isConfigured) {
-        authenticate(OAuthProviderNames.APPLE) {
-            get("/auth/login/apple") {
-                call.respondRedirect("/api/auth/callback/apple")
-            }.describe {
-                operationId = "loginApple"
-                tag("auth")
-            }
+        configureOAuthRoutes(
+            providerName = OAuthProviderNames.APPLE,
+            loginPath = "/auth/login/apple",
+            callbackPath = "/auth/callback/apple",
+            provider = "apple",
+            loginOperationId = "loginApple",
+            callbackOperationId = "callbackApple",
+            authService = authService,
+        )
+    }
+}
 
-            get("/auth/callback/apple") {
-                val principal: OAuthAccessTokenResponse.OAuth2? = call.authentication.principal()
-                val idToken = principal?.extraParameters?.get("id_token")
-                if (idToken != null) {
-                    val tokens = authService.authenticate(
-                        call,
-                        AuthenticateRequest(
-                            provider = "apple",
-                            idToken = idToken,
-                        ),
-                    )
-                    call.setAccessCookies(tokens)
-                }
-                call.respondRedirect("/")
-            }.describe {
-                operationId = "callbackApple"
-                tag("auth")
-            }
+private fun Route.configureOAuthRoutes(
+    providerName: String,
+    loginPath: String,
+    callbackPath: String,
+    provider: String,
+    loginOperationId: String,
+    callbackOperationId: String,
+    authService: AuthService,
+) {
+    authenticate(providerName) {
+        get(loginPath) {
+            // Unauthenticated requests are challenged by the OAuth plugin.
+        }.describe {
+            operationId = loginOperationId
+            tag("auth")
+        }
+
+        get(callbackPath) {
+            call.completeOAuthLogin(authService, provider)
+        }.describe {
+            operationId = callbackOperationId
+            tag("auth")
         }
     }
+}
+
+private suspend fun ApplicationCall.completeOAuthLogin(
+    authService: AuthService,
+    provider: String,
+) {
+    val principal: OAuthAccessTokenResponse.OAuth2? = authentication.principal()
+    val idToken = principal?.extraParameters?.get("id_token")
+    if (idToken != null) {
+        val tokens = authService.authenticate(
+            this,
+            AuthenticateRequest(
+                provider = provider,
+                idToken = idToken,
+                providerRefreshToken = principal.extraParameters["refresh_token"],
+            ),
+        )
+        setAccessCookies(tokens)
+    }
+    respondRedirect("/")
 }
 
 private suspend fun ApplicationCall.resolveAccessToken(authService: AuthService): String {
