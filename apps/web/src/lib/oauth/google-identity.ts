@@ -1,5 +1,6 @@
 import type { OAuthSignInResult } from "@zula/oauth"
 import { loadScript } from "./load-script"
+import { getGoogleSignInOriginHint } from "./google-errors"
 
 type GoogleCredentialResponse = {
   credential?: string
@@ -119,6 +120,10 @@ export async function renderGoogleIdentityButton({
   }
 
   render()
+
+  if (import.meta.env.DEV) {
+    console.info(`[zula] Google sign-in expects this origin in Authorized JavaScript origins: ${window.location.origin}`)
+  }
 
   const observer = new ResizeObserver(() => {
     render()

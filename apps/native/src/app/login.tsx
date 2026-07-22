@@ -1,6 +1,7 @@
 import { Redirect, Stack } from "expo-router"
 import { ActivityIndicator, View } from "react-native"
-import { getProviderDefinition, useOAuthProviders } from "@zula/oauth/react"
+import { getProviderDefinition } from "@zula/oauth"
+import { useOAuthProviders } from "@zula/oauth/react"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
 import { useAuth } from "@/lib/auth"

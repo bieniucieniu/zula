@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import { useOAuthSignIn } from "@zula/oauth/react"
+import { formatGoogleSignInError, getGoogleSignInOriginHint } from "./google-errors"
 import { renderGoogleIdentityButton, signInOnWeb } from "./sign-in"
 
 export type UseWebOAuthSignInOptions = {
@@ -15,6 +16,7 @@ export function useWebOAuthSignIn({ provider, onSuccess, onError }: UseWebOAuthS
   const onErrorRef = useRef(onError)
   const usesGoogleButton = provider?.id === "google"
   const [googlePending, setGooglePending] = useState(false)
+  const [googleError, setGoogleError] = useState<string | null>(null)
 
   onSuccessRef.current = onSuccess
   onErrorRef.current = onError
@@ -44,6 +46,7 @@ export function useWebOAuthSignIn({ provider, onSuccess, onError }: UseWebOAuthS
       clientId: provider.clientId,
       container,
       onSuccess: async (result) => {
+        setGoogleError(null)
         setGooglePending(true)
         try {
           await onSuccessRef.current?.(result)
@@ -56,6 +59,7 @@ export function useWebOAuthSignIn({ provider, onSuccess, onError }: UseWebOAuthS
         }
       },
       onError: (error) => {
+        setGoogleError(formatGoogleSignInError(error, provider.clientId))
         onErrorRef.current?.(error)
       },
     }).then((dispose) => {
@@ -78,5 +82,7 @@ export function useWebOAuthSignIn({ provider, onSuccess, onError }: UseWebOAuthS
     ready: Boolean(provider?.clientId),
     usesGoogleButton,
     buttonContainerRef,
+    error: googleError,
+    originHint: usesGoogleButton ? getGoogleSignInOriginHint(provider?.clientId) : null,
   }
 }
