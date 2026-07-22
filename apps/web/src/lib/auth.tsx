@@ -1,10 +1,4 @@
-import {
-  authenticate,
-  createChallenge,
-  getSession,
-  logout as logoutRequest,
-  refresh,
-} from "@zula/api/endpoints"
+import { getSession, refresh } from "@zula/api/endpoints"
 import type { SessionResponse } from "@zula/api"
 import { createContext, use, useEffect, useState, type ReactNode } from "react"
 
@@ -18,10 +12,7 @@ export type AuthSession = {
 type AuthContextValue = {
   session: AuthSession | null
   ready: boolean
-  requestEmailOtp: (email: string) => Promise<{ challengeId: string; devCode?: string }>
-  verifyEmailOtp: (input: { email: string; challengeId: string; code: string }) => Promise<void>
-  loginWithGoogle: () => void
-  logout: () => Promise<void>
+  setSession: (session: AuthSession | null) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -68,15 +59,20 @@ async function loadRemoteSession(): Promise<SessionResponse | null> {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(null)
+  const [session, setSessionState] = useState<AuthSession | null>(null)
   const [ready, setReady] = useState(false)
+
+  function setSession(next: AuthSession | null) {
+    writeStoredSession(next)
+    setSessionState(next)
+  }
 
   useEffect(() => {
     let cancelled = false
 
     async function bootstrap() {
       const stored = readStoredSession()
-      if (stored && !cancelled) setSession(stored)
+      if (stored && !cancelled) setSessionState(stored)
 
       try {
         let remote = await loadRemoteSession()
@@ -95,16 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (remote) {
           const next = toSession(remote, stored?.email ?? "")
           writeStoredSession(next)
-          setSession(next)
+          setSessionState(next)
           return
         }
 
         writeStoredSession(null)
-        setSession(null)
+        setSessionState(null)
       } catch {
         if (!cancelled) {
           writeStoredSession(null)
-          setSession(null)
+          setSessionState(null)
         }
       } finally {
         if (!cancelled) setReady(true)
@@ -118,79 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  async function requestEmailOtp(email: string) {
-    const trimmed = email.trim()
-    if (!trimmed) throw new Error("Email required")
-
-    const { data } = await createChallenge({
-      channel: "email",
-      target: trimmed,
-      purpose: "login",
-    })
-
-    return {
-      challengeId: data.challengeId,
-      devCode: data.token ?? undefined,
-    }
-  }
-
-  async function verifyEmailOtp({
-    email,
-    challengeId,
-    code,
-  }: {
-    email: string
-    challengeId: string
-    code: string
-  }) {
-    const trimmed = email.trim()
-    const trimmedCode = code.trim()
-    if (!trimmed || !challengeId || !trimmedCode) {
-      throw new Error("Email and verification code required")
-    }
-
-    const { data: tokens } = await authenticate({
-      provider: "email_otp",
-      challengeId,
-      code: trimmedCode,
-    })
-
-    const next: AuthSession = {
-      email: trimmed,
-      expiresIn: tokens.expiresIn,
-    }
-    writeStoredSession(next)
-    setSession(next)
-  }
-
-  function loginWithGoogle() {
-    window.location.assign("/api/auth/login/google")
-  }
-
-  async function logout() {
-    try {
-      await logoutRequest(undefined)
-    } catch {
-      // Clear local session even if server logout fails.
-    }
-    writeStoredSession(null)
-    setSession(null)
-  }
-
-  return (
-    <AuthContext
-      value={{
-        session,
-        ready,
-        requestEmailOtp,
-        verifyEmailOtp,
-        loginWithGoogle,
-        logout,
-      }}
-    >
-      {children}
-    </AuthContext>
-  )
+  return <AuthContext value={{ session, ready, setSession }}>{children}</AuthContext>
 }
 
 export function useAuth() {

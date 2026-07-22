@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useLogout } from "@zula/api/endpoints"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
@@ -7,7 +8,8 @@ import { usePowerSync } from "@/lib/powersync"
 export const Route = createFileRoute("/")({ component: App })
 
 function App() {
-  const { session, ready, logout } = useAuth()
+  const { session, ready, setSession } = useAuth()
+  const logout = useLogout()
   const { ready: syncReady } = usePowerSync()
   const navigate = useNavigate()
   const [pending, setPending] = useState(false)
@@ -29,7 +31,11 @@ function App() {
   async function onLogout() {
     setPending(true)
     try {
-      await logout()
+      await logout.mutateAsync({})
+      setSession(null)
+      await navigate({ to: "/login" })
+    } catch {
+      setSession(null)
       await navigate({ to: "/login" })
     } finally {
       setPending(false)
