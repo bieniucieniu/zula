@@ -182,10 +182,14 @@ fun Route.configureAuthRouting() {
 
 
 private suspend fun ApplicationCall.resolveAccessToken(authService: AuthService): String {
-    val principal: JWTPrincipal? = principal<JWTPrincipal>()
-    if (principal != null) {
-        return readAccessCookie() ?: unauthorized("Missing access token")
-    }
+    request.headers[HttpHeaders.Authorization]
+        ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
+        ?.substringAfter(' ')
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { return it }
+
+    readAccessCookie()?.let { return it }
 
     val refreshToken = readRefreshCookie() ?: unauthorized("Not authenticated")
     val tokens = authService.refresh(this, refreshToken)

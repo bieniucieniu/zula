@@ -1,16 +1,15 @@
 import { SQLJSOpenFactory } from "@powersync/adapter-sql-js"
 import { PowerSyncDatabase } from "@powersync/react-native"
-import { createAppPowersync, typedStreams } from "@zula/powersync"
-import { createCollection } from "@tanstack/react-db"
 import { powerSyncCollectionOptions } from "@tanstack/powersync-db-collection"
-import { useSyncExternalStore } from "react"
+import { createCollection } from "@tanstack/react-db"
+import { getPowerSyncToken } from "@zula/api/endpoints"
+import { useEffect, useSyncExternalStore } from "react"
+import { AppSchema, typedStreams } from "@/gen/powersync/schema"
+import { useAuth } from "@/lib/auth"
 import { createPowerSyncConnector } from "@/lib/powersync-connector"
 
-const defaultApiUrl = "http://127.0.0.1:8000/api/v1"
 const powersyncUrl = process.env.EXPO_PUBLIC_PS_URL ?? "http://127.0.0.1:8080"
-const syncBatchUrl = `${process.env.EXPO_PUBLIC_API_URL ?? defaultApiUrl}/sync/batch`
 
-let accessToken: string | null | undefined
 let syncReady = false
 const syncListeners = new Set<() => void>()
 
@@ -24,40 +23,47 @@ function subscribeSyncReady(listener: () => void) {
   return () => syncListeners.delete(listener)
 }
 
-async function getAccessToken() {
-  return accessToken ?? null
+async function fetchPowerSyncAccessToken(): Promise<string | null> {
+  try {
+    const { data } = await getPowerSyncToken()
+    return data.accessToken
+  } catch {
+    return null
+  }
 }
 
 const connector = createPowerSyncConnector({
-  getAccessToken,
+  getAccessToken: fetchPowerSyncAccessToken,
   powersyncUrl,
-  syncBatchUrl,
 })
 
 /**
  * Expo Go requires the sql-js adapter — native SQLite adapters won't load in the sandbox.
  * Switch to OP-SQLite or react-native-quick-sqlite for dev/production builds.
  */
-export const powerSync = createAppPowersync({
-  createDatabase: (options) =>
-    new PowerSyncDatabase({
-      schema: options.schema,
-      database: new SQLJSOpenFactory({
-        dbFilename: "app.db",
-      }),
-    }),
-  connector,
+export const db = new PowerSyncDatabase({
+  schema: AppSchema,
+  database: new SQLJSOpenFactory({
+    dbFilename: "app.db",
+  }),
 })
 
-export const { db: powerSyncDb, connect, disconnect } = powerSync
-export const streams = typedStreams(powerSyncDb)
+db.connect(connector)
+
+export const streams = typedStreams(db)
 
 export const usersCollection = createCollection(
-  powerSyncCollectionOptions(powerSync.getCollectionsOptions("users"))
+  powerSyncCollectionOptions({
+    database: db,
+    table: AppSchema.props.users,
+  })
 )
 
 export const userProfilesCollection = createCollection(
-  powerSyncCollectionOptions(powerSync.getCollectionsOptions("user_profiles"))
+  powerSyncCollectionOptions({
+    database: db,
+    table: AppSchema.props.user_profiles,
+  })
 )
 
 export function usePowerSync() {
@@ -66,21 +72,32 @@ export function usePowerSync() {
     () => syncReady,
     () => false
   )
-  return { ready, db: powerSyncDb }
+  return { ready, db }
 }
 
-export function setPowerSyncAccessToken(token: string | null | undefined) {
-  accessToken = token
+export function usePowerSyncAuth() {
+  const { session } = useAuth()
 
-  void (async () => {
-    if (!token) {
-      setSyncReady(false)
-      await powerSync.disconnect()
-      return
+  useEffect(() => {
+    let cancelled = false
+
+    async function run() {
+      if (!session) {
+        setSyncReady(false)
+        await db.disconnect()
+        return
+      }
+
+      await db.connect(connector)
+      if (!cancelled) setSyncReady(true)
     }
 
-    await powerSync.connect()
-    await streams.me().subscribe()
-    setSyncReady(true)
-  })()
+    void run()
+
+    return () => {
+      cancelled = true
+      setSyncReady(false)
+      void db.disconnect()
+    }
+  }, [session])
 }

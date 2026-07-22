@@ -1,4 +1,9 @@
 let apiBaseUrl: string | ((url: string, options: RequestInit) => string) = ""
+let accessTokenGetter: (() => string | null | undefined) | null = null
+
+export function setAccessTokenGetter(getter: (() => string | null | undefined) | null) {
+  accessTokenGetter = getter
+}
 
 export function getApiBaseUrl(url: string, options: RequestInit): string {
   if (typeof apiBaseUrl === "function") {
@@ -20,11 +25,13 @@ export function setApiBaseUrl(url: string | ((url: string, options: RequestInit)
 }
 
 export const customInstance = async <T>(url: string, options: RequestInit): Promise<T> => {
+  const token = accessTokenGetter?.()
   const res = await fetch(`${getApiBaseUrl(url, options)}`, {
     ...options,
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
   })
