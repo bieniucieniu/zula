@@ -1,9 +1,8 @@
+import type { OAuthSignInResult } from "@zula/oauth"
 import { loadScript } from "./load-script"
-import type { OAuthSignInResult } from "../types"
 
 type GoogleCredentialResponse = {
   credential?: string
-  select_by?: string
 }
 
 type GoogleIdApi = {
@@ -22,10 +21,8 @@ type GoogleIdApi = {
       text?: "signin_with" | "signup_with" | "continue_with" | "signin"
       shape?: "rectangular" | "pill" | "circle" | "square"
       width?: number | string
-      logo_alignment?: "left" | "center"
     }
   ) => void
-  prompt: (momentListener?: (notification: { isNotDisplayed: () => boolean }) => void) => void
 }
 
 declare global {
@@ -42,7 +39,7 @@ const GOOGLE_SCRIPT_URL = "https://accounts.google.com/gsi/client"
 
 let googleInitPromise: Promise<GoogleIdApi> | null = null
 
-async function getGoogleIdentityApi(clientId: string): Promise<GoogleIdApi> {
+async function getGoogleIdentityApi(): Promise<GoogleIdApi> {
   if (!googleInitPromise) {
     googleInitPromise = loadScript(GOOGLE_SCRIPT_URL).then(() => {
       const api = window.google?.accounts?.id
@@ -51,8 +48,7 @@ async function getGoogleIdentityApi(clientId: string): Promise<GoogleIdApi> {
     })
   }
 
-  const api = await googleInitPromise
-  return api
+  return googleInitPromise
 }
 
 export type GoogleIdentityButtonOptions = {
@@ -70,7 +66,7 @@ export async function renderGoogleIdentityButton({
   onSuccess,
   onError,
 }: GoogleIdentityButtonOptions): Promise<() => void> {
-  const api = await getGoogleIdentityApi(clientId)
+  const api = await getGoogleIdentityApi()
 
   api.initialize({
     client_id: clientId,
@@ -102,31 +98,4 @@ export async function renderGoogleIdentityButton({
   return () => {
     container.replaceChildren()
   }
-}
-
-export async function signInWithGoogleIdentity(clientId: string): Promise<OAuthSignInResult> {
-  const api = await getGoogleIdentityApi(clientId)
-
-  return new Promise<OAuthSignInResult>((resolve, reject) => {
-    api.initialize({
-      client_id: clientId,
-      callback: (response) => {
-        if (!response.credential) {
-          reject(new Error("Google sign-in returned no credential"))
-          return
-        }
-
-        resolve({
-          provider: "google",
-          idToken: response.credential,
-        })
-      },
-    })
-
-    api.prompt((notification) => {
-      if (notification.isNotDisplayed()) {
-        reject(new Error("Google One Tap not displayed"))
-      }
-    })
-  })
 }

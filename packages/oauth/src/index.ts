@@ -8,10 +8,9 @@ export {
 } from "./providers/registry"
 export type {
   BuildAuthorizeUrlInput,
-  OAuthNativeStrategy,
   OAuthProviderDefinition,
   OAuthProviderInfo,
   OAuthSignInError,
+  OAuthSignInExecutor,
   OAuthSignInResult,
-  OAuthWebStrategy,
 } from "./types"
