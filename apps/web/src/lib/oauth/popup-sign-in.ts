@@ -1,10 +1,10 @@
 import {
   buildAuthorizeUrl,
   getProviderDefinition,
-  parseOAuthRedirect,
-  randomString,
   type OAuthProviderInfo,
   type OAuthSignInResult,
+  parseOAuthRedirect,
+  randomString,
 } from "@zula/oauth"
 
 const OAUTH_MESSAGE_TYPE = "zula.oauth.callback"
@@ -18,8 +18,7 @@ export type PopupSignInOptions = {
 }
 
 /** Prefer redirect paths already registered in Google Cloud Console. */
-function defaultRedirectPath(providerId: string): string {
-  if (providerId === "google") return "/api/auth/callback/google"
+function defaultRedirectPath(_: string): string {
   return "/oauth/callback"
 }
 
@@ -43,7 +42,10 @@ export async function signInWithPopup({
   })
 
   if (import.meta.env.DEV) {
-    console.info(`[zula] OAuth authorize ${provider.id}`, { clientId: provider.clientId, redirectUri })
+    console.info(`[zula] OAuth authorize ${provider.id}`, {
+      clientId: provider.clientId,
+      redirectUri,
+    })
   }
 
   return new Promise<OAuthSignInResult>((resolve, reject) => {
@@ -90,7 +92,7 @@ export async function signInWithPopup({
     function cleanup() {
       window.clearTimeout(timeout)
       window.removeEventListener("message", onMessage)
-      if (!popup.closed) popup.close()
+      if (!popup?.closed) popup?.close()
     }
 
     window.addEventListener("message", onMessage)

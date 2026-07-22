@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.hours
 fun Route.configureAuthRouting() {
     val config: SecurityConfig = application.getKoin().getOrNull() ?: return
     val authService: AuthService by inject()
-    val jwtConfig: JwtConfig by inject()
+    val jwtConfig = config.jwt
 
     cacheOutput(1.hours) {
         get("/auth/providers") {
