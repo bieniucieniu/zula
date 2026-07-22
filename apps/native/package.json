@@ -52,6 +52,7 @@
     "@tanstack/react-db": "^0.1.94",
     "@tanstack/react-query": "^5.90.2",
     "@zula/api": "workspace:*",
+    "@zula/oauth": "workspace:*",
     "@zula/powersync": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

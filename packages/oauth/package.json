@@ -1,0 +1,32 @@
+{
+  "name": "@zula/oauth",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./web": "./src/web/index.ts",
+    "./native": "./src/native/index.ts",
+    "./react": "./src/react/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "expo-auth-session": ">=7",
+    "expo-web-browser": ">=15",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "expo-auth-session": {
+      "optional": true
+    },
+    "expo-web-browser": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "typescript": "^6",
+    "vitest": "^4.1.10"
+  }
+}

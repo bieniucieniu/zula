@@ -1,7 +1,7 @@
 import { revalidateLogic } from "@tanstack/react-form"
 import { useAuthenticate, useCreateChallenge } from "@zula/api/endpoints"
 import { cn } from "@/lib/utils"
-import { GoogleSignInButton } from "@/components/google-sign-in-button"
+import { OAuthSignInButtons } from "@/components/oauth-sign-in-buttons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -206,7 +206,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                             ? "Sending code…"
                             : "Verify and sign in"}
                       </Button>
-                      <GoogleSignInButton
+                      <OAuthSignInButtons
                         disabled={isSubmitting}
                         onSuccess={invalidateSession}
                       />
