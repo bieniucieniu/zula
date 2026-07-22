@@ -6,11 +6,11 @@ import com.zula.core.http.unauthorized
 import com.zula.core.security.AuthProviderNames
 import com.zula.core.security.JwtConfig
 import com.zula.core.security.SecurityConfig
-import com.zula.core.security.jwt.configureJwksRouting
 import com.zula.core.security.oauth.OAuthProviderNames
 import com.zula.features.auth.domain.AuthenticateRequest
 import com.zula.features.auth.domain.ChallengeRequest
 import com.zula.features.auth.domain.RefreshRequest
+import com.zula.features.auth.domain.SessionResponse
 import com.zula.lib.id.Ids
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -28,8 +28,6 @@ fun Route.configureAuthRouting() {
     val config: SecurityConfig = application.getKoin().getOrNull() ?: return
     val authService: AuthService by inject()
     val jwtConfig: JwtConfig by inject()
-
-    configureJwksRouting()
 
     cacheOutput(1.hours) {
         get("/auth/providers") {
@@ -68,6 +66,34 @@ fun Route.configureAuthRouting() {
     }
 
     authenticate(AuthProviderNames.JWT, optional = true) {
+        get("/auth/session") {
+            val principal: JWTPrincipal? = call.principal()
+            if (principal != null) {
+                val accessToken = call.readAccessCookie() ?: unauthorized("Missing access token")
+                call.respond(
+                    SessionResponse(
+                        accessToken = accessToken,
+                        expiresIn = jwtConfig.accessTokenTtlSeconds,
+                        email = principal.payload.getClaim("username").asString(),
+                    ),
+                )
+                return@get
+            }
+
+            val refreshToken = call.readRefreshCookie() ?: unauthorized("Not authenticated")
+            val tokens = authService.refresh(call, refreshToken)
+            call.setAccessCookies(tokens)
+            call.respond(
+                SessionResponse(
+                    accessToken = tokens.accessToken,
+                    expiresIn = tokens.expiresIn,
+                ),
+            )
+        }.describe {
+            operationId = "getSession"
+            tag("auth")
+        }
+
         post("/auth/logout") {
             val principal: JWTPrincipal? = call.principal()
             val sessionId = principal?.payload?.getClaim("sid")?.asString()?.let {
@@ -114,7 +140,10 @@ fun Route.configureAuthRouting() {
     if (config.oauth.google.isConfigured) {
         authenticate(OAuthProviderNames.GOOGLE) {
             get("/auth/login/google") {
-                call.respondRedirect("/auth/callback/google")
+                call.request.queryParameters["return_to"]?.let { returnTo ->
+                    if (isSafeReturnTo(returnTo)) call.setReturnToCookie(returnTo)
+                }
+                call.respondRedirect("/api/auth/callback/google")
             }.describe {
                 operationId = "loginGoogle"
                 tag("auth")
@@ -133,10 +162,10 @@ fun Route.configureAuthRouting() {
                         ),
                     )
                     call.setAccessCookies(tokens)
-                    call.respondRedirect("/")
-                } else {
-                    call.respondRedirect("/")
                 }
+                val returnTo = call.readReturnToCookie()?.takeIf(::isSafeReturnTo) ?: "/"
+                call.clearReturnToCookie()
+                call.respondRedirect(returnTo)
             }.describe {
                 operationId = "callbackGoogle"
                 tag("auth")
@@ -147,7 +176,10 @@ fun Route.configureAuthRouting() {
     if (config.oauth.apple.isConfigured) {
         authenticate(OAuthProviderNames.APPLE) {
             get("/auth/login/apple") {
-                call.respondRedirect("/auth/callback/apple")
+                call.request.queryParameters["return_to"]?.let { returnTo ->
+                    if (isSafeReturnTo(returnTo)) call.setReturnToCookie(returnTo)
+                }
+                call.respondRedirect("/api/auth/callback/apple")
             }.describe {
                 operationId = "loginApple"
                 tag("auth")
@@ -165,10 +197,10 @@ fun Route.configureAuthRouting() {
                         ),
                     )
                     call.setAccessCookies(tokens)
-                    call.respondRedirect("/")
-                } else {
-                    call.respondRedirect("/")
                 }
+                val returnTo = call.readReturnToCookie()?.takeIf(::isSafeReturnTo) ?: "/"
+                call.clearReturnToCookie()
+                call.respondRedirect(returnTo)
             }.describe {
                 operationId = "callbackApple"
                 tag("auth")
@@ -176,6 +208,9 @@ fun Route.configureAuthRouting() {
         }
     }
 }
+
+private fun isSafeReturnTo(value: String): Boolean =
+    value.startsWith("/") && !value.startsWith("//")
 
 private fun ApplicationCall.useCookieDelivery(): Boolean =
     request.queryParameters["delivery"] == "cookie" ||

@@ -6,6 +6,6 @@ object OAuthProviderNames {
 }
 
 object OAuthPaths {
-    const val GOOGLE_CALLBACK = "auth/callback/google"
-    const val APPLE_CALLBACK = "auth/callback/apple"
+    const val GOOGLE_CALLBACK = "api/auth/callback/google"
+    const val APPLE_CALLBACK = "api/auth/callback/apple"
 }

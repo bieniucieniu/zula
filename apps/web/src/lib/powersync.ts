@@ -6,7 +6,7 @@ import { AppSchema, typedStreams } from "@/gen/powersync/schema"
 import { useAuth } from "@/lib/auth"
 import { createPowerSyncConnector } from "@/lib/powersync-connector"
 
-const defaultApiUrl = "/api/v1"
+const defaultApiUrl = "/api"
 const powersyncUrl = import.meta.env.VITE_PS_URL ?? "http://127.0.0.1:8080"
 const syncBatchUrl = `${import.meta.env.VITE_API_URL ?? defaultApiUrl}/sync/batch`
 
