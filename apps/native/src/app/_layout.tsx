@@ -1,6 +1,6 @@
+import "@/polyfills/crypto"
 import "@/global.css"
 
-import { NAV_THEME } from "@/lib/theme"
 import { ThemeProvider } from "@react-navigation/native"
 import { PortalHost } from "@rn-primitives/portal"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
@@ -8,6 +8,7 @@ import { Stack } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import { useUniwind } from "uniwind"
 import { AuthProvider } from "@/lib/auth"
+import { NAV_THEME } from "@/lib/theme"
 
 export {
   // Catch any errors thrown by the Layout component.

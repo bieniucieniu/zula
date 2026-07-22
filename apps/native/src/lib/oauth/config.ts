@@ -1,4 +1,6 @@
 import type { OAuthProviderInfo } from "@zula/oauth"
+import Constants from "expo-constants"
+import * as AuthSession from "expo-auth-session"
 
 export type NativeClientIds = {
   webClientId: string
@@ -7,7 +9,8 @@ export type NativeClientIds = {
 }
 
 function readEnv(name: string): string | undefined {
-  return process.env[name]
+  const value = process.env[name]?.trim()
+  return value ? value : undefined
 }
 
 const providerClientIdEnv: Record<
@@ -25,23 +28,56 @@ const providerClientIdEnv: Record<
   },
 }
 
+/** App scheme used for OAuth redirect (must match app.json `expo.scheme`). */
+export function getNativeOAuthScheme(): string {
+  return Constants.expoConfig?.scheme?.toString() || "zula"
+}
+
+/**
+ * Redirect URI for Expo AuthSession.
+ * Register the same value in Google Cloud Console → Authorized redirect URIs:
+ *   zula://oauth
+ */
+export function getNativeOAuthRedirectUri(): string {
+  const scheme = getNativeOAuthScheme()
+  return AuthSession.makeRedirectUri({
+    scheme,
+    path: "oauth",
+    // `path` is ignored for native; set explicit URI for Console registration.
+    native: `${scheme}://oauth`,
+  })
+}
+
+export function getNativeOAuthRedirectUriOptions() {
+  const scheme = getNativeOAuthScheme()
+  return {
+    scheme,
+    path: "oauth",
+    native: `${scheme}://oauth`,
+  }
+}
+
+/**
+ * Resolve platform client IDs.
+ * Prefer server `provider.clientId` (same Web client as web popup) unless Expo env overrides.
+ */
 export function resolveNativeClientIds(
   provider: OAuthProviderInfo,
   overrides?: Partial<NativeClientIds>
 ): NativeClientIds {
   const env = providerClientIdEnv[provider.id]
-  const fallback =
+  const webClientId =
     overrides?.webClientId ??
     (env?.web ? readEnv(env.web) : undefined) ??
     (env?.fallback ? readEnv(env.fallback) : undefined) ??
-    provider.clientId
+    provider.clientId.trim()
 
   return {
-    webClientId: fallback,
+    webClientId,
     iosClientId:
-      overrides?.iosClientId ?? (env?.ios ? readEnv(env.ios) : undefined) ?? fallback,
+      overrides?.iosClientId ?? (env?.ios ? readEnv(env.ios) : undefined),
     androidClientId:
-      overrides?.androidClientId ?? (env?.android ? readEnv(env.android) : undefined) ?? fallback,
+      overrides?.androidClientId ?? (env?.android ? readEnv(env.android) : undefined),
   }
 }
 

@@ -6,14 +6,15 @@ import { useNativeOAuthSignIn } from "@/lib/oauth/use-native-oauth-sign-in"
 
 export function useProviderOAuthSignIn(providerId: string) {
   const { signInWithIdToken } = useAuth()
-  const { provider, isLoading, ready } = useOAuthProvider(providerId)
+  const { provider, isLoading, ready: providerReady } = useOAuthProvider(providerId)
   const definition = getProviderDefinition(providerId)
 
   const onSuccess = useCallback(
-    async (result: { provider: string; idToken: string }) => {
+    async (result: { provider: string; idToken: string; refreshToken?: string | null }) => {
       await signInWithIdToken({
         provider: result.provider,
         idToken: result.idToken,
+        providerRefreshToken: result.refreshToken,
       })
     },
     [signInWithIdToken]
@@ -22,12 +23,16 @@ export function useProviderOAuthSignIn(providerId: string) {
   const oauth = useNativeOAuthSignIn({
     provider,
     onSuccess,
+    onError: (error) => {
+      console.error(`${providerId} sign-in failed`, error)
+    },
   })
 
   return {
     label: definition?.label ?? providerId,
-    ready: ready && oauth.ready,
+    ready: providerReady && oauth.ready,
     loading: isLoading,
-    promptAsync: oauth.promptAsync,
+    pending: oauth.pending,
+    signIn: oauth.signIn,
   }
 }

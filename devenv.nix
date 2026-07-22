@@ -148,7 +148,24 @@ in
       extends = [ "backend" ];
       module = {
         processes.native = {
-          exec = "cd apps/native && bun run dev";
+          # Expo inlines EXPO_PUBLIC_* at Metro start. Prefer explicit override;
+          # else use LAN IP so a physical device can reach the host API.
+          exec = ''
+            set -eu
+            if [ -z "''${EXPO_PUBLIC_API_URL:-}" ]; then
+              lan_ip="$(${root}/scripts/lan-ip.sh || true)"
+              host="''${lan_ip:-127.0.0.1}"
+              export EXPO_PUBLIC_API_URL="http://''${host}:8000/api"
+            fi
+            if [ -z "''${EXPO_PUBLIC_PS_URL:-}" ]; then
+              lan_ip="''${lan_ip:-$(${root}/scripts/lan-ip.sh || true)}"
+              host="''${lan_ip:-127.0.0.1}"
+              export EXPO_PUBLIC_PS_URL="http://''${host}:8080"
+            fi
+            echo "native: EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
+            echo "native: EXPO_PUBLIC_PS_URL=$EXPO_PUBLIC_PS_URL"
+            cd ${root}/apps/native && bun run dev
+          '';
           process-compose = {
             working_dir = "${root}/apps/native";
             depends_on.server.condition = "process_healthy";
@@ -203,6 +220,9 @@ in
     echo "  jdbc:    $DATABASE_JDBC_URL"
     echo "  app:     $APP_URL"
     echo "  powersync: $PS_URL"
+    if lan_ip="$("${root}/scripts/lan-ip.sh" 2>/dev/null)"; then
+      echo "  lan:     $lan_ip  # native uses http://$lan_ip:8000/api unless EXPO_PUBLIC_API_URL set"
+    fi
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
       echo "  docker:  ok ($(docker compose version 2>/dev/null | head -n1))"
     else

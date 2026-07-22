@@ -19,8 +19,10 @@ function ProviderSignInButton({ providerId }: { providerId: string }) {
   }
 
   return (
-    <Button onPress={() => void oauth.promptAsync?.()}>
-      <Text>Continue with {oauth.label}</Text>
+    <Button disabled={oauth.pending} onPress={() => void oauth.signIn()}>
+      <Text>
+        {oauth.pending ? "Signing in…" : `Continue with ${oauth.label}`}
+      </Text>
     </Button>
   )
 }
