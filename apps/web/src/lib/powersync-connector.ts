@@ -5,7 +5,6 @@ import { syncBatch } from "@zula/api/endpoints"
 export type PowerSyncConnectorConfig = {
   getAccessToken: () => Promise<string | null>
   powersyncUrl: string
-  syncBatchUrl: string
 }
 
 export function createPowerSyncConnector(

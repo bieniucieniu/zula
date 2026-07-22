@@ -1,17 +1,11 @@
 import {
   authenticate,
   createChallenge,
+  getSession,
   logout as logoutRequest,
   refresh,
-  type AuthTokensResponse,
 } from "@zula/api/endpoints"
-import {
-  applyAuthTokens,
-  configureApiClient,
-  fetchSession,
-  setAccessToken,
-  unwrapTokens,
-} from "@/lib/api-client"
+import type { AuthTokensResponse, SessionResponse } from "@zula/api"
 import { createContext, use, useEffect, useState, type ReactNode } from "react"
 
 const SESSION_KEY = "app.auth.session"
@@ -32,6 +26,13 @@ type AuthContextValue = {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
+
+function unwrapApiData<T>(response: T | { data: T }): T {
+  if (response && typeof response === "object" && "data" in response) {
+    return (response as { data: T }).data
+  }
+  return response as T
+}
 
 function readStoredSession(): AuthSession | null {
   if (typeof window === "undefined") return null
@@ -56,14 +57,20 @@ function writeStoredSession(session: AuthSession | null) {
 }
 
 function toSession(tokens: AuthTokensResponse, email: string): AuthSession {
-  return applyAuthTokens(tokens, email)
+  return {
+    email,
+    expiresIn: tokens.expiresIn,
+    refreshToken: tokens.refreshToken ?? undefined,
+  }
 }
 
-function adoptSession(session: AuthSession) {
-  writeStoredSession(session)
+async function loadRemoteSession(): Promise<SessionResponse | null> {
+  try {
+    return unwrapApiData(await getSession())
+  } catch {
+    return null
+  }
 }
-
-configureApiClient()
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null)
@@ -74,13 +81,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function bootstrap() {
       const stored = readStoredSession()
-      if (stored) {
-        adoptSession(stored)
-        if (!cancelled) setSession(stored)
-      }
+      if (stored && !cancelled) setSession(stored)
 
       try {
-        const remote = await fetchSession()
+        const remote = await loadRemoteSession()
         if (cancelled) return
 
         if (remote) {
@@ -89,37 +93,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             expiresIn: remote.expiresIn,
             refreshToken: stored?.refreshToken,
           }
-          adoptSession(next)
+          writeStoredSession(next)
           setSession(next)
           return
         }
 
         if (stored?.refreshToken) {
-          const refreshed = unwrapTokens(await refresh({ refreshToken: stored.refreshToken }))
+          const refreshed = unwrapApiData(await refresh({ refreshToken: stored.refreshToken }))
           const next = toSession(refreshed, stored.email)
-          adoptSession(next)
+          writeStoredSession(next)
           setSession(next)
           return
         }
 
-        setAccessToken(null)
         writeStoredSession(null)
         setSession(null)
       } catch {
         if (stored?.refreshToken) {
           try {
-            const refreshed = unwrapTokens(await refresh({ refreshToken: stored.refreshToken }))
+            const refreshed = unwrapApiData(await refresh({ refreshToken: stored.refreshToken }))
             const next = toSession(refreshed, stored.email)
-            adoptSession(next)
+            writeStoredSession(next)
             if (!cancelled) setSession(next)
             return
           } catch {
-            // fall through to clear session
+            // fall through
           }
         }
 
         if (!cancelled) {
-          setAccessToken(null)
           writeStoredSession(null)
           setSession(null)
         }
@@ -168,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Email and verification code required")
     }
 
-    const tokens = unwrapTokens(
+    const tokens = unwrapApiData(
       await authenticate({
         provider: "email_otp",
         challengeId,
@@ -177,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     )
 
     const next = toSession(tokens, trimmed)
-    adoptSession(next)
+    writeStoredSession(next)
     setSession(next)
   }
 
@@ -191,7 +193,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Clear local session even if server logout fails.
     }
-    setAccessToken(null)
     writeStoredSession(null)
     setSession(null)
   }
@@ -210,13 +211,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext>
   )
-}
-
-function unwrapApiData<T>(response: T | { data: T }): T {
-  if (response && typeof response === "object" && "data" in response) {
-    return (response as { data: T }).data
-  }
-  return response as T
 }
 
 export function useAuth() {
