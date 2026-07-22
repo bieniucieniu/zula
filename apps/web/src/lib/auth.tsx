@@ -6,7 +6,7 @@ import {
   useGetSession,
 } from "@zula/api/endpoints"
 import type { SessionResponse } from "@zula/api"
-import { createContext, use, useEffect, type ReactNode } from "react"
+import { createContext, use, type ReactNode } from "react"
 
 export type AuthSession = {
   email: string
@@ -28,7 +28,6 @@ function toSession(remote: SessionResponse): AuthSession {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const queryClient = useQueryClient()
   const sessionQuery = useGetSession({
     query: {
       retry: false,
@@ -43,21 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   })
 
-  useEffect(() => {
-    if (sessionQuery.isError) {
-      queryClient.setQueryData(getGetSessionQueryKey(), null)
-    }
-  }, [sessionQuery.isError, queryClient])
-
-  const remote = sessionQuery.data?.data
-  const session = remote && !sessionQuery.isError ? toSession(remote) : null
-  const ready = !sessionQuery.isPending && !sessionQuery.isFetching
-
-  // First load: ready once settled. Allow refetch after login while keeping prior session.
-  const settled = !sessionQuery.isLoading
+  const remote = sessionQuery.isSuccess ? sessionQuery.data.data : null
+  const session = remote ? toSession(remote) : null
 
   return (
-    <AuthContext value={{ session, ready: settled }}>{children}</AuthContext>
+    <AuthContext value={{ session, ready: !sessionQuery.isLoading }}>{children}</AuthContext>
   )
 }
 
@@ -69,6 +58,5 @@ export function useAuth() {
 
 export function useInvalidateSession() {
   const queryClient = useQueryClient()
-  return () =>
-    queryClient.invalidateQueries({ queryKey: getGetSessionQueryKey() })
+  return () => queryClient.invalidateQueries({ queryKey: getGetSessionQueryKey() })
 }

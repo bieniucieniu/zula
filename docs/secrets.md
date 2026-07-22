@@ -32,6 +32,17 @@ Cloudflare tunnel (manual): both hosts → Traefik `:80`.
 
 ## Local development
 
+Web (Vite on `:3000`, proxies `/api` → Ktor `:8000`):
+
+```properties
+APP_URL=http://localhost:3000
+API_URL=http://localhost:8000/api/v1
+```
+
+`APP_URL` is the **browser-facing** origin. OAuth `redirect_uri` and post-login redirects
+use it so Google/Apple return to Vite (which proxies `/api/auth/callback/*` to Ktor).
+Do not set `APP_URL` to `:8000` when developing the web app through the Vite proxy.
+
 ```properties
 # packages/client-config/dev.properties (Android emulator default)
 API_URL=http://10.0.2.2:8000/api/v1
