@@ -8,4 +8,19 @@
 /**
  * @nullable
  */
-export type ProblemDetailsErrors = {[key: string]: ('required' | 'too_short' | 'too_long' | 'invalid' | 'format' | 'mismatch' | 'taken' | 'not_found' | 'expired' | 'forbidden' | 'unauthorized' | 'conflict')[]} | null;
+export type ProblemDetailsErrors = {
+  [key: string]: (
+    | "required"
+    | "too_short"
+    | "too_long"
+    | "invalid"
+    | "format"
+    | "mismatch"
+    | "taken"
+    | "not_found"
+    | "expired"
+    | "forbidden"
+    | "unauthorized"
+    | "conflict"
+  )[]
+} | null

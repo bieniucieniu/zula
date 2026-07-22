@@ -98,8 +98,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                 <form.Field
                   name="email"
                   validators={{
-                    onSubmit: ({ value }) =>
-                      !value.trim() ? "Email required" : undefined,
+                    onSubmit: ({ value }) => (!value.trim() ? "Email required" : undefined),
                   }}
                 >
                   {(field) => (
@@ -155,9 +154,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
                           </InputOTP>
                         )}
                       </form.Subscribe>
-                      {devCode ? (
-                        <FieldDescription>Dev code: {devCode}</FieldDescription>
-                      ) : null}
+                      {devCode ? <FieldDescription>Dev code: {devCode}</FieldDescription> : null}
                       {field.state.meta.errors.length > 0 ? (
                         <p className="text-xs text-destructive" role="alert">
                           {field.state.meta.errors.join(", ")}
@@ -175,7 +172,9 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               ) : null}
 
               <Field>
-                <form.Subscribe selector={(state) => [state.isSubmitting, state.values.code] as const}>
+                <form.Subscribe
+                  selector={(state) => [state.isSubmitting, state.values.code] as const}
+                >
                   {([isSubmitting, code]) => (
                     <>
                       {step === "email" ? (

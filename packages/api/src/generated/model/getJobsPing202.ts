@@ -5,4 +5,4 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetJobsPing202 = {[key: string]: string};
+export type GetJobsPing202 = { [key: string]: string }

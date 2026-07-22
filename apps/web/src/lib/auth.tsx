@@ -26,11 +26,7 @@ type AuthContextValue = {
   session: AuthSession | null
   ready: boolean
   requestEmailOtp: (email: string) => Promise<{ challengeId: string; devCode?: string }>
-  verifyEmailOtp: (input: {
-    email: string
-    challengeId: string
-    code: string
-  }) => Promise<void>
+  verifyEmailOtp: (input: { email: string; challengeId: string; code: string }) => Promise<void>
   loginWithGoogle: () => void
   logout: () => Promise<void>
 }
@@ -99,9 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (stored?.refreshToken) {
-          const refreshed = unwrapTokens(
-            await refresh({ refreshToken: stored.refreshToken })
-          )
+          const refreshed = unwrapTokens(await refresh({ refreshToken: stored.refreshToken }))
           const next = toSession(refreshed, stored.email)
           adoptSession(next)
           setSession(next)
@@ -114,9 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch {
         if (stored?.refreshToken) {
           try {
-            const refreshed = unwrapTokens(
-              await refresh({ refreshToken: stored.refreshToken })
-            )
+            const refreshed = unwrapTokens(await refresh({ refreshToken: stored.refreshToken }))
             const next = toSession(refreshed, stored.email)
             adoptSession(next)
             if (!cancelled) setSession(next)

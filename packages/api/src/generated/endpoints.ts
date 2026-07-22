@@ -4,7 +4,7 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
-
+import { useMutation, useQuery } from "@tanstack/react-query"
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -19,25 +19,28 @@ import type {
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query"
-import { useMutation, useQuery } from "@tanstack/react-query"
-import { customInstance } from "../mutator"
+
 import type {
-  AuthenticateRequest,
   AuthTokensResponse,
-  CallbackGoogleParams,
+  AuthenticateRequest,
   ChallengeRequest,
   ChallengeResponse,
   GetHealth200,
   GetHealth503,
   GetJobsPing202,
   GetJobsPing503,
+  GoogleCallbackParams,
   JwksResponse,
   LinkedProvidersResponse,
   OAuthProvidersResponse,
+  PowerSyncTokenResponse,
   RefreshRequest,
+  SessionResponse,
   SyncBatchRequest,
   SyncBatchResponse,
 } from "./model"
+
+import { customInstance } from "../mutator"
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
@@ -304,7 +307,7 @@ export type getWellKnownJwksResponseSuccess = getWellKnownJwksResponse200 & {
 export type getWellKnownJwksResponse = getWellKnownJwksResponseSuccess
 
 export const getGetWellKnownJwksUrl = () => {
-  return `/api/.well-known/jwks.json`
+  return `/.well-known/jwks.json`
 }
 
 export const getWellKnownJwks = async (
@@ -317,7 +320,7 @@ export const getWellKnownJwks = async (
 }
 
 export const getGetWellKnownJwksQueryKey = () => {
-  return [`/api/.well-known/jwks.json`] as const
+  return [`/.well-known/jwks.json`] as const
 }
 
 export const getGetWellKnownJwksQueryOptions = <
@@ -422,7 +425,7 @@ export type getJwksResponseSuccess = getJwksResponse200 & {
 export type getJwksResponse = getJwksResponseSuccess
 
 export const getGetJwksUrl = () => {
-  return `/api/auth/jwks`
+  return `/auth/jwks`
 }
 
 export const getJwks = async (options?: RequestInit): Promise<getJwksResponse> => {
@@ -433,7 +436,7 @@ export const getJwks = async (options?: RequestInit): Promise<getJwksResponse> =
 }
 
 export const getGetJwksQueryKey = () => {
-  return [`/api/auth/jwks`] as const
+  return [`/auth/jwks`] as const
 }
 
 export const getGetJwksQueryOptions = <
@@ -506,6 +509,122 @@ export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError =
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetJwksQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type listProvidersResponse200 = {
+  data: OAuthProvidersResponse
+  status: 200
+}
+
+export type listProvidersResponseSuccess = listProvidersResponse200 & {
+  headers: Headers
+}
+
+export type listProvidersResponse = listProvidersResponseSuccess
+
+export const getListProvidersUrl = () => {
+  return `/api/auth/providers`
+}
+
+export const listProviders = async (options?: RequestInit): Promise<listProvidersResponse> => {
+  return customInstance<listProvidersResponse>(getListProvidersUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListProvidersQueryKey = () => {
+  return [`/api/auth/providers`] as const
+}
+
+export const getListProvidersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listProviders>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListProvidersQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProviders>>> = ({ signal }) =>
+    listProviders({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listProviders>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof listProviders>>>
+export type ListProvidersQueryError = unknown
+
+export function useListProviders<
+  TData = Awaited<ReturnType<typeof listProviders>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProviders>>,
+          TError,
+          Awaited<ReturnType<typeof listProviders>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProviders<
+  TData = Awaited<ReturnType<typeof listProviders>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listProviders>>,
+          TError,
+          Awaited<ReturnType<typeof listProviders>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListProviders<
+  TData = Awaited<ReturnType<typeof listProviders>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListProviders<
+  TData = Awaited<ReturnType<typeof listProviders>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListProvidersQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -766,67 +885,64 @@ export const useCreateChallenge = <TError = unknown, TContext = unknown>(
   return useMutation(getCreateChallengeMutationOptions(options), queryClient)
 }
 
-export type listProvidersResponse200 = {
-  data: OAuthProvidersResponse
+export type getSessionResponse200 = {
+  data: SessionResponse
   status: 200
 }
 
-export type listProvidersResponseSuccess = listProvidersResponse200 & {
+export type getSessionResponseSuccess = getSessionResponse200 & {
   headers: Headers
 }
 
-export type listProvidersResponse = listProvidersResponseSuccess
+export type getSessionResponse = getSessionResponseSuccess
 
-export const getListProvidersUrl = () => {
-  return `/api/auth/providers`
+export const getGetSessionUrl = () => {
+  return `/api/auth/session`
 }
 
-export const listProviders = async (options?: RequestInit): Promise<listProvidersResponse> => {
-  return customInstance<listProvidersResponse>(getListProvidersUrl(), {
+export const getSession = async (options?: RequestInit): Promise<getSessionResponse> => {
+  return customInstance<getSessionResponse>(getGetSessionUrl(), {
     ...options,
     method: "GET",
   })
 }
 
-export const getListProvidersQueryKey = () => {
-  return [`/api/auth/providers`] as const
+export const getGetSessionQueryKey = () => {
+  return [`/api/auth/session`] as const
 }
 
-export const getListProvidersQueryOptions = <
-  TData = Awaited<ReturnType<typeof listProviders>>,
+export const getGetSessionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSession>>,
   TError = unknown,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = queryOptions?.queryKey ?? getListProvidersQueryKey()
+  const queryKey = queryOptions?.queryKey ?? getGetSessionQueryKey()
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof listProviders>>> = ({ signal }) =>
-    listProviders({ signal, ...requestOptions })
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSession>>> = ({ signal }) =>
+    getSession({ signal, ...requestOptions })
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof listProviders>>,
+    Awaited<ReturnType<typeof getSession>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type ListProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof listProviders>>>
-export type ListProvidersQueryError = unknown
+export type GetSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getSession>>>
+export type GetSessionQueryError = unknown
 
-export function useListProviders<
-  TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
->(
+export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = unknown>(
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listProviders>>,
+          Awaited<ReturnType<typeof getSession>>,
           TError,
-          Awaited<ReturnType<typeof listProviders>>
+          Awaited<ReturnType<typeof getSession>>
         >,
         "initialData"
       >
@@ -834,17 +950,14 @@ export function useListProviders<
   },
   queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListProviders<
-  TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
->(
+export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof listProviders>>,
+          Awaited<ReturnType<typeof getSession>>,
           TError,
-          Awaited<ReturnType<typeof listProviders>>
+          Awaited<ReturnType<typeof getSession>>
         >,
         "initialData"
       >
@@ -852,28 +965,142 @@ export function useListProviders<
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useListProviders<
-  TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
->(
+export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useListProviders<
-  TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
->(
+export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getListProvidersQueryOptions(options)
+  const queryOptions = getGetSessionQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getPowerSyncTokenResponse200 = {
+  data: PowerSyncTokenResponse
+  status: 200
+}
+
+export type getPowerSyncTokenResponseSuccess = getPowerSyncTokenResponse200 & {
+  headers: Headers
+}
+
+export type getPowerSyncTokenResponse = getPowerSyncTokenResponseSuccess
+
+export const getGetPowerSyncTokenUrl = () => {
+  return `/api/auth/powersync/token`
+}
+
+export const getPowerSyncToken = async (
+  options?: RequestInit
+): Promise<getPowerSyncTokenResponse> => {
+  return customInstance<getPowerSyncTokenResponse>(getGetPowerSyncTokenUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetPowerSyncTokenQueryKey = () => {
+  return [`/api/auth/powersync/token`] as const
+}
+
+export const getGetPowerSyncTokenQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPowerSyncToken>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPowerSyncToken>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetPowerSyncTokenQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPowerSyncToken>>> = ({ signal }) =>
+    getPowerSyncToken({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPowerSyncToken>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPowerSyncTokenQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPowerSyncToken>>
+>
+export type GetPowerSyncTokenQueryError = unknown
+
+export function useGetPowerSyncToken<
+  TData = Awaited<ReturnType<typeof getPowerSyncToken>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPowerSyncToken>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPowerSyncToken>>,
+          TError,
+          Awaited<ReturnType<typeof getPowerSyncToken>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPowerSyncToken<
+  TData = Awaited<ReturnType<typeof getPowerSyncToken>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPowerSyncToken>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPowerSyncToken>>,
+          TError,
+          Awaited<ReturnType<typeof getPowerSyncToken>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPowerSyncToken<
+  TData = Awaited<ReturnType<typeof getPowerSyncToken>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPowerSyncToken>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetPowerSyncToken<
+  TData = Awaited<ReturnType<typeof getPowerSyncToken>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPowerSyncToken>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPowerSyncTokenQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -1090,63 +1317,63 @@ export function useListLinkedProviders<
   return withQueryKey(query, queryOptions.queryKey)
 }
 
-export type loginGoogleResponse302 = {
-  data: void
-  status: 302
+export type googleLoginResponseDefault = {
+  data: unknown
+  status: number
 }
-export type loginGoogleResponseError = loginGoogleResponse302 & {
+export type googleLoginResponseError = googleLoginResponseDefault & {
   headers: Headers
 }
 
-export type loginGoogleResponse = loginGoogleResponseError
+export type googleLoginResponse = googleLoginResponseError
 
-export const getLoginGoogleUrl = () => {
+export const getGoogleLoginUrl = () => {
   return `/api/auth/login/google`
 }
 
-export const loginGoogle = async (options?: RequestInit): Promise<loginGoogleResponse> => {
-  return customInstance<loginGoogleResponse>(getLoginGoogleUrl(), {
+export const googleLogin = async (options?: RequestInit): Promise<googleLoginResponse> => {
+  return customInstance<googleLoginResponse>(getGoogleLoginUrl(), {
     ...options,
     method: "GET",
   })
 }
 
-export const getLoginGoogleQueryKey = () => {
+export const getGoogleLoginQueryKey = () => {
   return [`/api/auth/login/google`] as const
 }
 
-export const getLoginGoogleQueryOptions = <
-  TData = Awaited<ReturnType<typeof loginGoogle>>,
-  TError = void,
+export const getGoogleLoginQueryOptions = <
+  TData = Awaited<ReturnType<typeof googleLogin>>,
+  TError = unknown,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof loginGoogle>>, TError, TData>>
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleLogin>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = queryOptions?.queryKey ?? getLoginGoogleQueryKey()
+  const queryKey = queryOptions?.queryKey ?? getGoogleLoginQueryKey()
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof loginGoogle>>> = ({ signal }) =>
-    loginGoogle({ signal, ...requestOptions })
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof googleLogin>>> = ({ signal }) =>
+    googleLogin({ signal, ...requestOptions })
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof loginGoogle>>,
+    Awaited<ReturnType<typeof googleLogin>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type LoginGoogleQueryResult = NonNullable<Awaited<ReturnType<typeof loginGoogle>>>
-export type LoginGoogleQueryError = void
+export type GoogleLoginQueryResult = NonNullable<Awaited<ReturnType<typeof googleLogin>>>
+export type GoogleLoginQueryError = unknown
 
-export function useLoginGoogle<TData = Awaited<ReturnType<typeof loginGoogle>>, TError = void>(
+export function useGoogleLogin<TData = Awaited<ReturnType<typeof googleLogin>>, TError = unknown>(
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof loginGoogle>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleLogin>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof loginGoogle>>,
+          Awaited<ReturnType<typeof googleLogin>>,
           TError,
-          Awaited<ReturnType<typeof loginGoogle>>
+          Awaited<ReturnType<typeof googleLogin>>
         >,
         "initialData"
       >
@@ -1154,14 +1381,14 @@ export function useLoginGoogle<TData = Awaited<ReturnType<typeof loginGoogle>>, 
   },
   queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLoginGoogle<TData = Awaited<ReturnType<typeof loginGoogle>>, TError = void>(
+export function useGoogleLogin<TData = Awaited<ReturnType<typeof googleLogin>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof loginGoogle>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleLogin>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof loginGoogle>>,
+          Awaited<ReturnType<typeof googleLogin>>,
           TError,
-          Awaited<ReturnType<typeof loginGoogle>>
+          Awaited<ReturnType<typeof googleLogin>>
         >,
         "initialData"
       >
@@ -1169,22 +1396,22 @@ export function useLoginGoogle<TData = Awaited<ReturnType<typeof loginGoogle>>, 
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useLoginGoogle<TData = Awaited<ReturnType<typeof loginGoogle>>, TError = void>(
+export function useGoogleLogin<TData = Awaited<ReturnType<typeof googleLogin>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof loginGoogle>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleLogin>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useLoginGoogle<TData = Awaited<ReturnType<typeof loginGoogle>>, TError = void>(
+export function useGoogleLogin<TData = Awaited<ReturnType<typeof googleLogin>>, TError = unknown>(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof loginGoogle>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleLogin>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getLoginGoogleQueryOptions(options)
+  const queryOptions = getGoogleLoginQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -1193,17 +1420,17 @@ export function useLoginGoogle<TData = Awaited<ReturnType<typeof loginGoogle>>, 
   return withQueryKey(query, queryOptions.queryKey)
 }
 
-export type callbackGoogleResponse302 = {
+export type googleCallbackResponse302 = {
   data: void
   status: 302
 }
-export type callbackGoogleResponseError = callbackGoogleResponse302 & {
+export type googleCallbackResponseError = googleCallbackResponse302 & {
   headers: Headers
 }
 
-export type callbackGoogleResponse = callbackGoogleResponseError
+export type googleCallbackResponse = googleCallbackResponseError
 
-export const getCallbackGoogleUrl = (params?: CallbackGoogleParams) => {
+export const getGoogleCallbackUrl = (params?: GoogleCallbackParams) => {
   const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1219,59 +1446,59 @@ export const getCallbackGoogleUrl = (params?: CallbackGoogleParams) => {
     : `/api/auth/callback/google`
 }
 
-export const callbackGoogle = async (
-  params?: CallbackGoogleParams,
+export const googleCallback = async (
+  params?: GoogleCallbackParams,
   options?: RequestInit
-): Promise<callbackGoogleResponse> => {
-  return customInstance<callbackGoogleResponse>(getCallbackGoogleUrl(params), {
+): Promise<googleCallbackResponse> => {
+  return customInstance<googleCallbackResponse>(getGoogleCallbackUrl(params), {
     ...options,
     method: "GET",
   })
 }
 
-export const getCallbackGoogleQueryKey = (params?: CallbackGoogleParams) => {
+export const getGoogleCallbackQueryKey = (params?: GoogleCallbackParams) => {
   return [`/api/auth/callback/google`, ...(params ? [params] : [])] as const
 }
 
-export const getCallbackGoogleQueryOptions = <
-  TData = Awaited<ReturnType<typeof callbackGoogle>>,
+export const getGoogleCallbackQueryOptions = <
+  TData = Awaited<ReturnType<typeof googleCallback>>,
   TError = void,
 >(
-  params?: CallbackGoogleParams,
+  params?: GoogleCallbackParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof callbackGoogle>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleCallback>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = queryOptions?.queryKey ?? getCallbackGoogleQueryKey(params)
+  const queryKey = queryOptions?.queryKey ?? getGoogleCallbackQueryKey(params)
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof callbackGoogle>>> = ({ signal }) =>
-    callbackGoogle(params, { signal, ...requestOptions })
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof googleCallback>>> = ({ signal }) =>
+    googleCallback(params, { signal, ...requestOptions })
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof callbackGoogle>>,
+    Awaited<ReturnType<typeof googleCallback>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
-export type CallbackGoogleQueryResult = NonNullable<Awaited<ReturnType<typeof callbackGoogle>>>
-export type CallbackGoogleQueryError = void
+export type GoogleCallbackQueryResult = NonNullable<Awaited<ReturnType<typeof googleCallback>>>
+export type GoogleCallbackQueryError = void
 
-export function useCallbackGoogle<
-  TData = Awaited<ReturnType<typeof callbackGoogle>>,
+export function useGoogleCallback<
+  TData = Awaited<ReturnType<typeof googleCallback>>,
   TError = void,
 >(
-  params: undefined | CallbackGoogleParams,
+  params: undefined | GoogleCallbackParams,
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof callbackGoogle>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleCallback>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof callbackGoogle>>,
+          Awaited<ReturnType<typeof googleCallback>>,
           TError,
-          Awaited<ReturnType<typeof callbackGoogle>>
+          Awaited<ReturnType<typeof googleCallback>>
         >,
         "initialData"
       >
@@ -1279,18 +1506,18 @@ export function useCallbackGoogle<
   },
   queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCallbackGoogle<
-  TData = Awaited<ReturnType<typeof callbackGoogle>>,
+export function useGoogleCallback<
+  TData = Awaited<ReturnType<typeof googleCallback>>,
   TError = void,
 >(
-  params?: CallbackGoogleParams,
+  params?: GoogleCallbackParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof callbackGoogle>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleCallback>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof callbackGoogle>>,
+          Awaited<ReturnType<typeof googleCallback>>,
           TError,
-          Awaited<ReturnType<typeof callbackGoogle>>
+          Awaited<ReturnType<typeof googleCallback>>
         >,
         "initialData"
       >
@@ -1298,30 +1525,30 @@ export function useCallbackGoogle<
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useCallbackGoogle<
-  TData = Awaited<ReturnType<typeof callbackGoogle>>,
+export function useGoogleCallback<
+  TData = Awaited<ReturnType<typeof googleCallback>>,
   TError = void,
 >(
-  params?: CallbackGoogleParams,
+  params?: GoogleCallbackParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof callbackGoogle>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleCallback>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useCallbackGoogle<
-  TData = Awaited<ReturnType<typeof callbackGoogle>>,
+export function useGoogleCallback<
+  TData = Awaited<ReturnType<typeof googleCallback>>,
   TError = void,
 >(
-  params?: CallbackGoogleParams,
+  params?: GoogleCallbackParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof callbackGoogle>>, TError, TData>>
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleCallback>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getCallbackGoogleQueryOptions(params, options)
+  const queryOptions = getGoogleCallbackQueryOptions(params, options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>

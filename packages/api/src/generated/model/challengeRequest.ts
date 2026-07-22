@@ -6,7 +6,7 @@
  */
 
 export interface ChallengeRequest {
-  channel: string;
-  target: string;
-  purpose?: string;
+  channel: string
+  target: string
+  purpose?: string
 }

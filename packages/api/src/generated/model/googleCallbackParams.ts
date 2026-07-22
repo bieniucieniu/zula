@@ -5,6 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface JsonElement {
-  [key: string]: unknown
+export type GoogleCallbackParams = {
+  id_token?: string
+  refresh_token?: string
 }
