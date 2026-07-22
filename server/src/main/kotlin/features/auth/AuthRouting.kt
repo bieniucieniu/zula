@@ -140,9 +140,6 @@ fun Route.configureAuthRouting() {
     if (config.oauth.google.isConfigured) {
         authenticate(OAuthProviderNames.GOOGLE) {
             get("/auth/login/google") {
-                call.request.queryParameters["return_to"]?.let { returnTo ->
-                    if (isSafeReturnTo(returnTo)) call.setReturnToCookie(returnTo)
-                }
                 call.respondRedirect("/api/auth/callback/google")
             }.describe {
                 operationId = "loginGoogle"
@@ -163,9 +160,7 @@ fun Route.configureAuthRouting() {
                     )
                     call.setAccessCookies(tokens)
                 }
-                val returnTo = call.readReturnToCookie()?.takeIf(::isSafeReturnTo) ?: "/"
-                call.clearReturnToCookie()
-                call.respondRedirect(returnTo)
+                call.respondRedirect("/")
             }.describe {
                 operationId = "callbackGoogle"
                 tag("auth")
@@ -176,9 +171,6 @@ fun Route.configureAuthRouting() {
     if (config.oauth.apple.isConfigured) {
         authenticate(OAuthProviderNames.APPLE) {
             get("/auth/login/apple") {
-                call.request.queryParameters["return_to"]?.let { returnTo ->
-                    if (isSafeReturnTo(returnTo)) call.setReturnToCookie(returnTo)
-                }
                 call.respondRedirect("/api/auth/callback/apple")
             }.describe {
                 operationId = "loginApple"
@@ -198,9 +190,7 @@ fun Route.configureAuthRouting() {
                     )
                     call.setAccessCookies(tokens)
                 }
-                val returnTo = call.readReturnToCookie()?.takeIf(::isSafeReturnTo) ?: "/"
-                call.clearReturnToCookie()
-                call.respondRedirect(returnTo)
+                call.respondRedirect("/")
             }.describe {
                 operationId = "callbackApple"
                 tag("auth")
@@ -208,9 +198,6 @@ fun Route.configureAuthRouting() {
         }
     }
 }
-
-private fun isSafeReturnTo(value: String): Boolean =
-    value.startsWith("/") && !value.startsWith("//")
 
 private fun ApplicationCall.useCookieDelivery(): Boolean =
     request.queryParameters["delivery"] == "cookie" ||

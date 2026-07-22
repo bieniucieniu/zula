@@ -88,15 +88,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const remote = await fetchSession()
-        if (cancelled || !remote) return
-        const next: AuthSession = {
-          email: remote.email ?? stored?.email ?? "",
-          accessToken: remote.accessToken,
-          expiresIn: remote.expiresIn,
-          refreshToken: stored?.refreshToken,
+        if (cancelled) return
+
+        if (remote) {
+          const next: AuthSession = {
+            email: remote.email ?? stored?.email ?? "",
+            accessToken: remote.accessToken,
+            expiresIn: remote.expiresIn,
+            refreshToken: stored?.refreshToken,
+          }
+          adoptSession(next)
+          setSession(next)
+          return
         }
-        adoptSession(next)
-        setSession(next)
+
+        if (stored?.refreshToken) {
+          const refreshed = unwrapTokens(
+            await refresh({ refreshToken: stored.refreshToken })
+          )
+          const next = toSession(refreshed, stored.email)
+          adoptSession(next)
+          setSession(next)
+          return
+        }
+
+        setAccessToken(null)
+        writeStoredSession(null)
+        setSession(null)
       } catch {
         if (stored?.refreshToken) {
           try {
@@ -106,13 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const next = toSession(refreshed, stored.email)
             adoptSession(next)
             if (!cancelled) setSession(next)
+            return
           } catch {
-            if (!cancelled) {
-              setAccessToken(null)
-              writeStoredSession(null)
-              setSession(null)
-            }
+            // fall through to clear session
           }
+        }
+
+        if (!cancelled) {
+          setAccessToken(null)
+          writeStoredSession(null)
+          setSession(null)
         }
       } finally {
         if (!cancelled) setReady(true)
@@ -173,9 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function loginWithGoogle() {
-    const returnTo = `${window.location.pathname}${window.location.search}`
-    const params = new URLSearchParams({ return_to: returnTo || "/" })
-    window.location.assign(`/api/auth/login/google?${params}`)
+    window.location.assign("/api/auth/login/google")
   }
 
   async function logout() {
