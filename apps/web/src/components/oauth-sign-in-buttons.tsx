@@ -47,7 +47,7 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
       <div
         ref={oauth.buttonContainerRef}
         className={cn(
-          "[&>div]:w-full [&_iframe]:!w-full",
+          "w-full min-h-10",
           (disabled || oauth.pending) && "pointer-events-none opacity-50"
         )}
         data-provider={provider.id}
