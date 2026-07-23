@@ -132,11 +132,6 @@ UPDATE user_profiles SET
     updated_at = ?
 WHERE user_id = ?;
 
-insertAuthChallenge:
-INSERT INTO auth_challenges (
-    id, channel, target, code_hash, purpose, expires_at
-) VALUES (?, ?, ?, ?, ?, ?);
-
 insertAuthChallengeAuto:
 INSERT INTO auth_challenges (
     channel, target, code_hash, purpose, expires_at
