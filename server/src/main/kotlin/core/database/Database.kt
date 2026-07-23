@@ -19,8 +19,10 @@ fun Application.configureDatabase() {
         return
     }
 
+    val driver: SqlDriver = get()
+    requirePostgres18OrNewer(driver)
+
     if (config.autoMigrate) {
-        val driver: SqlDriver = get()
         migrateSchema(driver)
         log.info("Database schema at version ${Database.Schema.version}")
     } else {
@@ -38,7 +40,7 @@ fun Application.configureDatabase() {
 }
 
 internal fun migrateSchema(driver: SqlDriver) {
-    ensureUuidV7Function(driver)
+    migrateLegacyUuidDefaults(driver)
     ensureSchemaVersionTable(driver)
     val target = Database.Schema.version
     val current = readSchemaVersion(driver)
@@ -62,30 +64,26 @@ internal fun migrateSchema(driver: SqlDriver) {
     }
 }
 
-private fun ensureUuidV7Function(driver: SqlDriver) {
+private fun migrateLegacyUuidDefaults(driver: SqlDriver) {
+    val uuidPrimaryKeyTables = listOf(
+        "users",
+        "user_identities",
+        "user_sessions",
+        "auth_challenges",
+    )
+
+    for (table in uuidPrimaryKeyTables) {
+        driver.execute(
+            identifier = null,
+            sql = "ALTER TABLE IF EXISTS $table ALTER COLUMN id SET DEFAULT uuidv7()",
+            parameters = 0,
+        )
+    }
+
     driver.execute(
-        null,
-        // language=PostgreSQL
-        """
-        CREATE OR REPLACE FUNCTION generate_uuid_v7()
-        RETURNS uuid
-        LANGUAGE plpgsql
-        AS $$
-        DECLARE
-          unix_ts_ms BIGINT;
-          uuid_bytes BYTEA;
-        BEGIN
-          unix_ts_ms := (EXTRACT(EPOCH FROM clock_timestamp()) * 1000)::BIGINT;
-          uuid_bytes :=
-            substring(int8send(unix_ts_ms) FROM 3 FOR 6)
-            || substring(uuid_send(gen_random_uuid()) FROM 7 FOR 10);
-          uuid_bytes := set_byte(uuid_bytes, 6, (get_byte(uuid_bytes, 6) & 15) | 112);
-          uuid_bytes := set_byte(uuid_bytes, 8, (get_byte(uuid_bytes, 8) & 63) | 128);
-          RETURN encode(uuid_bytes, 'hex')::uuid;
-        END;
-        $$
-        """.trimIndent(),
-        0,
+        identifier = null,
+        sql = "DROP FUNCTION IF EXISTS generate_uuid_v7()",
+        parameters = 0,
     )
 }
 
