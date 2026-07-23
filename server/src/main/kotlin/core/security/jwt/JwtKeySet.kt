@@ -53,9 +53,8 @@ data class JwtKeySet(
     }
 
     companion object {
-        private val json = Json { ignoreUnknownKeys = true }
 
-        fun fromJson(jsonString: String): JwtKeySet {
+        fun fromJson(jsonString: String, json: Json): JwtKeySet {
             val entries: List<JwtKeyEntryJson> = json.decodeFromString(jsonString)
             return fromEntries(entries)
         }

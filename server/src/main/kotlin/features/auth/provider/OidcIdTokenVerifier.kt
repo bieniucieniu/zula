@@ -21,8 +21,8 @@ class OidcIdTokenVerifier(
     val jwksUrl: String,
     val issuers: List<String>,
     val audiences: List<String>,
+    val json: Json
 ) {
-    private val json = Json { ignoreUnknownKeys = true }
     private val keyCache = ConcurrentHashMap<String, Algorithm>()
     private var keysLoadedAt = 0L
 

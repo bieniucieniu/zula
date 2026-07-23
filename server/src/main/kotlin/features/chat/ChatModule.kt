@@ -1,9 +1,10 @@
 package com.zula.features.chat
 
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val chatModule = module {
-    single { ChatService() }
-    single { ChatPublisher() }
-    single { ChatConsumer(get()) }
+    singleOf(::ChatService)
+    singleOf(::ChatPublisher)
+    singleOf(::ChatConsumer)
 }

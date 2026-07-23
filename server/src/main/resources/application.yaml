@@ -52,10 +52,10 @@ ktor:
   development: true
   application:
     modules:
+      - com.zula.app.KoinKt.configureKoin
       - com.zula.core.http.HttpKt.configureHttp
       - com.zula.core.http.SerializationKt.configureSerialization
       - com.zula.core.openapi.OpenApiKt.configureOpenApi
-      - com.zula.app.KoinKt.configureKoin
       - com.zula.core.database.DatabaseKt.configureDatabase
       - com.zula.core.health.HealthKt.configureHealth
       - com.zula.core.jobrunr.JobRunrKt.configureJobRunr

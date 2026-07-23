@@ -1,9 +1,10 @@
 package com.zula.features.media
 
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val mediaModule = module {
-    single { MediaService() }
-    single { MediaPublisher() }
-    single { MediaConsumer(get()) }
+    singleOf(::MediaService)
+    singleOf(::MediaPublisher)
+    singleOf(::MediaConsumer)
 }

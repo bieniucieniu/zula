@@ -15,6 +15,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import org.koin.ktor.ext.get
 import org.slf4j.LoggerFactory
@@ -44,10 +45,7 @@ fun securityModule(config: SecurityConfig): Module = module {
         keysManager.resolveKeySet()
     }
 
-    single {
-        val keySet: JwtKeySet = get()
-        JwkSetProvider(keySet)
-    }
+    singleOf(::JwkSetProvider)
 
     single {
         val keySet: JwtKeySet = get()

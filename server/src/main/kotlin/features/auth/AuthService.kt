@@ -2,7 +2,7 @@ package com.zula.features.auth
 
 import com.zula.core.http.badRequest
 import com.zula.core.http.unauthorized
-import com.zula.core.security.JwtConfig
+import com.zula.core.security.SecurityConfig
 import com.zula.core.security.jwt.SessionJwtIssuer
 import com.zula.features.auth.crypto.RefreshTokenGenerator
 import com.zula.features.auth.domain.*
@@ -17,13 +17,13 @@ import java.time.Instant
 import kotlin.uuid.Uuid
 
 class AuthService(
-    private val repository: AuthRepository,
-    private val providers: AuthProviders,
-    private val jwtIssuer: SessionJwtIssuer,
-    private val jwtConfig: JwtConfig,
-    private val providerTokenService: ProviderTokenService,
+    val repository: AuthRepository,
+    val providers: AuthProviders,
+    val jwtIssuer: SessionJwtIssuer,
+    val securityConfig: SecurityConfig,
+    val providerTokenService: ProviderTokenService,
+    val json: Json
 ) {
-    private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun authenticate(call: ApplicationCall, request: AuthenticateRequest): AuthTokensResponse {
         val provider = providers[request.provider]
@@ -74,9 +74,9 @@ class AuthService(
         val refreshToken = if (passwordless) RefreshTokenGenerator.generate() else null
         val refreshHash = refreshToken?.let(RefreshTokenGenerator::hash)
         val sessionExpires = if (passwordless) {
-            now + jwtConfig.refreshTokenTtlSeconds
+            now + securityConfig.jwt.refreshTokenTtlSeconds
         } else {
-            now + jwtConfig.accessTokenTtlSeconds
+            now + securityConfig.jwt.accessTokenTtlSeconds
         }
 
         val sessionId = resolveSessionId(

@@ -14,3 +14,4 @@ fun Application.configureOpenApi() {
 val openApiModule = module {
     // Shared DTOs (FeedCursor, ProfileCursor, …) when core/openapi ships
 }
+

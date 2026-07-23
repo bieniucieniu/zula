@@ -1,9 +1,10 @@
 package com.zula.features.geolocation
 
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val geolocationModule = module {
-    single { GeolocationService() }
-    single { GeolocationPublisher() }
-    single { GeolocationConsumer(get()) }
+    singleOf(::GeolocationService)
+    singleOf(::GeolocationPublisher)
+    singleOf(::GeolocationConsumer)
 }

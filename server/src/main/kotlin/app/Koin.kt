@@ -4,6 +4,7 @@ import com.zula.core.database.DatabaseConfig
 import com.zula.core.database.databaseModule
 import com.zula.core.openapi.openApiModule
 import com.zula.core.security.*
+import com.zula.core.serialization.serializationModule
 import com.zula.features.auth.authModule
 import com.zula.features.chat.chatModule
 import com.zula.features.feed.feedModule
@@ -40,8 +41,12 @@ fun Application.configureKoin() {
                 )
                 devAuth = DevAuthConfig.from(security?.configOrNull("devAuth"))
             },
-            openApiModule,
+            serializationModule(
+                environment.config.propertyOrNull("ktor.development")?.getString()?.toBooleanStrictOrNull() ?: false
+            ),
             authModule,
+            // unimplemented
+            openApiModule,
             userModule,
             feedModule,
             mediaModule,

@@ -6,21 +6,24 @@ import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
 import com.zula.features.auth.domain.Identity
 import io.ktor.client.*
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 class GoogleAuthProvider(
-    private val config: GoogleOAuthConfig,
+    val config: GoogleOAuthConfig,
     httpClient: HttpClient,
+    val json: Json,
 ) : AuthProvider {
     override val id: String = "google"
 
-    private val verifier = OidcIdTokenVerifier(
+    val verifier = OidcIdTokenVerifier(
         httpClient = httpClient,
         jwksUrl = "https://www.googleapis.com/oauth2/v3/certs",
         issuers = listOf("https://accounts.google.com", "accounts.google.com"),
         audiences = config.idTokenAudiences,
+        json = json
     )
 
     override fun info(): OAuthProviderInfo? {

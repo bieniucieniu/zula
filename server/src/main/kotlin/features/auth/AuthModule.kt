@@ -6,39 +6,31 @@ import com.zula.features.auth.crypto.TokenEncryption
 import com.zula.features.auth.persistence.AuthRepository
 import com.zula.features.auth.provider.*
 import io.ktor.client.*
+import kotlinx.serialization.json.Json
+import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val authModule = module {
-    single {
-        AuthRepository(get())
-    }
+    singleOf(::AuthRepository)
     single {
         val jwtConfig: SecurityConfig = get()
         TokenEncryption(jwtConfig.jwt.providerTokenEncryptionKey)
     }
-    single {
-        val security: SecurityConfig = get()
-
-        ProviderTokenService(
-            googleConfig = security.oauth.google,
-            repository = get(),
-            encryption = get(),
-            httpClient = get(),
-        )
-    }
+    singleOf(::ProviderTokenService)
 
     single<AuthProviders> {
         val http: HttpClient = get()
         val security: SecurityConfig = get()
         val repo: AuthRepository = get()
+        val json: Json = get()
 
         AuthProviders {
             if (security.oauth.google.isIdTokenConfigured) {
-                put("google", GoogleAuthProvider(security.oauth.google, http))
+                put("google", GoogleAuthProvider(security.oauth.google, http, json))
             }
 
             if (security.oauth.apple.isIdTokenConfigured) {
-                put("apple", AppleAuthProvider(security.oauth.apple, http))
+                put("apple", AppleAuthProvider(security.oauth.apple, http, json))
             }
 
             val emailOtp = EmailOtpAuthProvider(repo)
@@ -62,15 +54,7 @@ val authModule = module {
         }
     }
 
-    single {
-        AuthService(
-            get(),
-            get(),
-            get(),
-            get<SecurityConfig>().jwt,
-            get()
-        )
-    }
+    singleOf(::AuthService)
 
     single<JwtSessionValidator> {
         val repo: AuthRepository = get()

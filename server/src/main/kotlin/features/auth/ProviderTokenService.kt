@@ -3,7 +3,7 @@ package com.zula.features.auth
 import com.zula.User_identities
 import com.zula.core.http.badRequest
 import com.zula.core.http.conflict
-import com.zula.core.security.GoogleOAuthConfig
+import com.zula.core.security.SecurityConfig
 import com.zula.features.auth.crypto.TokenEncryption
 import com.zula.features.auth.domain.CredentialsStatus
 import com.zula.features.auth.persistence.AuthRepository
@@ -18,12 +18,12 @@ import java.time.Instant
 import kotlin.uuid.Uuid
 
 class ProviderTokenService(
-    private val repository: AuthRepository,
-    private val encryption: TokenEncryption,
-    private val googleConfig: GoogleOAuthConfig,
-    private val httpClient: HttpClient,
+    val repository: AuthRepository,
+    val encryption: TokenEncryption,
+    val securityConfig: SecurityConfig,
+    val httpClient: HttpClient,
+    val json: Json
 ) {
-    private val json = Json { ignoreUnknownKeys = true }
 
     suspend fun <T> withProviderAccess(userId: Uuid, provider: String, block: suspend (String) -> T): T {
         val identity = repository.findIdentityByUserAndProvider(userId, provider)
@@ -75,8 +75,8 @@ class ProviderTokenService(
                 formParameters = Parameters.build {
                     append("grant_type", "refresh_token")
                     append("refresh_token", refresh)
-                    append("client_id", googleConfig.clientId.orEmpty())
-                    append("client_secret", googleConfig.clientSecret.orEmpty())
+                    append("client_id", securityConfig.oauth.google.clientId.orEmpty())
+                    append("client_secret", securityConfig.oauth.google.clientSecret.orEmpty())
                 },
             ).bodyAsText()
             val decoded: GoogleTokenResponse = json.decodeFromString(body)

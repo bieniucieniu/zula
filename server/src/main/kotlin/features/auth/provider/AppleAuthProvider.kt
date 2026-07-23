@@ -5,12 +5,14 @@ import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
 import com.zula.features.auth.domain.Identity
 import io.ktor.client.*
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 class AppleAuthProvider(
-    private val config: AppleOAuthConfig,
+    val config: AppleOAuthConfig,
     httpClient: HttpClient,
+    val json: Json
 ) : AuthProvider {
     override val id: String = "apple"
 
@@ -19,6 +21,7 @@ class AppleAuthProvider(
         jwksUrl = "https://appleid.apple.com/auth/keys",
         issuers = listOf("https://appleid.apple.com"),
         audiences = config.idTokenAudiences,
+        json = json
     )
 
     override fun info(): OAuthProviderInfo? {

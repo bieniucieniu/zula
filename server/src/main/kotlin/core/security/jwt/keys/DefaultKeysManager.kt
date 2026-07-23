@@ -6,13 +6,15 @@ import com.zula.core.security.jwt.JwtKeys
 import com.zula.core.security.jwt.decodePrivateKey
 import com.zula.core.security.jwt.decodePublicKey
 import com.zula.lib.utils.attempt
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import org.slf4j.Logger
 
 class DefaultKeysManager(
-    private val config: JwtConfig,
-    private val store: JwtKeysStore,
-    private val log: Logger,
-) : KeysManager {
+    val config: JwtConfig,
+    val store: JwtKeysStore,
+    val log: Logger,
+) : KeysManager, KoinComponent {
     override fun generate(): JwtKeys = JwtKeys.generateRsa2048()
 
     override fun validate(keys: JwtKeys): KeysValidation = validateKeySet(JwtKeySet.fromSingleKey(keys))
@@ -116,11 +118,12 @@ class DefaultKeysManager(
         resolveKeySet().toLegacyJwtKeys() ?: error("JWT keys are not configured")
 
     private fun keySetFromConfig(): JwtKeySet? {
-        config.keysJson?.takeIf { it.isNotBlank() }?.let { return JwtKeySet.fromJson(it) }
+        val key = config.keysJson?.takeIf { it.isNotBlank() }
+        if (key != null) return JwtKeySet.fromJson(key, get())
 
-        keysFromLegacyPem()?.let { keys ->
-            return JwtKeySet.fromSingleKey(keys, kid = config.defaultKeyId)
-        }
+        val keys = keysFromLegacyPem()
+        if (keys != null) return JwtKeySet.fromSingleKey(keys, kid = config.defaultKeyId)
+
 
         return null
     }

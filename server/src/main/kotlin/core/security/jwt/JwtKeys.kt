@@ -1,12 +1,8 @@
 package com.zula.core.security.jwt
 
 import com.auth0.jwt.algorithms.Algorithm
-import com.zula.core.security.JwtConfig
-import com.zula.core.security.jwt.keys.KeysManagers
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.slf4j.Logger
 import java.security.Key
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
@@ -89,9 +85,6 @@ data class JwtKeys(
     }
 }
 
-object JwtKeyLoader {
-    fun load(config: JwtConfig, log: Logger): JwtKeys = KeysManagers.create(config, log).resolve()
-}
 
 internal fun String.decodePrivateKey(): RSAPrivateKey {
     val bytes = Base64.getDecoder().decode(stripPemHeaders())

@@ -1,13 +1,12 @@
 package com.zula.core.http
 
-import io.ktor.http.ContentType
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.request.path
-import io.ktor.server.response.respondText
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.koin.ktor.ext.get
 
 /**
  * Field-keyed validation errors for forms.
@@ -51,11 +50,6 @@ fun HttpException.toProblemDetails(instance: String? = null) = problemDetails(
     errors = this.errors,
 )
 
-private val problemJson = Json {
-    encodeDefaults = true
-    explicitNulls = false
-}
-
 suspend fun ApplicationCall.respondProblem(
     status: HttpStatusCode,
     detail: String? = null,
@@ -74,8 +68,9 @@ suspend fun ApplicationCall.respondProblem(
 }
 
 suspend fun ApplicationCall.respondProblem(problem: ProblemDetails) {
+    val json: Json = get()
     respondText(
-        text = problemJson.encodeToString(problem),
+        text = json.encodeToString(problem),
         contentType = ContentType.Application.ProblemJson,
         status = HttpStatusCode.fromValue(problem.status),
     )
