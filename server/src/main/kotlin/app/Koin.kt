@@ -10,7 +10,6 @@ import com.zula.features.feed.feedModule
 import com.zula.features.geolocation.geolocationModule
 import com.zula.features.media.mediaModule
 import com.zula.features.moderation.moderationModule
-import com.zula.features.sync.syncModule
 import com.zula.features.trade.tradeModule
 import com.zula.features.user.userModule
 import com.zula.features.validation.validationModule
@@ -44,7 +43,6 @@ fun Application.configureKoin() {
             openApiModule,
             authModule,
             userModule,
-            syncModule,
             feedModule,
             mediaModule,
             geolocationModule,

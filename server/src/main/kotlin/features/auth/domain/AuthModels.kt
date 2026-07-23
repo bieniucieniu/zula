@@ -62,11 +62,6 @@ data class SessionResponse(
 )
 
 @Serializable
-data class PowerSyncTokenResponse(
-    val accessToken: String,
-)
-
-@Serializable
 data class RefreshRequest(
     val refreshToken: String? = null,
 )

@@ -87,14 +87,6 @@ fun Route.configureAuthRouting() {
             tag("auth")
         }
 
-        get("/auth/powersync/token") {
-            val accessToken = call.resolveAccessToken(authService)
-            call.respond(PowerSyncTokenResponse(accessToken = accessToken))
-        }.describe {
-            operationId = "getPowerSyncToken"
-            tag("auth")
-        }
-
         post("/auth/logout") {
             val principal: JWTPrincipal? = call.principal()
             val sessionId = principal?.payload?.getClaim("sid")?.asString()?.let {
@@ -139,16 +131,4 @@ fun Route.configureAuthRouting() {
     }
 }
 
-
-private suspend fun ApplicationCall.resolveAccessToken(authService: AuthService): String {
-    val principal: JWTPrincipal? = principal<JWTPrincipal>()
-    if (principal != null) {
-        return resolvePresentAccessToken() ?: unauthorized("Missing access token")
-    }
-
-    val refreshToken = readRefreshCookie() ?: unauthorized("Not authenticated")
-    val tokens = authService.refresh(this, refreshToken)
-    setAccessCookies(tokens)
-    return tokens.accessToken
-}
 
