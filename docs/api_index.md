@@ -20,16 +20,6 @@ Request/response shapes: `core/openapi/` DTOs (also in OpenAPI spec).
 
 ---
 
-## SyncService ✅
-
-| RPC | Auth | Path |
-|-----|------|------|
-| `SyncBatch` | Auth | `POST /api/sync/batch` |
-
-PowerSync client `uploadData` → batch of CRUD ops. Server registry dispatches to feature services (not raw SQL). Today: `user_profiles` PUT/PATCH. Doc: [powersync.md](./powersync.md).
-
----
-
 ## GoogleService ✅
 
 | RPC | Auth |

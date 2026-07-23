@@ -12,7 +12,7 @@ data class ProfileWrite(
     val sellerHeadline: String? = null,
 )
 
-/** Own-profile writes used by REST and PowerSync upload registry. */
+/** Own-profile writes used by REST handlers. */
 interface UserProfileWriter {
     fun putMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite)
 

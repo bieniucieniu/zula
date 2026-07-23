@@ -4,7 +4,6 @@ import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { AuthProvider } from "@/lib/auth"
-import { usePowerSyncAuth } from "@/lib/powersync"
 import appCss from "../styles.css?url"
 
 const queryClient = new QueryClient()
@@ -39,11 +38,6 @@ export const Route = createRootRoute({
   shellComponent: RootDocument,
 })
 
-function PowerSyncConnector() {
-  usePowerSyncAuth()
-  return null
-}
-
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -53,7 +47,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <PowerSyncConnector />
             <TooltipProvider>{children}</TooltipProvider>
           </AuthProvider>
         </QueryClientProvider>

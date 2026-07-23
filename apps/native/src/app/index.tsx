@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Icon } from "@/components/ui/icon"
 import { Text } from "@/components/ui/text"
 import { useAuth } from "@/lib/auth"
-import { usePowerSync } from "@/lib/powersync"
 
 const LOGO = {
   light: require("@assets/images/react-native-reusables-light.png"),
@@ -27,7 +26,6 @@ const IMAGE_STYLE: ImageStyle = {
 export default function Screen() {
   const { theme } = useUniwind()
   const { session, ready, signOut } = useAuth()
-  const { ready: syncReady } = usePowerSync()
 
   if (!ready) {
     return (
@@ -49,9 +47,6 @@ export default function Screen() {
         <View className="gap-2 p-4">
           <Text className="ios:text-foreground text-center text-sm text-muted-foreground">
             Signed in as {session.email || "user"}
-          </Text>
-          <Text className="ios:text-foreground text-muted-foreground font-mono text-sm">
-            PowerSync (Expo Go / sql-js): {syncReady ? "connected" : "connecting…"}
           </Text>
         </View>
         <View className="flex-row gap-2">

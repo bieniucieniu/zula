@@ -31,50 +31,20 @@ in
     enable = true;
     package = pkgs.postgresql_18;
     extensions = extensions: [ extensions.pgvector ];
-    # Bridge-network PowerSync (Docker Desktop) reaches Postgres via host.docker.internal.
     listen_addresses = "127.0.0.1";
     port = 5432;
-    settings.wal_level = "logical";
     initialDatabases = [
       {
         name = "zula";
         user = secrets.DATABASE_USERNAME or "zula";
         pass = secrets.DATABASE_PASSWORD or "zula";
-        # PowerSync logical replication (first Postgres init only).
-        # https://devenv.sh/services/postgres/#servicespostgresinitialdatabasesinitialsql
-        # Runs as cluster superuser (unix socket during setup) before initialScript.
-        # DEFAULT PRIVILEGES must be FOR ROLE <app user> — tables are created by Ktor as that role.
-        initialSQL = ''
-          CREATE ROLE powersync_role WITH REPLICATION BYPASSRLS LOGIN PASSWORD '${
-            secrets.PS_REPLICATION_PASSWORD or "powersync"
-          }';
-          GRANT CONNECT ON DATABASE zula TO powersync_role;
-          GRANT USAGE ON SCHEMA public TO powersync_role;
-          GRANT SELECT ON ALL TABLES IN SCHEMA public TO powersync_role;
-          GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO powersync_role;
-          ALTER DEFAULT PRIVILEGES FOR ROLE "${secrets.DATABASE_USERNAME or "zula"}" IN SCHEMA public
-            GRANT SELECT ON TABLES TO powersync_role;
-          ALTER DEFAULT PRIVILEGES FOR ROLE "${secrets.DATABASE_USERNAME or "zula"}" IN SCHEMA public
-            GRANT SELECT ON SEQUENCES TO powersync_role;
-          CREATE PUBLICATION powersync FOR ALL TABLES;
-        '';
-      }
-      {
-        name = "zula_powersync";
-        user = secrets.PS_STORAGE_USERNAME or "powersync";
-        pass = secrets.PS_STORAGE_PASSWORD or "powersync";
-        initialSQL = ''
-          GRANT CONNECT ON DATABASE zula_powersync TO powersync_role;
-        '';
       }
     ];
-
   };
 
   # --- Profiles ---
   # devenv --profile backend up     → Postgres + Ktor
-  # devenv --profile powersync up   → backend + PowerSync (:8080)
-  # devenv --profile all up         → deps + Ktor + web + native
+  # devenv --profile all up         → backend + web + native
   profiles = {
     backend = {
       module = {
@@ -83,7 +53,7 @@ in
           process-compose = {
             working_dir = root;
             depends_on = {
-            postgres.condition = "process_healthy";
+              postgres.condition = "process_healthy";
             };
             readiness_probe = {
               http_get = {
@@ -96,37 +66,6 @@ in
               period_seconds = 5;
               timeout_seconds = 5;
               failure_threshold = 36;
-            };
-          };
-        };
-        processes.powersync = {
-          # --force-recreate: PowerSync can cache stale service.yaml across restarts.
-          # trap down: always remove the container on exit (process-compose stop or crash).
-          exec = ''
-            set -eu
-            trap 'docker compose -f ${root}/powersync/docker-compose.yaml down --remove-orphans' EXIT
-            docker compose -f ${root}/powersync/docker-compose.yaml up --abort-on-container-exit --force-recreate --remove-orphans
-          '';
-          process-compose = {
-            working_dir = "${root}/powersync";
-            depends_on = {
-              postgres.condition = "process_healthy";
-              server.condition = "process_healthy";
-            };
-            readiness_probe = {
-              http_get = {
-                host = "127.0.0.1";
-                port = 8080;
-                path = "/probes/readiness";
-              };
-              initial_delay_seconds = 10;
-              period_seconds = 5;
-              timeout_seconds = 5;
-              failure_threshold = 12;
-            };
-            shutdown = {
-              command = "docker compose -f ${root}/powersync/docker-compose.yaml down --remove-orphans";
-              timeout_seconds = 30;
             };
           };
         };
@@ -157,13 +96,7 @@ in
               host="''${lan_ip:-127.0.0.1}"
               export EXPO_PUBLIC_API_URL="http://''${host}:8000/api"
             fi
-            if [ -z "''${EXPO_PUBLIC_PS_URL:-}" ]; then
-              lan_ip="''${lan_ip:-$(${root}/scripts/lan-ip.sh || true)}"
-              host="''${lan_ip:-127.0.0.1}"
-              export EXPO_PUBLIC_PS_URL="http://''${host}:8080"
-            fi
             echo "native: EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
-            echo "native: EXPO_PUBLIC_PS_URL=$EXPO_PUBLIC_PS_URL"
             cd ${root}/apps/native && bun run dev
           '';
           process-compose = {
@@ -201,32 +134,25 @@ in
     bun run format
   '';
 
-  scripts.gen-powersync.exec = ''
-    cd "${root}"
-    bun run gen:powersync
-  '';
-
   enterShell = ''
     echo "zula devenv"
     echo "  secrets: secretspec provider=${toString (config.secretspec.provider or "unset")} profile=${
       toString (config.secretspec.profile or "unset")
     }"
-    echo "  deps:    devenv --profile backend up   # postgres + ktor + PowerSync"
-    echo "  docker:  bun run deps:docker            # postgres + PowerSync only (no devenv)"
+    echo "  deps:    devenv --profile backend up   # postgres + ktor"
+    echo "  docker:  bun run deps:docker            # postgres only (no devenv)"
     echo "  all:     devenv --profile all up       # or: zula-all"
     echo "  api:     gen-api                       # orval + biome format (server must be up)"
-    echo "  psync:   gen-powersync                 # AppSchema from running PowerSync"
     echo "  db:      psql                          # interactive (needs devenv up)"
     echo "  jdbc:    $DATABASE_JDBC_URL"
     echo "  app:     $APP_URL"
-    echo "  powersync: $PS_URL"
     if lan_ip="$("${root}/scripts/lan-ip.sh" 2>/dev/null)"; then
       echo "  lan:     $lan_ip  # native uses http://$lan_ip:8000/api unless EXPO_PUBLIC_API_URL set"
     fi
     if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
       echo "  docker:  ok ($(docker compose version 2>/dev/null | head -n1))"
     else
-      echo "  docker:  MISSING — needed for PowerSync profile (Mac: Docker Desktop; Linux: docker + compose)"
+      echo "  docker:  MISSING — needed for bun run deps:docker (Mac: Docker Desktop; Linux: docker + compose)"
     fi
   '';
 
@@ -236,27 +162,13 @@ in
     test -n "$APP_URL"
     test -n "$PROVIDER_TOKEN_ENCRYPTION_KEY"
 
-    echo "Checking PowerSync secretspec defaults (compose builds PS_* URIs from these)"
-    test -n "$PS_URL"
-    test -n "$PS_REPLICATION_PASSWORD"
-    test -n "$PS_STORAGE_USERNAME"
-    test -n "$PS_STORAGE_PASSWORD"
-    # Defaults from secretspec.toml — must match powersync/docker-compose.yaml :-defaults.
-    test "$PS_URL" = "http://127.0.0.1:8080"
-    test "$PS_REPLICATION_PASSWORD" = "powersync"
-    test "$PS_STORAGE_USERNAME" = "powersync"
-    test "$PS_STORAGE_PASSWORD" = "powersync"
-
     echo "Checking docker compose accessibility (warn-only if absent on CI without Docker)"
     if command -v docker >/dev/null 2>&1; then
       docker compose version
     else
       echo "SKIP: docker not installed in this environment"
     fi
-    test -f "${root}/powersync/docker-compose.yaml"
-    test -f "${root}/powersync/service.yaml"
-    test -f "${root}/powersync/sync-config.yaml"
-    test -f "${root}/packages/powersync/package.json"
+    test -f "${root}/docker-compose.yaml"
     echo "OK"
   '';
 }

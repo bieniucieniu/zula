@@ -9,8 +9,7 @@ import com.zula.features.user.persistence.UserRepository
 import kotlin.uuid.Uuid
 
 /**
- * Domain writes for user/profile. PowerSync upload registry calls these —
- * do not apply raw CRUD SQL from the sync endpoint.
+ * Domain writes for user/profile. REST handlers call these — do not apply raw CRUD SQL.
  */
 class UserService(
     private val repository: UserRepository,
@@ -29,7 +28,7 @@ class UserService(
     }
 
     /**
-     * Full replace of editable profile fields (PowerSync PUT).
+     * Full replace of editable profile fields.
      * [profileId] must equal [actorId] (own profile only).
      */
     override fun putMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite) {
@@ -51,7 +50,7 @@ class UserService(
     }
 
     /**
-     * Partial update (PowerSync PATCH). Null fields in [write] mean "leave unchanged".
+     * Partial update. Null fields in [write] mean "leave unchanged".
      */
     override fun patchMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite) {
         requireOwnProfile(actorId, profileId)
