@@ -5,6 +5,4 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface JsonElement {
-  [key: string]: unknown
-}
+export type GetHealth200One = { [key: string]: string }

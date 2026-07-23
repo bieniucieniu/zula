@@ -20,10 +20,7 @@ export default function RootLayout() {
   const { theme } = useUniwind()
 
   return (
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={persistOptions}
-    >
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <AuthProvider>
         <ThemeProvider value={NAV_THEME[theme ?? "light"]}>
           <StatusBar style={theme === "dark" ? "light" : "dark"} />

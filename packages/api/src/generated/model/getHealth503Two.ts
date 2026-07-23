@@ -5,4 +5,4 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type GetHealth503 = { [key: string]: string }
+export type GetHealth503Two = { [key: string]: string }

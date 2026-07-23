@@ -6,10 +6,7 @@
  */
 import type { ProblemDetailsErrors } from "./problemDetailsErrors"
 
-/**
- * @nullable
- */
-export type ProblemDetails = {
+export interface ProblemDetails {
   type?: string
   title: string
   status: number
@@ -19,4 +16,4 @@ export type ProblemDetails = {
   instance?: string | null
   /** @nullable */
   errors?: ProblemDetailsErrors
-} | null
+}

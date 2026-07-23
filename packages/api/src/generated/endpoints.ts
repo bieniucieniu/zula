@@ -25,18 +25,24 @@ import type {
   AuthenticateRequest,
   ChallengeRequest,
   ChallengeResponse,
-  GetHealth200,
-  GetHealth503,
-  GetJobsPing202,
-  GetJobsPing503,
+  GetHealth200One,
+  GetHealth200Two,
+  GetHealth503One,
+  GetHealth503Two,
+  GetJobsPing202One,
+  GetJobsPing202Two,
+  GetJobsPing503One,
+  GetJobsPing503Two,
   JwksResponse,
   LinkedProvidersResponse,
   OAuthProvidersResponse,
+  ProblemDetails,
   RefreshRequest,
   SessionResponse,
 } from "./model"
 
 import { customInstance } from "../mutator"
+import type { ErrorType, BodyType } from "../mutator"
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1]
 
@@ -55,20 +61,36 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result
 }
 
-export type getHealthResponse200 = {
-  data: GetHealth200
+export type getHealthResponse200ApplicationJson = {
+  data: GetHealth200One
   status: 200
 }
 
-export type getHealthResponse503 = {
-  data: GetHealth503
+export type getHealthResponse200ApplicationProblemJson = {
+  data: GetHealth200Two
+  status: 200
+}
+
+export type getHealthResponse503ApplicationJson = {
+  data: GetHealth503One
   status: 503
 }
 
-export type getHealthResponseSuccess = getHealthResponse200 & {
+export type getHealthResponse503ApplicationProblemJson = {
+  data: GetHealth503Two
+  status: 503
+}
+
+export type getHealthResponseSuccess = (
+  | getHealthResponse200ApplicationJson
+  | getHealthResponse200ApplicationProblemJson
+) & {
   headers: Headers
 }
-export type getHealthResponseError = getHealthResponse503 & {
+export type getHealthResponseError = (
+  | getHealthResponse503ApplicationJson
+  | getHealthResponse503ApplicationProblemJson
+) & {
   headers: Headers
 }
 
@@ -91,7 +113,7 @@ export const getGetHealthQueryKey = () => {
 
 export const getGetHealthQueryOptions = <
   TData = Awaited<ReturnType<typeof getHealth>>,
-  TError = GetHealth503,
+  TError = ErrorType<GetHealth503One | GetHealth503Two>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -111,9 +133,12 @@ export const getGetHealthQueryOptions = <
 }
 
 export type GetHealthQueryResult = NonNullable<Awaited<ReturnType<typeof getHealth>>>
-export type GetHealthQueryError = GetHealth503
+export type GetHealthQueryError = ErrorType<GetHealth503One | GetHealth503Two>
 
-export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+export function useGetHealth<
+  TData = Awaited<ReturnType<typeof getHealth>>,
+  TError = ErrorType<GetHealth503One | GetHealth503Two>,
+>(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>> &
       Pick<
@@ -128,7 +153,10 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
   },
   queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+export function useGetHealth<
+  TData = Awaited<ReturnType<typeof getHealth>>,
+  TError = ErrorType<GetHealth503One | GetHealth503Two>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>> &
       Pick<
@@ -143,7 +171,10 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+export function useGetHealth<
+  TData = Awaited<ReturnType<typeof getHealth>>,
+  TError = ErrorType<GetHealth503One | GetHealth503Two>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -151,7 +182,10 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TError = GetHealth503>(
+export function useGetHealth<
+  TData = Awaited<ReturnType<typeof getHealth>>,
+  TError = ErrorType<GetHealth503One | GetHealth503Two>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHealth>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -167,20 +201,36 @@ export function useGetHealth<TData = Awaited<ReturnType<typeof getHealth>>, TErr
   return withQueryKey(query, queryOptions.queryKey)
 }
 
-export type getJobsPingResponse202 = {
-  data: GetJobsPing202
+export type getJobsPingResponse202ApplicationJson = {
+  data: GetJobsPing202One
   status: 202
 }
 
-export type getJobsPingResponse503 = {
-  data: GetJobsPing503
+export type getJobsPingResponse202ApplicationProblemJson = {
+  data: GetJobsPing202Two
+  status: 202
+}
+
+export type getJobsPingResponse503ApplicationJson = {
+  data: GetJobsPing503One
   status: 503
 }
 
-export type getJobsPingResponseSuccess = getJobsPingResponse202 & {
+export type getJobsPingResponse503ApplicationProblemJson = {
+  data: GetJobsPing503Two
+  status: 503
+}
+
+export type getJobsPingResponseSuccess = (
+  | getJobsPingResponse202ApplicationJson
+  | getJobsPingResponse202ApplicationProblemJson
+) & {
   headers: Headers
 }
-export type getJobsPingResponseError = getJobsPingResponse503 & {
+export type getJobsPingResponseError = (
+  | getJobsPingResponse503ApplicationJson
+  | getJobsPingResponse503ApplicationProblemJson
+) & {
   headers: Headers
 }
 
@@ -203,7 +253,7 @@ export const getGetJobsPingQueryKey = () => {
 
 export const getGetJobsPingQueryOptions = <
   TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503,
+  TError = ErrorType<GetJobsPing503One | GetJobsPing503Two>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -223,11 +273,11 @@ export const getGetJobsPingQueryOptions = <
 }
 
 export type GetJobsPingQueryResult = NonNullable<Awaited<ReturnType<typeof getJobsPing>>>
-export type GetJobsPingQueryError = GetJobsPing503
+export type GetJobsPingQueryError = ErrorType<GetJobsPing503One | GetJobsPing503Two>
 
 export function useGetJobsPing<
   TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503,
+  TError = ErrorType<GetJobsPing503One | GetJobsPing503Two>,
 >(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
@@ -245,7 +295,7 @@ export function useGetJobsPing<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetJobsPing<
   TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503,
+  TError = ErrorType<GetJobsPing503One | GetJobsPing503Two>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
@@ -263,7 +313,7 @@ export function useGetJobsPing<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetJobsPing<
   TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503,
+  TError = ErrorType<GetJobsPing503One | GetJobsPing503Two>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
@@ -274,7 +324,7 @@ export function useGetJobsPing<
 
 export function useGetJobsPing<
   TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503,
+  TError = ErrorType<GetJobsPing503One | GetJobsPing503Two>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
@@ -291,12 +341,20 @@ export function useGetJobsPing<
   return withQueryKey(query, queryOptions.queryKey)
 }
 
-export type getWellKnownJwksResponse200 = {
+export type getWellKnownJwksResponse200ApplicationJson = {
   data: JwksResponse
   status: 200
 }
 
-export type getWellKnownJwksResponseSuccess = getWellKnownJwksResponse200 & {
+export type getWellKnownJwksResponse200ApplicationProblemJson = {
+  data: JwksResponse
+  status: 200
+}
+
+export type getWellKnownJwksResponseSuccess = (
+  | getWellKnownJwksResponse200ApplicationJson
+  | getWellKnownJwksResponse200ApplicationProblemJson
+) & {
   headers: Headers
 }
 
@@ -321,7 +379,7 @@ export const getGetWellKnownJwksQueryKey = () => {
 
 export const getGetWellKnownJwksQueryOptions = <
   TData = Awaited<ReturnType<typeof getWellKnownJwks>>,
-  TError = unknown,
+  TError = ErrorType<unknown>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getWellKnownJwks>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -341,11 +399,11 @@ export const getGetWellKnownJwksQueryOptions = <
 }
 
 export type GetWellKnownJwksQueryResult = NonNullable<Awaited<ReturnType<typeof getWellKnownJwks>>>
-export type GetWellKnownJwksQueryError = unknown
+export type GetWellKnownJwksQueryError = ErrorType<unknown>
 
 export function useGetWellKnownJwks<
   TData = Awaited<ReturnType<typeof getWellKnownJwks>>,
-  TError = unknown,
+  TError = ErrorType<unknown>,
 >(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getWellKnownJwks>>, TError, TData>> &
@@ -363,7 +421,7 @@ export function useGetWellKnownJwks<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetWellKnownJwks<
   TData = Awaited<ReturnType<typeof getWellKnownJwks>>,
-  TError = unknown,
+  TError = ErrorType<unknown>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getWellKnownJwks>>, TError, TData>> &
@@ -381,7 +439,7 @@ export function useGetWellKnownJwks<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetWellKnownJwks<
   TData = Awaited<ReturnType<typeof getWellKnownJwks>>,
-  TError = unknown,
+  TError = ErrorType<unknown>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getWellKnownJwks>>, TError, TData>>
@@ -392,7 +450,7 @@ export function useGetWellKnownJwks<
 
 export function useGetWellKnownJwks<
   TData = Awaited<ReturnType<typeof getWellKnownJwks>>,
-  TError = unknown,
+  TError = ErrorType<unknown>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getWellKnownJwks>>, TError, TData>>
@@ -409,12 +467,20 @@ export function useGetWellKnownJwks<
   return withQueryKey(query, queryOptions.queryKey)
 }
 
-export type getJwksResponse200 = {
+export type getJwksResponse200ApplicationJson = {
   data: JwksResponse
   status: 200
 }
 
-export type getJwksResponseSuccess = getJwksResponse200 & {
+export type getJwksResponse200ApplicationProblemJson = {
+  data: JwksResponse
+  status: 200
+}
+
+export type getJwksResponseSuccess = (
+  | getJwksResponse200ApplicationJson
+  | getJwksResponse200ApplicationProblemJson
+) & {
   headers: Headers
 }
 
@@ -437,7 +503,7 @@ export const getGetJwksQueryKey = () => {
 
 export const getGetJwksQueryOptions = <
   TData = Awaited<ReturnType<typeof getJwks>>,
-  TError = unknown,
+  TError = ErrorType<unknown>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJwks>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -457,9 +523,12 @@ export const getGetJwksQueryOptions = <
 }
 
 export type GetJwksQueryResult = NonNullable<Awaited<ReturnType<typeof getJwks>>>
-export type GetJwksQueryError = unknown
+export type GetJwksQueryError = ErrorType<unknown>
 
-export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError = unknown>(
+export function useGetJwks<
+  TData = Awaited<ReturnType<typeof getJwks>>,
+  TError = ErrorType<unknown>,
+>(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJwks>>, TError, TData>> &
       Pick<
@@ -474,7 +543,10 @@ export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError =
   },
   queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError = unknown>(
+export function useGetJwks<
+  TData = Awaited<ReturnType<typeof getJwks>>,
+  TError = ErrorType<unknown>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJwks>>, TError, TData>> &
       Pick<
@@ -489,7 +561,10 @@ export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError =
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError = unknown>(
+export function useGetJwks<
+  TData = Awaited<ReturnType<typeof getJwks>>,
+  TError = ErrorType<unknown>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJwks>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -497,7 +572,10 @@ export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError =
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError = unknown>(
+export function useGetJwks<
+  TData = Awaited<ReturnType<typeof getJwks>>,
+  TError = ErrorType<unknown>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJwks>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -513,16 +591,40 @@ export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError =
   return withQueryKey(query, queryOptions.queryKey)
 }
 
-export type listProvidersResponse200 = {
+export type listProvidersResponse200ApplicationJson = {
   data: OAuthProvidersResponse
   status: 200
 }
 
-export type listProvidersResponseSuccess = listProvidersResponse200 & {
+export type listProvidersResponse200ApplicationProblemJson = {
+  data: OAuthProvidersResponse
+  status: 200
+}
+
+export type listProvidersResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listProvidersResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listProvidersResponseSuccess = (
+  | listProvidersResponse200ApplicationJson
+  | listProvidersResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listProvidersResponseError = (
+  | listProvidersResponse500ApplicationJson
+  | listProvidersResponse500ApplicationProblemJson
+) & {
   headers: Headers
 }
 
-export type listProvidersResponse = listProvidersResponseSuccess
+export type listProvidersResponse = listProvidersResponseSuccess | listProvidersResponseError
 
 export const getListProvidersUrl = () => {
   return `/api/auth/providers`
@@ -541,7 +643,7 @@ export const getListProvidersQueryKey = () => {
 
 export const getListProvidersQueryOptions = <
   TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -561,11 +663,11 @@ export const getListProvidersQueryOptions = <
 }
 
 export type ListProvidersQueryResult = NonNullable<Awaited<ReturnType<typeof listProviders>>>
-export type ListProvidersQueryError = unknown
+export type ListProvidersQueryError = ErrorType<ProblemDetails>
 
 export function useListProviders<
   TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>> &
@@ -583,7 +685,7 @@ export function useListProviders<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useListProviders<
   TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>> &
@@ -601,7 +703,7 @@ export function useListProviders<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useListProviders<
   TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
@@ -612,7 +714,7 @@ export function useListProviders<
 
 export function useListProviders<
   TData = Awaited<ReturnType<typeof listProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listProviders>>, TError, TData>>
@@ -629,16 +731,40 @@ export function useListProviders<
   return withQueryKey(query, queryOptions.queryKey)
 }
 
-export type authenticateResponse200 = {
+export type authenticateResponse200ApplicationJson = {
   data: AuthTokensResponse
   status: 200
 }
 
-export type authenticateResponseSuccess = authenticateResponse200 & {
+export type authenticateResponse200ApplicationProblemJson = {
+  data: AuthTokensResponse
+  status: 200
+}
+
+export type authenticateResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type authenticateResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type authenticateResponseSuccess = (
+  | authenticateResponse200ApplicationJson
+  | authenticateResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type authenticateResponseError = (
+  | authenticateResponse500ApplicationJson
+  | authenticateResponse500ApplicationProblemJson
+) & {
   headers: Headers
 }
 
-export type authenticateResponse = authenticateResponseSuccess
+export type authenticateResponse = authenticateResponseSuccess | authenticateResponseError
 
 export const getAuthenticateUrl = () => {
   return `/api/auth/authenticate`
@@ -656,18 +782,21 @@ export const authenticate = async (
   })
 }
 
-export const getAuthenticateMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+export const getAuthenticateMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof authenticate>>,
     TError,
-    { data?: AuthenticateRequest },
+    { data?: BodyType<AuthenticateRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof authenticate>>,
   TError,
-  { data?: AuthenticateRequest },
+  { data?: BodyType<AuthenticateRequest> },
   TContext
 > => {
   const mutationKey = ["authenticate"]
@@ -679,7 +808,7 @@ export const getAuthenticateMutationOptions = <TError = unknown, TContext = unkn
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof authenticate>>,
-    { data?: AuthenticateRequest }
+    { data?: BodyType<AuthenticateRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -690,15 +819,15 @@ export const getAuthenticateMutationOptions = <TError = unknown, TContext = unkn
 }
 
 export type AuthenticateMutationResult = NonNullable<Awaited<ReturnType<typeof authenticate>>>
-export type AuthenticateMutationBody = AuthenticateRequest | undefined
-export type AuthenticateMutationError = unknown
+export type AuthenticateMutationBody = BodyType<AuthenticateRequest> | undefined
+export type AuthenticateMutationError = ErrorType<ProblemDetails>
 
-export const useAuthenticate = <TError = unknown, TContext = unknown>(
+export const useAuthenticate = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof authenticate>>,
       TError,
-      { data?: AuthenticateRequest },
+      { data?: BodyType<AuthenticateRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -707,22 +836,46 @@ export const useAuthenticate = <TError = unknown, TContext = unknown>(
 ): UseMutationResult<
   Awaited<ReturnType<typeof authenticate>>,
   TError,
-  { data?: AuthenticateRequest },
+  { data?: BodyType<AuthenticateRequest> },
   TContext
 > => {
   return useMutation(getAuthenticateMutationOptions(options), queryClient)
 }
 
-export type refreshResponse200 = {
+export type refreshResponse200ApplicationJson = {
   data: AuthTokensResponse
   status: 200
 }
 
-export type refreshResponseSuccess = refreshResponse200 & {
+export type refreshResponse200ApplicationProblemJson = {
+  data: AuthTokensResponse
+  status: 200
+}
+
+export type refreshResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type refreshResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type refreshResponseSuccess = (
+  | refreshResponse200ApplicationJson
+  | refreshResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type refreshResponseError = (
+  | refreshResponse500ApplicationJson
+  | refreshResponse500ApplicationProblemJson
+) & {
   headers: Headers
 }
 
-export type refreshResponse = refreshResponseSuccess
+export type refreshResponse = refreshResponseSuccess | refreshResponseError
 
 export const getRefreshUrl = () => {
   return `/api/auth/refresh`
@@ -740,18 +893,21 @@ export const refresh = async (
   })
 }
 
-export const getRefreshMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+export const getRefreshMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof refresh>>,
     TError,
-    { data?: RefreshRequest },
+    { data?: BodyType<RefreshRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof refresh>>,
   TError,
-  { data?: RefreshRequest },
+  { data?: BodyType<RefreshRequest> },
   TContext
 > => {
   const mutationKey = ["refresh"]
@@ -763,7 +919,7 @@ export const getRefreshMutationOptions = <TError = unknown, TContext = unknown>(
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof refresh>>,
-    { data?: RefreshRequest }
+    { data?: BodyType<RefreshRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -774,15 +930,15 @@ export const getRefreshMutationOptions = <TError = unknown, TContext = unknown>(
 }
 
 export type RefreshMutationResult = NonNullable<Awaited<ReturnType<typeof refresh>>>
-export type RefreshMutationBody = RefreshRequest | undefined
-export type RefreshMutationError = unknown
+export type RefreshMutationBody = BodyType<RefreshRequest> | undefined
+export type RefreshMutationError = ErrorType<ProblemDetails>
 
-export const useRefresh = <TError = unknown, TContext = unknown>(
+export const useRefresh = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof refresh>>,
       TError,
-      { data?: RefreshRequest },
+      { data?: BodyType<RefreshRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -791,22 +947,46 @@ export const useRefresh = <TError = unknown, TContext = unknown>(
 ): UseMutationResult<
   Awaited<ReturnType<typeof refresh>>,
   TError,
-  { data?: RefreshRequest },
+  { data?: BodyType<RefreshRequest> },
   TContext
 > => {
   return useMutation(getRefreshMutationOptions(options), queryClient)
 }
 
-export type createChallengeResponse200 = {
+export type createChallengeResponse200ApplicationJson = {
   data: ChallengeResponse
   status: 200
 }
 
-export type createChallengeResponseSuccess = createChallengeResponse200 & {
+export type createChallengeResponse200ApplicationProblemJson = {
+  data: ChallengeResponse
+  status: 200
+}
+
+export type createChallengeResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type createChallengeResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type createChallengeResponseSuccess = (
+  | createChallengeResponse200ApplicationJson
+  | createChallengeResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type createChallengeResponseError = (
+  | createChallengeResponse500ApplicationJson
+  | createChallengeResponse500ApplicationProblemJson
+) & {
   headers: Headers
 }
 
-export type createChallengeResponse = createChallengeResponseSuccess
+export type createChallengeResponse = createChallengeResponseSuccess | createChallengeResponseError
 
 export const getCreateChallengeUrl = () => {
   return `/api/auth/challenge`
@@ -824,18 +1004,21 @@ export const createChallenge = async (
   })
 }
 
-export const getCreateChallengeMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+export const getCreateChallengeMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof createChallenge>>,
     TError,
-    { data?: ChallengeRequest },
+    { data?: BodyType<ChallengeRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof createChallenge>>,
   TError,
-  { data?: ChallengeRequest },
+  { data?: BodyType<ChallengeRequest> },
   TContext
 > => {
   const mutationKey = ["createChallenge"]
@@ -847,7 +1030,7 @@ export const getCreateChallengeMutationOptions = <TError = unknown, TContext = u
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof createChallenge>>,
-    { data?: ChallengeRequest }
+    { data?: BodyType<ChallengeRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -858,15 +1041,15 @@ export const getCreateChallengeMutationOptions = <TError = unknown, TContext = u
 }
 
 export type CreateChallengeMutationResult = NonNullable<Awaited<ReturnType<typeof createChallenge>>>
-export type CreateChallengeMutationBody = ChallengeRequest | undefined
-export type CreateChallengeMutationError = unknown
+export type CreateChallengeMutationBody = BodyType<ChallengeRequest> | undefined
+export type CreateChallengeMutationError = ErrorType<ProblemDetails>
 
-export const useCreateChallenge = <TError = unknown, TContext = unknown>(
+export const useCreateChallenge = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof createChallenge>>,
       TError,
-      { data?: ChallengeRequest },
+      { data?: BodyType<ChallengeRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -875,22 +1058,46 @@ export const useCreateChallenge = <TError = unknown, TContext = unknown>(
 ): UseMutationResult<
   Awaited<ReturnType<typeof createChallenge>>,
   TError,
-  { data?: ChallengeRequest },
+  { data?: BodyType<ChallengeRequest> },
   TContext
 > => {
   return useMutation(getCreateChallengeMutationOptions(options), queryClient)
 }
 
-export type getSessionResponse200 = {
+export type getSessionResponse200ApplicationJson = {
   data: SessionResponse
   status: 200
 }
 
-export type getSessionResponseSuccess = getSessionResponse200 & {
+export type getSessionResponse200ApplicationProblemJson = {
+  data: SessionResponse
+  status: 200
+}
+
+export type getSessionResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getSessionResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getSessionResponseSuccess = (
+  | getSessionResponse200ApplicationJson
+  | getSessionResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getSessionResponseError = (
+  | getSessionResponse500ApplicationJson
+  | getSessionResponse500ApplicationProblemJson
+) & {
   headers: Headers
 }
 
-export type getSessionResponse = getSessionResponseSuccess
+export type getSessionResponse = getSessionResponseSuccess | getSessionResponseError
 
 export const getGetSessionUrl = () => {
   return `/api/auth/session`
@@ -909,7 +1116,7 @@ export const getGetSessionQueryKey = () => {
 
 export const getGetSessionQueryOptions = <
   TData = Awaited<ReturnType<typeof getSession>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -929,9 +1136,12 @@ export const getGetSessionQueryOptions = <
 }
 
 export type GetSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getSession>>>
-export type GetSessionQueryError = unknown
+export type GetSessionQueryError = ErrorType<ProblemDetails>
 
-export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = unknown>(
+export function useGetSession<
+  TData = Awaited<ReturnType<typeof getSession>>,
+  TError = ErrorType<ProblemDetails>,
+>(
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>> &
       Pick<
@@ -946,7 +1156,10 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
   },
   queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = unknown>(
+export function useGetSession<
+  TData = Awaited<ReturnType<typeof getSession>>,
+  TError = ErrorType<ProblemDetails>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>> &
       Pick<
@@ -961,7 +1174,10 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = unknown>(
+export function useGetSession<
+  TData = Awaited<ReturnType<typeof getSession>>,
+  TError = ErrorType<ProblemDetails>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -969,7 +1185,10 @@ export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TE
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
-export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = unknown>(
+export function useGetSession<
+  TData = Awaited<ReturnType<typeof getSession>>,
+  TError = ErrorType<ProblemDetails>,
+>(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -990,11 +1209,27 @@ export type logoutResponse204 = {
   status: 204
 }
 
+export type logoutResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type logoutResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
 export type logoutResponseSuccess = logoutResponse204 & {
   headers: Headers
 }
+export type logoutResponseError = (
+  | logoutResponse500ApplicationJson
+  | logoutResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
 
-export type logoutResponse = logoutResponseSuccess
+export type logoutResponse = logoutResponseSuccess | logoutResponseError
 
 export const getLogoutUrl = () => {
   return `/api/auth/logout`
@@ -1012,18 +1247,21 @@ export const logout = async (
   })
 }
 
-export const getLogoutMutationOptions = <TError = unknown, TContext = unknown>(options?: {
+export const getLogoutMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof logout>>,
     TError,
-    { data?: RefreshRequest },
+    { data?: BodyType<RefreshRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
   Awaited<ReturnType<typeof logout>>,
   TError,
-  { data?: RefreshRequest },
+  { data?: BodyType<RefreshRequest> },
   TContext
 > => {
   const mutationKey = ["logout"]
@@ -1035,7 +1273,7 @@ export const getLogoutMutationOptions = <TError = unknown, TContext = unknown>(o
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof logout>>,
-    { data?: RefreshRequest }
+    { data?: BodyType<RefreshRequest> }
   > = (props) => {
     const { data } = props ?? {}
 
@@ -1046,15 +1284,15 @@ export const getLogoutMutationOptions = <TError = unknown, TContext = unknown>(o
 }
 
 export type LogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logout>>>
-export type LogoutMutationBody = RefreshRequest | undefined
-export type LogoutMutationError = unknown
+export type LogoutMutationBody = BodyType<RefreshRequest> | undefined
+export type LogoutMutationError = ErrorType<ProblemDetails>
 
-export const useLogout = <TError = unknown, TContext = unknown>(
+export const useLogout = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof logout>>,
       TError,
-      { data?: RefreshRequest },
+      { data?: BodyType<RefreshRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
@@ -1063,22 +1301,48 @@ export const useLogout = <TError = unknown, TContext = unknown>(
 ): UseMutationResult<
   Awaited<ReturnType<typeof logout>>,
   TError,
-  { data?: RefreshRequest },
+  { data?: BodyType<RefreshRequest> },
   TContext
 > => {
   return useMutation(getLogoutMutationOptions(options), queryClient)
 }
 
-export type listLinkedProvidersResponse200 = {
+export type listLinkedProvidersResponse200ApplicationJson = {
   data: LinkedProvidersResponse
   status: 200
 }
 
-export type listLinkedProvidersResponseSuccess = listLinkedProvidersResponse200 & {
+export type listLinkedProvidersResponse200ApplicationProblemJson = {
+  data: LinkedProvidersResponse
+  status: 200
+}
+
+export type listLinkedProvidersResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listLinkedProvidersResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listLinkedProvidersResponseSuccess = (
+  | listLinkedProvidersResponse200ApplicationJson
+  | listLinkedProvidersResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listLinkedProvidersResponseError = (
+  | listLinkedProvidersResponse500ApplicationJson
+  | listLinkedProvidersResponse500ApplicationProblemJson
+) & {
   headers: Headers
 }
 
-export type listLinkedProvidersResponse = listLinkedProvidersResponseSuccess
+export type listLinkedProvidersResponse =
+  | listLinkedProvidersResponseSuccess
+  | listLinkedProvidersResponseError
 
 export const getListLinkedProvidersUrl = () => {
   return `/api/auth/providers/linked`
@@ -1099,7 +1363,7 @@ export const getListLinkedProvidersQueryKey = () => {
 
 export const getListLinkedProvidersQueryOptions = <
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(options?: {
   query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinkedProviders>>, TError, TData>>
   request?: SecondParameter<typeof customInstance>
@@ -1121,11 +1385,11 @@ export const getListLinkedProvidersQueryOptions = <
 export type ListLinkedProvidersQueryResult = NonNullable<
   Awaited<ReturnType<typeof listLinkedProviders>>
 >
-export type ListLinkedProvidersQueryError = unknown
+export type ListLinkedProvidersQueryError = ErrorType<ProblemDetails>
 
 export function useListLinkedProviders<
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(
   options: {
     query: Partial<
@@ -1145,7 +1409,7 @@ export function useListLinkedProviders<
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useListLinkedProviders<
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
@@ -1165,7 +1429,7 @@ export function useListLinkedProviders<
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useListLinkedProviders<
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinkedProviders>>, TError, TData>>
@@ -1176,7 +1440,7 @@ export function useListLinkedProviders<
 
 export function useListLinkedProviders<
   TData = Awaited<ReturnType<typeof listLinkedProviders>>,
-  TError = unknown,
+  TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listLinkedProviders>>, TError, TData>>

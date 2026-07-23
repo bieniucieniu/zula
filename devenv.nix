@@ -59,23 +59,12 @@ in
     backend = {
       module = {
         processes.server = {
+          after = [ "devenv:processes:postgres" ];
           exec = "${root}/gradlew :server:run";
-          process-compose = {
-            working_dir = root;
-            depends_on = {
-              postgres.condition = "process_healthy";
-            };
-            readiness_probe = {
-              http_get = {
-                host = "127.0.0.1";
-                port = 8000;
-                path = "/health";
-              };
-              # Gradle cold start can take a while.
-              initial_delay_seconds = 15;
-              period_seconds = 5;
-              timeout_seconds = 5;
-              failure_threshold = 36;
+          ready = {
+            http.get = {
+              port = 8000;
+              path = "/health";
             };
           };
         };
@@ -84,17 +73,9 @@ in
     schema = {
       extends = [ "backend" ];
       module = {
-        processes.sync-schema = {
+        processes.schema-sync = {
+          after = [ "devenv:processes:server" ];
           exec = syncSchema;
-          process-compose = {
-            working_dir = root;
-            depends_on = {
-              server.condition = "process_healthy";
-            };
-            availability = {
-              restart = "no";
-            };
-          };
         };
       };
     };
@@ -102,13 +83,11 @@ in
       extends = [ "schema" ];
       module = {
         processes.web = {
-          exec = "cd apps/web && bun run dev";
-          process-compose = {
-            working_dir = "${root}/apps/web";
-            depends_on = {
-              sync-schema.condition = "process_completed_successfully";
-            };
-          };
+          after = [
+            "devenv:processes:schema-sync@completed"
+            "devenv:processes:server"
+          ];
+          exec = "cd apps/web && bun run dev --host";
         };
       };
     };
@@ -116,6 +95,10 @@ in
       extends = [ "schema" ];
       module = {
         processes.native = {
+          after = [
+            "devenv:processes:schema-sync@completed"
+            "devenv:processes:server"
+          ];
           # Expo inlines EXPO_PUBLIC_* at Metro start. Prefer explicit override;
           # else use LAN IP so a physical device can reach the host API.
           exec = ''
@@ -128,12 +111,6 @@ in
             echo "native: EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
             cd ${root}/apps/native && bun run dev
           '';
-          process-compose = {
-            working_dir = "${root}/apps/native";
-            depends_on = {
-              sync-schema.condition = "process_completed_successfully";
-            };
-          };
         };
       };
     };
