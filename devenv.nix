@@ -44,7 +44,10 @@ in
 
   # --- Profiles ---
   # devenv --profile backend up     → Postgres + Ktor
-  # devenv --profile all up         → backend + web + native
+  # devenv --profile schema up      → backend + sync OpenAPI client + format + build packages
+  # devenv --profile web up           → schema + Vite
+  # devenv --profile native up        → schema + Expo
+  # devenv --profile all up           → web + native
   profiles = {
     backend = {
       module = {
@@ -71,20 +74,39 @@ in
         };
       };
     };
-    web = {
+    schema = {
       extends = [ "backend" ];
+      module = {
+        processes.sync-schema = {
+          exec = "${root}/scripts/sync-schema.sh";
+          process-compose = {
+            working_dir = root;
+            depends_on = {
+              server.condition = "process_healthy";
+            };
+            availability = {
+              restart = "no";
+            };
+          };
+        };
+      };
+    };
+    web = {
+      extends = [ "schema" ];
       module = {
         processes.web = {
           exec = "cd apps/web && bun run dev";
           process-compose = {
             working_dir = "${root}/apps/web";
-            depends_on.server.condition = "process_healthy";
+            depends_on = {
+              sync-schema.condition = "process_completed_successfully";
+            };
           };
         };
       };
     };
     native = {
-      extends = [ "backend" ];
+      extends = [ "schema" ];
       module = {
         processes.native = {
           # Expo inlines EXPO_PUBLIC_* at Metro start. Prefer explicit override;
@@ -101,14 +123,15 @@ in
           '';
           process-compose = {
             working_dir = "${root}/apps/native";
-            depends_on.server.condition = "process_healthy";
+            depends_on = {
+              sync-schema.condition = "process_completed_successfully";
+            };
           };
         };
       };
     };
     all = {
       extends = [
-        "backend"
         "web"
         "native"
       ];
@@ -128,6 +151,10 @@ in
     '';
   };
 
+  scripts.sync-schema.exec = ''
+    exec "${root}/scripts/sync-schema.sh"
+  '';
+
   scripts.gen-api.exec = ''
     cd "${root}"
     bun run gen:api
@@ -140,9 +167,13 @@ in
       toString (config.secretspec.profile or "unset")
     }"
     echo "  deps:    devenv --profile backend up   # postgres + ktor"
+    echo "  schema:  devenv --profile schema up    # backend + sync OpenAPI client + build packages"
+    echo "  web:     devenv --profile web up        # schema + vite"
+    echo "  native:  devenv --profile native up     # schema + expo"
     echo "  docker:  bun run deps:docker            # postgres only (no devenv)"
-    echo "  all:     devenv --profile all up       # or: zula-all"
-    echo "  api:     gen-api                       # orval + biome format (server must be up)"
+    echo "  all:     devenv --profile all up        # web + native"
+    echo "  schema:  sync-schema                   # orval + format + build packages (server must be up)"
+    echo "  api:     gen-api                        # orval + biome format (server must be up)"
     echo "  db:      psql                          # interactive (needs devenv up)"
     echo "  jdbc:    $DATABASE_JDBC_URL"
     echo "  app:     $APP_URL"
@@ -169,6 +200,7 @@ in
       echo "SKIP: docker not installed in this environment"
     fi
     test -f "${root}/docker-compose.yaml"
+    test -f "${root}/scripts/sync-schema.sh"
     echo "OK"
   '';
 }
