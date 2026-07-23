@@ -4,7 +4,6 @@ JOIN user_identities ON users.id = user_identities.user_id
 WHERE user_identities.provider = ? AND user_identities.provider_user_id = ?
 LIMIT 1;
 
--- Client id for optimistic creates on non-critical tables only (see insertAuthChallenge).
 insertUser:
 INSERT INTO users (id, username)
 VALUES (?, ?);

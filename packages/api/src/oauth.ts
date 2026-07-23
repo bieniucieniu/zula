@@ -38,7 +38,7 @@ export function toStoredOAuthSession(tokens: AuthTokensResponse): StoredOAuthSes
     accessToken: tokens.accessToken,
     expiresIn: tokens.expiresIn,
     refreshToken: tokens.refreshToken,
-    sessionId: sessionIdFromAccessToken(tokens.accessToken),
+    sessionId: tokens.sessionId ?? sessionIdFromAccessToken(tokens.accessToken),
   }
 }
 
