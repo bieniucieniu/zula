@@ -1,6 +1,6 @@
 import kotlin.uuid.Uuid;
 CREATE TABLE users (
-    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT generate_uuid_v7(),
+    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT uuidv7(),
     username TEXT NOT NULL UNIQUE
 );
 
@@ -17,7 +17,7 @@ CREATE TABLE user_profiles (
 );
 
 CREATE TABLE user_identities (
-    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT generate_uuid_v7(),
+    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT uuidv7(),
     user_id UUID AS Uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     provider TEXT NOT NULL,
     provider_user_id TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE user_identities (
 );
 
 CREATE TABLE user_sessions (
-    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT generate_uuid_v7(),
+    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT uuidv7(),
     user_id UUID AS Uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     auth_method TEXT NOT NULL,
     refresh_token_hash TEXT UNIQUE,
@@ -53,7 +53,7 @@ CREATE TABLE user_stats (
 );
 
 CREATE TABLE auth_challenges (
-    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT generate_uuid_v7(),
+    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT uuidv7(),
     channel TEXT NOT NULL,
     target TEXT NOT NULL,
     code_hash TEXT NOT NULL,

@@ -11,9 +11,9 @@
 
 | Object | Purpose |
 |--------|---------|
-| `generate_uuid_v7()` | UUID PKs (UUIDv7, time-ordered; app uses `Uuid.generateV7()`) |
+| `uuidv7()` | UUID PKs (PostgreSQL 18+ built-in UUIDv7; app uses `Uuid.generateV7()`) |
 
-Entity tables use `id UUID PRIMARY KEY DEFAULT generate_uuid_v7()` and **no `created_at`** — create time is in the UUIDv7 timestamp field (`Ids.createdAtMillis`).
+Entity tables use `id UUID PRIMARY KEY DEFAULT uuidv7()` and **no `created_at`** — create time is in the UUIDv7 timestamp field (`Ids.createdAtMillis`).
 
 Explicit mint: `Ids.next()` / `Uuid.generateV7()` before insert (JWT `sid`, chat sync). Omit `id` on INSERT to use DB DEFAULT.
 
