@@ -19,16 +19,18 @@ Entity tables use `id UUID PRIMARY KEY DEFAULT uuidv7()` and **no `created_at`**
 
 Explicit mint: `Ids.next()` / `Uuid.generateV7()` before insert (JWT `sid`, optimistic client creates). Omit `id` on INSERT to use DB DEFAULT.
 
-### Optimistic client ids
+### Optimistic client ids (non-critical only)
 
-Tables with `DEFAULT uuidv7()` support two insert paths:
+Use only for **ephemeral, non-critical** rows (today: `auth_challenges`). **Never** for users, profiles, identities, sessions, or other authoritative data — those require a known id up front and must fail on conflict.
 
 | Query pair | Use |
 |------------|-----|
-| `insert*` | Client supplies `id` (optimistic create / offline-first) |
+| `insert*` | Client supplies `id` (optimistic create) |
 | `insert*Auto` | Omit `id`; PostgreSQL mints `uuidv7()` |
 
-Repository helpers accept `preferredId: Uuid?`. They try `insert*` first; on **primary-key** conflict (`*_pkey`), they retry via `insert*Auto` so Postgres assigns a fresh id. Other unique violations (e.g. `users.username`) still surface as errors.
+`insertChallenge(preferredId?)` tries `insertAuthChallenge` first; on **primary-key** conflict (`*_pkey`), retries via `insertAuthChallengeAuto`. Other unique violations still surface as errors.
+
+Critical tables use strict `insert*` with a server-minted id (`Ids.next()`) or `insert*Auto` when the id can be assigned after insert — no PK-conflict retry.
 
 ---
 
