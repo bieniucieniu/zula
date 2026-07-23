@@ -11,13 +11,9 @@ let
   syncSchema = ''
     set -eu
     cd "${root}"
-    echo "sync-schema: generating OpenAPI client from running server"
     bun run gen:api
-    echo "sync-schema: formatting workspace"
     bun run format
-    echo "sync-schema: building workspace packages"
     bun run build:packages
-    echo "sync-schema: done"
   '';
 in
 {
