@@ -1,5 +1,6 @@
 package com.zula.app
 
+import com.zula.core.http.ProblemDetails
 import com.zula.core.security.jwt.configureJwksRouting
 import com.zula.features.auth.configureAuthRouting
 import com.zula.features.chat.configureChatRouting
@@ -10,11 +11,15 @@ import com.zula.features.moderation.configureModerationRouting
 import com.zula.features.trade.configureTradeRouting
 import com.zula.features.user.configureUserRouting
 import com.zula.features.validation.configureValidationRouting
+import io.ktor.http.*
+import io.ktor.openapi.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.*
 
 fun Application.configureRouting() {
     routing {
+
         configureJwksRouting()
 
         route("/api") {
@@ -27,6 +32,14 @@ fun Application.configureRouting() {
             configureValidationRouting()
             configureChatRouting()
             configureModerationRouting()
+        }.describe {
+            responses {
+                //expose ProblemDetails to openapi generation
+                HttpStatusCode.InternalServerError {
+                    schema = jsonSchema<ProblemDetails>()
+                }
+            }
         }
     }
+
 }

@@ -41,8 +41,9 @@ class AuthService(
                 json.encodeToString(serializer, it)
             }
         val existingIdentity = repository.findIdentity(identity.provider, identity.providerUserId)
-        if (existingIdentity == null) {
-            repository.insertIdentity(
+        var identityId = existingIdentity?.id
+        if (identityId == null) {
+            identityId = repository.insertIdentity(
                 userId = userId,
                 provider = identity.provider,
                 providerUserId = identity.providerUserId,
@@ -61,8 +62,6 @@ class AuthService(
             )
         }
 
-        val identityId =
-            existingIdentity?.id ?: repository.findIdentity(identity.provider, identity.providerUserId)!!.id
         if (credential is AuthCredential.OAuthIdToken && !credential.providerRefreshToken.isNullOrBlank()) {
             providerTokenService.storeProviderRefresh(identityId, credential.providerRefreshToken)
         }
@@ -103,9 +102,10 @@ class AuthService(
             ),
         )
 
+
         return AuthTokensResponse(
             accessToken = accessToken,
-            expiresIn = jwtConfig.accessTokenTtlSeconds,
+            expiresIn = securityConfig.jwt.accessTokenTtlSeconds,
             refreshToken = refreshToken,
             sessionId = sessionId.toString(),
         )
@@ -116,7 +116,7 @@ class AuthService(
         val newRefresh = RefreshTokenGenerator.generate()
         val newHash = RefreshTokenGenerator.hash(newRefresh)
         val now = Instant.now().epochSecond
-        val newExpires = now + jwtConfig.refreshTokenTtlSeconds
+        val newExpires = now + securityConfig.jwt.refreshTokenTtlSeconds
 
         val (oldSession, nextId) = repository.rotateRefreshSession(
             refreshHash = hash,
@@ -139,7 +139,7 @@ class AuthService(
 
         return AuthTokensResponse(
             accessToken = accessToken,
-            expiresIn = jwtConfig.accessTokenTtlSeconds,
+            expiresIn = securityConfig.jwt.accessTokenTtlSeconds,
             refreshToken = newRefresh,
             sessionId = nextId.toString(),
         )

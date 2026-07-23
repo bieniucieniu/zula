@@ -28,7 +28,6 @@ class AuthRepository(
     }
 
     fun insertIdentity(
-
         userId: Uuid,
         provider: String,
         providerUserId: String,
@@ -37,18 +36,17 @@ class AuthRepository(
         refreshEnc: String?,
         status: String,
         scopes: String?,
-    ) {
-        queries.insertIdentity(
-            user_id = userId,
-            provider = provider,
-            provider_user_id = providerUserId,
-            email = email,
-            provider_metadata = metadata,
-            provider_refresh_token_enc = refreshEnc,
-            credentials_status = status,
-            scopes = scopes,
-        )
-    }
+    ) = queries.insertIdentity(
+        user_id = userId,
+        provider = provider,
+        provider_user_id = providerUserId,
+        email = email,
+        provider_metadata = metadata,
+        provider_refresh_token_enc = refreshEnc,
+        credentials_status = status,
+        scopes = scopes,
+    ).executeAsOne()
+
 
     fun findIdentity(provider: String, providerUserId: String): User_identities? =
         queries.findIdentityByProvider(provider, providerUserId).executeAsOneOrNull()
