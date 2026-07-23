@@ -8,6 +8,17 @@
 let
   secrets = config.secretspec.secrets;
   root = config.devenv.root;
+  syncSchema = ''
+    set -eu
+    cd "${root}"
+    echo "sync-schema: generating OpenAPI client from running server"
+    bun run gen:api
+    echo "sync-schema: formatting workspace"
+    bun run format
+    echo "sync-schema: building workspace packages"
+    bun run build:packages
+    echo "sync-schema: done"
+  '';
 in
 {
   packages = [
@@ -78,7 +89,7 @@ in
       extends = [ "backend" ];
       module = {
         processes.sync-schema = {
-          exec = "${root}/scripts/sync-schema.sh";
+          exec = syncSchema;
           process-compose = {
             working_dir = root;
             depends_on = {
@@ -151,9 +162,7 @@ in
     '';
   };
 
-  scripts.sync-schema.exec = ''
-    exec "${root}/scripts/sync-schema.sh"
-  '';
+  scripts.sync-schema.exec = syncSchema;
 
   scripts.gen-api.exec = ''
     cd "${root}"
@@ -200,7 +209,6 @@ in
       echo "SKIP: docker not installed in this environment"
     fi
     test -f "${root}/docker-compose.yaml"
-    test -f "${root}/scripts/sync-schema.sh"
     echo "OK"
   '';
 }
