@@ -19,32 +19,25 @@ class AuthRepository(
     fun findUserByUsername(username: String): Users? =
         queries.findUserByUsername(username).executeAsOneOrNull()
 
-    fun createUser(
-        preferredId: Uuid?,
-        username: String,
-        now: Long = System.currentTimeMillis() / 1000,
-    ): Uuid =
+    fun createUser(id: Uuid, username: String, now: Long = System.currentTimeMillis() / 1000) {
+        database.transaction {
+            queries.insertUser(id, username)
+            queries.insertUserProfile(id, username, now)
+            queries.upsertUserStats(id, now)
+        }
+    }
+
+    /** DB-minted UUIDv7. Prefer [createUser] when the id must be known before insert. */
+    fun createUserAuto(username: String, now: Long = System.currentTimeMillis() / 1000): Uuid =
         database.transactionWithResult {
-            val id = insertWithOptimisticId(
-                preferredId = preferredId,
-                insertWithId = { userId ->
-                    queries.insertUser(userId, username)
-                    queries.insertUserProfile(userId, username, now)
-                    queries.upsertUserStats(userId, now)
-                    userId
-                },
-                insertAuto = {
-                    val userId = queries.insertUserAuto(username).executeAsOne()
-                    queries.insertUserProfile(userId, username, now)
-                    queries.upsertUserStats(userId, now)
-                    userId
-                },
-            )
+            val id = queries.insertUserAuto(username).executeAsOne()
+            queries.insertUserProfile(id, username, now)
+            queries.upsertUserStats(id, now)
             id
         }
 
     fun insertIdentity(
-        preferredId: Uuid?,
+        id: Uuid,
         userId: Uuid,
         provider: String,
         providerUserId: String,
@@ -53,36 +46,19 @@ class AuthRepository(
         refreshEnc: String?,
         status: String,
         scopes: String?,
-    ): Uuid =
-        insertWithOptimisticId(
-            preferredId = preferredId,
-            insertWithId = { identityId ->
-                queries.insertIdentity(
-                    id = identityId,
-                    user_id = userId,
-                    provider = provider,
-                    provider_user_id = providerUserId,
-                    email = email,
-                    provider_metadata = metadata,
-                    provider_refresh_token_enc = refreshEnc,
-                    credentials_status = status,
-                    scopes = scopes,
-                )
-                identityId
-            },
-            insertAuto = {
-                queries.insertIdentityAuto(
-                    user_id = userId,
-                    provider = provider,
-                    provider_user_id = providerUserId,
-                    email = email,
-                    provider_metadata = metadata,
-                    provider_refresh_token_enc = refreshEnc,
-                    credentials_status = status,
-                    scopes = scopes,
-                ).executeAsOne()
-            },
+    ) {
+        queries.insertIdentity(
+            id = id,
+            user_id = userId,
+            provider = provider,
+            provider_user_id = providerUserId,
+            email = email,
+            provider_metadata = metadata,
+            provider_refresh_token_enc = refreshEnc,
+            credentials_status = status,
+            scopes = scopes,
         )
+    }
 
     fun findIdentity(provider: String, providerUserId: String): User_identities? =
         queries.findIdentityByProvider(provider, providerUserId).executeAsOneOrNull()
@@ -116,7 +92,7 @@ class AuthRepository(
         queries.listIdentitiesByUser(userId).executeAsList()
 
     fun insertSession(
-        preferredId: Uuid?,
+        id: Uuid,
         userId: Uuid,
         authMethod: String,
         refreshHash: String?,
@@ -124,34 +100,18 @@ class AuthRepository(
         ipAddress: String?,
         expiresAt: Long,
         rotatedFromId: Uuid?,
-    ): Uuid =
-        insertWithOptimisticId(
-            preferredId = preferredId,
-            insertWithId = { sessionId ->
-                queries.insertSession(
-                    id = sessionId,
-                    user_id = userId,
-                    auth_method = authMethod,
-                    refresh_token_hash = refreshHash,
-                    device_info = deviceInfo,
-                    ip_address = ipAddress,
-                    expires_at = expiresAt,
-                    rotated_from_id = rotatedFromId,
-                )
-                sessionId
-            },
-            insertAuto = {
-                queries.insertSessionAuto(
-                    user_id = userId,
-                    auth_method = authMethod,
-                    refresh_token_hash = refreshHash,
-                    device_info = deviceInfo,
-                    ip_address = ipAddress,
-                    expires_at = expiresAt,
-                    rotated_from_id = rotatedFromId,
-                ).executeAsOne()
-            },
+    ) {
+        queries.insertSession(
+            id = id,
+            user_id = userId,
+            auth_method = authMethod,
+            refresh_token_hash = refreshHash,
+            device_info = deviceInfo,
+            ip_address = ipAddress,
+            expires_at = expiresAt,
+            rotated_from_id = rotatedFromId,
         )
+    }
 
     fun findSession(id: Uuid): User_sessions? =
         queries.findSessionById(id).executeAsOneOrNull()
@@ -212,7 +172,7 @@ class AuthRepository(
             }
 
             insertSession(
-                preferredId = newSessionId,
+                id = newSessionId,
                 userId = session.user_id,
                 authMethod = session.auth_method,
                 refreshHash = newRefreshHash,
@@ -231,6 +191,7 @@ class AuthRepository(
 
     fun getUserById(id: Uuid): Users? = queries.getUserById(id).executeAsOneOrNull()
 
+    /** Non-critical ephemeral row; supports optimistic client ids with PK-conflict retry. */
     fun insertChallenge(
         preferredId: Uuid?,
         channel: String,

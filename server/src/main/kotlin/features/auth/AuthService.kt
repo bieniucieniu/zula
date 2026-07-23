@@ -43,7 +43,7 @@ class AuthService(
         val existingIdentity = repository.findIdentity(identity.provider, identity.providerUserId)
         if (existingIdentity == null) {
             repository.insertIdentity(
-                preferredId = Ids.next(),
+                id = Ids.next(),
                 userId = userId,
                 provider = identity.provider,
                 providerUserId = identity.providerUserId,
@@ -221,8 +221,9 @@ class AuthService(
             }
         }
 
-        val sessionId = repository.insertSession(
-            preferredId = Ids.next(),
+        val sessionId = Ids.next()
+        repository.insertSession(
+            id = sessionId,
             userId = userId,
             authMethod = amr,
             refreshHash = refreshHash,
@@ -269,7 +270,8 @@ class AuthService(
             username = "${base.take(32)}_$suffix"
         }
         val id = Ids.next()
-        return repository.createUser(preferredId = id, username)
+        repository.createUser(id, username)
+        return id
     }
 
     private fun generateUsername(identity: Identity): String {

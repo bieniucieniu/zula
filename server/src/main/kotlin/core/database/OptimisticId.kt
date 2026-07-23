@@ -18,8 +18,9 @@ internal fun isPrimaryKeyConflict(error: Throwable): Boolean {
 }
 
 /**
- * Insert with a client-minted id for optimistic create flows.
- * On primary-key conflict, retry without an id so PostgreSQL applies `uuidv7()`.
+ * Insert with a client-minted id for optimistic create flows on **non-critical** data only
+ * (e.g. ephemeral auth challenges). On primary-key conflict, retry without an id so
+ * PostgreSQL applies `uuidv7()`. Do not use for users, profiles, identities, or sessions.
  */
 internal inline fun <T> insertWithOptimisticId(
     preferredId: Uuid?,
