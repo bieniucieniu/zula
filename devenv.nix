@@ -172,7 +172,7 @@ in
     echo "  native:  devenv --profile native up     # schema + expo"
     echo "  docker:  bun run deps:docker            # postgres only (no devenv)"
     echo "  all:     devenv --profile all up        # web + native"
-    echo "  schema:  sync-schema                   # orval + format + build packages (server must be up)"
+    echo "  sync:    sync-schema                   # orval + format + build packages (server must be up)"
     echo "  api:     gen-api                        # orval + biome format (server must be up)"
     echo "  db:      psql                          # interactive (needs devenv up)"
     echo "  jdbc:    $DATABASE_JDBC_URL"
