@@ -11,6 +11,8 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "gen:api": "orval --config packages/api/orval.config.ts",
+    "web": "bun run --filter zula-web dev",
+    "native": "bun run --filter zula-native dev",
     "deps:docker": "docker compose up",
     "deps:docker:down": "docker compose down",
     "deps:docker:reset": "docker compose down -v"
