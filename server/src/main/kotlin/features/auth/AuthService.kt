@@ -108,6 +108,7 @@ class AuthService(
             accessToken = accessToken,
             expiresIn = jwtConfig.accessTokenTtlSeconds,
             refreshToken = refreshToken,
+            sessionId = sessionId.toString(),
         )
     }
 
@@ -143,6 +144,7 @@ class AuthService(
             accessToken = accessToken,
             expiresIn = jwtConfig.accessTokenTtlSeconds,
             refreshToken = newRefresh,
+            sessionId = newSessionId.toString(),
         )
     }
 
@@ -169,13 +171,11 @@ class AuthService(
     }
 
     suspend fun createChallenge(request: ChallengeRequest): ChallengeResponse {
-        val id = Ids.next()
         val now = Instant.now().epochSecond
         val expiresIn = 600L
         val code = EmailOtpAuthProvider.generateCode()
         val hash = EmailOtpAuthProvider.hashCode(request.target, code)
         val challengeId = repository.insertChallenge(
-            preferredId = id,
             channel = request.channel,
             target = request.target,
             codeHash = hash,
@@ -186,13 +186,11 @@ class AuthService(
     }
 
     suspend fun createMagicLinkChallenge(channel: String, target: String): ChallengeResponse {
-        val id = Ids.next()
         val token = MagicLinkAuthProvider.generateToken()
         val hash = MagicLinkAuthProvider.hashToken(token)
         val now = Instant.now().epochSecond
         val expiresIn = 900L
         val challengeId = repository.insertChallenge(
-            preferredId = id,
             channel = channel,
             target = target,
             codeHash = hash,

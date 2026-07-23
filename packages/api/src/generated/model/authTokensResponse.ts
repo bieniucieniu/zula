@@ -11,4 +11,5 @@ export interface AuthTokensResponse {
   tokenType?: string
   /** @nullable */
   refreshToken?: string | null
+  sessionId: string
 }

@@ -52,6 +52,7 @@ data class AuthTokensResponse(
     val expiresIn: Long,
     val tokenType: String = "Bearer",
     val refreshToken: String? = null,
+    val sessionId: String,
 )
 
 @Serializable

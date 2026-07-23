@@ -17,20 +17,9 @@
 
 Entity tables use `id UUID PRIMARY KEY DEFAULT uuidv7()` and **no `created_at`** — create time is in the UUIDv7 timestamp field (`Ids.createdAtMillis`).
 
-Explicit mint: `Ids.next()` / `Uuid.generateV7()` before insert (JWT `sid`, optimistic client creates). Omit `id` on INSERT to use DB DEFAULT.
+Explicit mint: `Ids.next()` / `Uuid.generateV7()` before insert when the id must be known up front (JWT `sid`). Omit `id` on INSERT to use DB DEFAULT (`insert*Auto` + `RETURNING id`).
 
-### Optimistic client ids (non-critical only)
-
-Use only for **ephemeral, non-critical** rows (today: `auth_challenges`). **Never** for users, profiles, identities, sessions, or other authoritative data — those require a known id up front and must fail on conflict.
-
-| Query pair | Use |
-|------------|-----|
-| `insert*` | Client supplies `id` (optimistic create) |
-| `insert*Auto` | Omit `id`; PostgreSQL mints `uuidv7()` |
-
-`insertChallenge(preferredId?)` tries `insertAuthChallenge` first; on **primary-key** conflict (`*_pkey`), retries via `insertAuthChallengeAuto`. Other unique violations still surface as errors.
-
-Critical tables use strict `insert*` with a server-minted id (`Ids.next()`) or `insert*Auto` when the id can be assigned after insert — no PK-conflict retry.
+Create endpoints return persisted ids in the response (e.g. `ChallengeResponse.challengeId`, `AuthTokensResponse.sessionId`) so clients can reconcile optimistic UI after the server assigns ids.
 
 ---
 

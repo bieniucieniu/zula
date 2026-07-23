@@ -1,7 +1,6 @@
 package com.zula.features.auth.persistence
 
 import com.zula.*
-import com.zula.core.database.insertWithOptimisticId
 import com.zula.core.http.badRequest
 import com.zula.features.auth.domain.AuthMethods
 import com.zula.core.http.unauthorized
@@ -191,25 +190,14 @@ class AuthRepository(
 
     fun getUserById(id: Uuid): Users? = queries.getUserById(id).executeAsOneOrNull()
 
-    /** Non-critical ephemeral row; supports optimistic client ids with PK-conflict retry. */
     fun insertChallenge(
-        preferredId: Uuid?,
         channel: String,
         target: String,
         codeHash: String,
         purpose: String,
         expiresAt: Long,
     ): Uuid =
-        insertWithOptimisticId(
-            preferredId = preferredId,
-            insertWithId = { challengeId ->
-                queries.insertAuthChallenge(challengeId, channel, target, codeHash, purpose, expiresAt)
-                challengeId
-            },
-            insertAuto = {
-                queries.insertAuthChallengeAuto(channel, target, codeHash, purpose, expiresAt).executeAsOne()
-            },
-        )
+        queries.insertAuthChallengeAuto(channel, target, codeHash, purpose, expiresAt).executeAsOne()
 
     fun findChallenge(id: Uuid): Auth_challenges? =
         queries.findAuthChallenge(id).executeAsOneOrNull()
