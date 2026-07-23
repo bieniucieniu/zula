@@ -13,7 +13,6 @@ import {
 } from "react"
 import { configureApiClient } from "@/lib/api"
 import { getDevAuthEmail, getDevAuthSecret } from "@/lib/dev-auth"
-import { setPowerSyncAccessToken } from "@/lib/powersync"
 
 const SESSION_STORAGE_KEY = "zula.oauth.session"
 
@@ -48,13 +47,11 @@ async function writeStoredSession(session: StoredOAuthSession | null) {
   if (!session) {
     await AsyncStorage.removeItem(SESSION_STORAGE_KEY)
     setAccessToken(null)
-    setPowerSyncAccessToken(null)
     return
   }
 
   await AsyncStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
   setAccessToken(session.accessToken)
-  setPowerSyncAccessToken(session.accessToken)
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -66,7 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const stored = await readStoredSession()
       if (stored) {
         setAccessToken(stored.accessToken)
-        setPowerSyncAccessToken(stored.accessToken)
       }
       setBootstrapped(true)
     })()
