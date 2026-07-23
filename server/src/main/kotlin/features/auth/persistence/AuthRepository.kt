@@ -1,6 +1,7 @@
 package com.zula.features.auth.persistence
 
 import com.zula.*
+import com.zula.core.database.insertWithOptimisticId
 import com.zula.core.http.badRequest
 import com.zula.features.auth.domain.AuthMethods
 import com.zula.core.http.unauthorized
@@ -18,29 +19,32 @@ class AuthRepository(
     fun findUserByUsername(username: String): Users? =
         queries.findUserByUsername(username).executeAsOneOrNull()
 
-    fun createUser(id: Uuid, username: String, now: Long = System.currentTimeMillis() / 1000) {
-        database.transaction {
-            queries.insertUser(id, username)
-            queries.insertUserProfile(id, username, now)
-            queries.upsertUserStats(id, now)
-        }
-    }
-
-    /** DB-minted UUIDv7. Prefer [createUser] when JWT needs the id first. */
-    fun createUserAuto(username: String, now: Long = System.currentTimeMillis() / 1000): Uuid {
-        return database.transactionWithResult {
-            val id = queries.insertUserAuto(username).executeAsOne()
-            queries.insertUserProfile(id, username, now)
-            queries.upsertUserStats(id, now)
+    fun createUser(
+        preferredId: Uuid?,
+        username: String,
+        now: Long = System.currentTimeMillis() / 1000,
+    ): Uuid =
+        database.transactionWithResult {
+            val id = insertWithOptimisticId(
+                preferredId = preferredId,
+                insertWithId = { userId ->
+                    queries.insertUser(userId, username)
+                    queries.insertUserProfile(userId, username, now)
+                    queries.upsertUserStats(userId, now)
+                    userId
+                },
+                insertAuto = {
+                    val userId = queries.insertUserAuto(username).executeAsOne()
+                    queries.insertUserProfile(userId, username, now)
+                    queries.upsertUserStats(userId, now)
+                    userId
+                },
+            )
             id
         }
-    }
-
-    fun findIdentity(provider: String, providerUserId: String): User_identities? =
-        queries.findIdentityByProvider(provider, providerUserId).executeAsOneOrNull()
 
     fun insertIdentity(
-        id: Uuid,
+        preferredId: Uuid?,
         userId: Uuid,
         provider: String,
         providerUserId: String,
@@ -49,19 +53,39 @@ class AuthRepository(
         refreshEnc: String?,
         status: String,
         scopes: String?,
-    ) {
-        queries.insertIdentity(
-            id = id,
-            user_id = userId,
-            provider = provider,
-            provider_user_id = providerUserId,
-            email = email,
-            provider_metadata = metadata,
-            provider_refresh_token_enc = refreshEnc,
-            credentials_status = status,
-            scopes = scopes,
+    ): Uuid =
+        insertWithOptimisticId(
+            preferredId = preferredId,
+            insertWithId = { identityId ->
+                queries.insertIdentity(
+                    id = identityId,
+                    user_id = userId,
+                    provider = provider,
+                    provider_user_id = providerUserId,
+                    email = email,
+                    provider_metadata = metadata,
+                    provider_refresh_token_enc = refreshEnc,
+                    credentials_status = status,
+                    scopes = scopes,
+                )
+                identityId
+            },
+            insertAuto = {
+                queries.insertIdentityAuto(
+                    user_id = userId,
+                    provider = provider,
+                    provider_user_id = providerUserId,
+                    email = email,
+                    provider_metadata = metadata,
+                    provider_refresh_token_enc = refreshEnc,
+                    credentials_status = status,
+                    scopes = scopes,
+                ).executeAsOne()
+            },
         )
-    }
+
+    fun findIdentity(provider: String, providerUserId: String): User_identities? =
+        queries.findIdentityByProvider(provider, providerUserId).executeAsOneOrNull()
 
     fun updateIdentityLogin(id: Uuid, email: String?, metadata: String?, status: String) {
         queries.updateIdentityLogin(email, metadata, status, id)
@@ -92,7 +116,7 @@ class AuthRepository(
         queries.listIdentitiesByUser(userId).executeAsList()
 
     fun insertSession(
-        id: Uuid,
+        preferredId: Uuid?,
         userId: Uuid,
         authMethod: String,
         refreshHash: String?,
@@ -100,18 +124,34 @@ class AuthRepository(
         ipAddress: String?,
         expiresAt: Long,
         rotatedFromId: Uuid?,
-    ) {
-        queries.insertSession(
-            id = id,
-            user_id = userId,
-            auth_method = authMethod,
-            refresh_token_hash = refreshHash,
-            device_info = deviceInfo,
-            ip_address = ipAddress,
-            expires_at = expiresAt,
-            rotated_from_id = rotatedFromId,
+    ): Uuid =
+        insertWithOptimisticId(
+            preferredId = preferredId,
+            insertWithId = { sessionId ->
+                queries.insertSession(
+                    id = sessionId,
+                    user_id = userId,
+                    auth_method = authMethod,
+                    refresh_token_hash = refreshHash,
+                    device_info = deviceInfo,
+                    ip_address = ipAddress,
+                    expires_at = expiresAt,
+                    rotated_from_id = rotatedFromId,
+                )
+                sessionId
+            },
+            insertAuto = {
+                queries.insertSessionAuto(
+                    user_id = userId,
+                    auth_method = authMethod,
+                    refresh_token_hash = refreshHash,
+                    device_info = deviceInfo,
+                    ip_address = ipAddress,
+                    expires_at = expiresAt,
+                    rotated_from_id = rotatedFromId,
+                ).executeAsOne()
+            },
         )
-    }
 
     fun findSession(id: Uuid): User_sessions? =
         queries.findSessionById(id).executeAsOneOrNull()
@@ -171,15 +211,15 @@ class AuthRepository(
                 unauthorized("Invalid refresh token")
             }
 
-            queries.insertSession(
-                id = newSessionId,
-                user_id = session.user_id,
-                auth_method = session.auth_method,
-                refresh_token_hash = newRefreshHash,
-                device_info = session.device_info,
-                ip_address = session.ip_address,
-                expires_at = newExpiresAt,
-                rotated_from_id = session.id,
+            insertSession(
+                preferredId = newSessionId,
+                userId = session.user_id,
+                authMethod = session.auth_method,
+                refreshHash = newRefreshHash,
+                deviceInfo = session.device_info,
+                ipAddress = session.ip_address,
+                expiresAt = newExpiresAt,
+                rotatedFromId = session.id,
             )
             session
         }
@@ -192,15 +232,23 @@ class AuthRepository(
     fun getUserById(id: Uuid): Users? = queries.getUserById(id).executeAsOneOrNull()
 
     fun insertChallenge(
-        id: Uuid,
+        preferredId: Uuid?,
         channel: String,
         target: String,
         codeHash: String,
         purpose: String,
         expiresAt: Long,
-    ) {
-        queries.insertAuthChallenge(id, channel, target, codeHash, purpose, expiresAt)
-    }
+    ): Uuid =
+        insertWithOptimisticId(
+            preferredId = preferredId,
+            insertWithId = { challengeId ->
+                queries.insertAuthChallenge(challengeId, channel, target, codeHash, purpose, expiresAt)
+                challengeId
+            },
+            insertAuto = {
+                queries.insertAuthChallengeAuto(channel, target, codeHash, purpose, expiresAt).executeAsOne()
+            },
+        )
 
     fun findChallenge(id: Uuid): Auth_challenges? =
         queries.findAuthChallenge(id).executeAsOneOrNull()

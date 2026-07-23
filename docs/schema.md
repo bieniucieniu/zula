@@ -5,6 +5,8 @@
 **Baseline migration:** `000001_init.sql`  
 **Next planned:** `000002_feed.sql` (traits + feed — see [implementation_plan.md](./implementation_plan.md))
 
+**PostgreSQL:** 18+ required (`uuidv7()` is built-in). The server checks `server_version_num >= 180000` at startup.
+
 ---
 
 ## Core utilities
@@ -15,7 +17,18 @@
 
 Entity tables use `id UUID PRIMARY KEY DEFAULT uuidv7()` and **no `created_at`** — create time is in the UUIDv7 timestamp field (`Ids.createdAtMillis`).
 
-Explicit mint: `Ids.next()` / `Uuid.generateV7()` before insert (JWT `sid`, chat sync). Omit `id` on INSERT to use DB DEFAULT.
+Explicit mint: `Ids.next()` / `Uuid.generateV7()` before insert (JWT `sid`, optimistic client creates). Omit `id` on INSERT to use DB DEFAULT.
+
+### Optimistic client ids
+
+Tables with `DEFAULT uuidv7()` support two insert paths:
+
+| Query pair | Use |
+|------------|-----|
+| `insert*` | Client supplies `id` (optimistic create / offline-first) |
+| `insert*Auto` | Omit `id`; PostgreSQL mints `uuidv7()` |
+
+Repository helpers accept `preferredId: Uuid?`. They try `insert*` first; on **primary-key** conflict (`*_pkey`), they retry via `insert*Auto` so Postgres assigns a fresh id. Other unique violations (e.g. `users.username`) still surface as errors.
 
 ---
 

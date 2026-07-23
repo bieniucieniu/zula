@@ -43,7 +43,7 @@ class AuthService(
         val existingIdentity = repository.findIdentity(identity.provider, identity.providerUserId)
         if (existingIdentity == null) {
             repository.insertIdentity(
-                id = Ids.next(),
+                preferredId = Ids.next(),
                 userId = userId,
                 provider = identity.provider,
                 providerUserId = identity.providerUserId,
@@ -174,15 +174,15 @@ class AuthService(
         val expiresIn = 600L
         val code = EmailOtpAuthProvider.generateCode()
         val hash = EmailOtpAuthProvider.hashCode(request.target, code)
-        repository.insertChallenge(
-            id = id,
+        val challengeId = repository.insertChallenge(
+            preferredId = id,
             channel = request.channel,
             target = request.target,
             codeHash = hash,
             purpose = request.purpose,
             expiresAt = now + expiresIn,
         )
-        return ChallengeResponse(challengeId = id.toString(), expiresIn = expiresIn, token = code)
+        return ChallengeResponse(challengeId = challengeId.toString(), expiresIn = expiresIn, token = code)
     }
 
     suspend fun createMagicLinkChallenge(channel: String, target: String): ChallengeResponse {
@@ -191,15 +191,15 @@ class AuthService(
         val hash = MagicLinkAuthProvider.hashToken(token)
         val now = Instant.now().epochSecond
         val expiresIn = 900L
-        repository.insertChallenge(
-            id = id,
+        val challengeId = repository.insertChallenge(
+            preferredId = id,
             channel = channel,
             target = target,
             codeHash = hash,
             purpose = "magic_link",
             expiresAt = now + expiresIn,
         )
-        return ChallengeResponse(challengeId = id.toString(), expiresIn = expiresIn, token = token)
+        return ChallengeResponse(challengeId = challengeId.toString(), expiresIn = expiresIn, token = token)
     }
 
     private fun resolveSessionId(
@@ -221,9 +221,8 @@ class AuthService(
             }
         }
 
-        val sessionId = Ids.next()
-        repository.insertSession(
-            id = sessionId,
+        val sessionId = repository.insertSession(
+            preferredId = Ids.next(),
             userId = userId,
             authMethod = amr,
             refreshHash = refreshHash,
@@ -270,8 +269,7 @@ class AuthService(
             username = "${base.take(32)}_$suffix"
         }
         val id = Ids.next()
-        repository.createUser(id, username)
-        return id
+        return repository.createUser(preferredId = id, username)
     }
 
     private fun generateUsername(identity: Identity): String {
