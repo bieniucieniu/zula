@@ -103,10 +103,10 @@ object AuthMethods {
 
     fun isPasswordless(provider: String): Boolean =
         provider == DEV ||
-            provider == EMAIL_OTP ||
-            provider == MAGIC_LINK ||
-            provider == "email" ||
-            provider == "phone"
+                provider == EMAIL_OTP ||
+                provider == MAGIC_LINK ||
+                provider == "email" ||
+                provider == "phone"
 
     fun amrFor(provider: String): String = when (provider) {
         DEV -> DEV

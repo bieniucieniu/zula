@@ -2,8 +2,8 @@ package com.zula.features.auth.persistence
 
 import com.zula.*
 import com.zula.core.http.badRequest
-import com.zula.features.auth.domain.AuthMethods
 import com.zula.core.http.unauthorized
+import com.zula.features.auth.domain.AuthMethods
 import java.time.Instant
 import kotlin.uuid.Uuid
 
@@ -18,25 +18,17 @@ class AuthRepository(
     fun findUserByUsername(username: String): Users? =
         queries.findUserByUsername(username).executeAsOneOrNull()
 
-    fun createUser(id: Uuid, username: String, now: Long = System.currentTimeMillis() / 1000) {
-        database.transaction {
-            queries.insertUser(id, username)
-            queries.insertUserProfile(id, username, now)
-            queries.upsertUserStats(id, now)
-        }
-    }
-
-    /** DB-minted UUIDv7. Prefer [createUser] when the id must be known before insert. */
-    fun createUserAuto(username: String, now: Long = System.currentTimeMillis() / 1000): Uuid =
-        database.transactionWithResult {
-            val id = queries.insertUserAuto(username).executeAsOne()
+    fun createUser(username: String, now: Long = System.currentTimeMillis() / 1000): Uuid {
+        return database.transactionWithResult {
+            val id = queries.insertUser(username).executeAsOne()
             queries.insertUserProfile(id, username, now)
             queries.upsertUserStats(id, now)
             id
         }
+    }
 
     fun insertIdentity(
-        id: Uuid,
+
         userId: Uuid,
         provider: String,
         providerUserId: String,
@@ -47,7 +39,6 @@ class AuthRepository(
         scopes: String?,
     ) {
         queries.insertIdentity(
-            id = id,
             user_id = userId,
             provider = provider,
             provider_user_id = providerUserId,
@@ -91,7 +82,6 @@ class AuthRepository(
         queries.listIdentitiesByUser(userId).executeAsList()
 
     fun insertSession(
-        id: Uuid,
         userId: Uuid,
         authMethod: String,
         refreshHash: String?,
@@ -101,7 +91,6 @@ class AuthRepository(
         rotatedFromId: Uuid?,
     ) {
         queries.insertSession(
-            id = id,
             user_id = userId,
             auth_method = authMethod,
             refresh_token_hash = refreshHash,
@@ -109,7 +98,7 @@ class AuthRepository(
             ip_address = ipAddress,
             expires_at = expiresAt,
             rotated_from_id = rotatedFromId,
-        )
+        ).executeAsOne()
     }
 
     fun findSession(id: Uuid): User_sessions? =
@@ -143,11 +132,10 @@ class AuthRepository(
 
     fun rotateRefreshSession(
         refreshHash: String,
-        newSessionId: Uuid,
         newRefreshHash: String,
         newExpiresAt: Long,
         now: Long = Instant.now().epochSecond,
-    ): User_sessions {
+    ): Pair<User_sessions, Uuid> {
         return database.transactionWithResult {
             val session = queries.findAnySessionByRefreshHash(refreshHash).executeAsOneOrNull()
                 ?: unauthorized("Invalid refresh token")
@@ -165,22 +153,19 @@ class AuthRepository(
                 )
             }
 
-            val claimedId = queries.claimSessionForRefresh(session.id, now).executeAsOneOrNull()
-            if (claimedId == null) {
-                unauthorized("Invalid refresh token")
-            }
+            queries.claimSessionForRefresh(session.id, now).executeAsOneOrNull()
+                ?: unauthorized("Invalid refresh token")
 
-            insertSession(
-                id = newSessionId,
-                userId = session.user_id,
-                authMethod = session.auth_method,
-                refreshHash = newRefreshHash,
-                deviceInfo = session.device_info,
-                ipAddress = session.ip_address,
-                expiresAt = newExpiresAt,
-                rotatedFromId = session.id,
-            )
-            session
+            val id = queries.insertSession(
+                user_id = session.user_id,
+                auth_method = session.auth_method,
+                refresh_token_hash = newRefreshHash,
+                device_info = session.device_info,
+                ip_address = session.ip_address,
+                expires_at = newExpiresAt,
+                rotated_from_id = session.id,
+            ).executeAsOne()
+            session to id
         }
     }
 
@@ -197,7 +182,7 @@ class AuthRepository(
         purpose: String,
         expiresAt: Long,
     ): Uuid =
-        queries.insertAuthChallengeAuto(channel, target, codeHash, purpose, expiresAt).executeAsOne()
+        queries.insertAuthChallenge(channel, target, codeHash, purpose, expiresAt).executeAsOne()
 
     fun findChallenge(id: Uuid): Auth_challenges? =
         queries.findAuthChallenge(id).executeAsOneOrNull()

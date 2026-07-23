@@ -1,17 +1,17 @@
 package com.zula.features.auth
 
+import com.zula.core.http.badRequest
+import com.zula.core.http.unauthorized
 import com.zula.core.security.JwtConfig
 import com.zula.core.security.jwt.SessionJwtIssuer
 import com.zula.features.auth.crypto.RefreshTokenGenerator
-import com.zula.core.http.badRequest
-import com.zula.core.http.unauthorized
 import com.zula.features.auth.domain.*
 import com.zula.features.auth.persistence.AuthRepository
 import com.zula.features.auth.provider.AuthProviders
 import com.zula.features.auth.provider.EmailOtpAuthProvider
 import com.zula.features.auth.provider.MagicLinkAuthProvider
 import com.zula.lib.id.Ids
-import io.ktor.server.application.ApplicationCall
+import io.ktor.server.application.*
 import kotlinx.serialization.json.Json
 import java.time.Instant
 import kotlin.uuid.Uuid
@@ -29,7 +29,7 @@ class AuthService(
         val provider = providers[request.provider]
             ?: badRequest("Unknown auth provider: ${request.provider}")
 
-        val credential = toCredential(request)
+        val credential = request.toCredential()
         val identity = provider.verify(credential)
 
         val existingUser = repository.findUserByIdentity(identity.provider, identity.providerUserId)
@@ -43,7 +43,6 @@ class AuthService(
         val existingIdentity = repository.findIdentity(identity.provider, identity.providerUserId)
         if (existingIdentity == null) {
             repository.insertIdentity(
-                id = Ids.next(),
                 userId = userId,
                 provider = identity.provider,
                 providerUserId = identity.providerUserId,
@@ -117,12 +116,10 @@ class AuthService(
         val newRefresh = RefreshTokenGenerator.generate()
         val newHash = RefreshTokenGenerator.hash(newRefresh)
         val now = Instant.now().epochSecond
-        val newSessionId = Ids.next()
         val newExpires = now + jwtConfig.refreshTokenTtlSeconds
 
-        val oldSession = repository.rotateRefreshSession(
+        val (oldSession, nextId) = repository.rotateRefreshSession(
             refreshHash = hash,
-            newSessionId = newSessionId,
             newRefreshHash = newHash,
             newExpiresAt = newExpires,
             now = now,
@@ -134,7 +131,7 @@ class AuthService(
             call = call,
             subject = oldSession.user_id.toString(),
             claims = mapOf(
-                "sid" to newSessionId.toString(),
+                "sid" to nextId.toString(),
                 "amr" to oldSession.auth_method,
                 "username" to user.username,
             ),
@@ -144,7 +141,7 @@ class AuthService(
             accessToken = accessToken,
             expiresIn = jwtConfig.accessTokenTtlSeconds,
             refreshToken = newRefresh,
-            sessionId = newSessionId.toString(),
+            sessionId = nextId.toString(),
         )
     }
 
@@ -221,7 +218,6 @@ class AuthService(
 
         val sessionId = Ids.next()
         repository.insertSession(
-            id = sessionId,
             userId = userId,
             authMethod = amr,
             refreshHash = refreshHash,
@@ -233,30 +229,32 @@ class AuthService(
         return sessionId
     }
 
-    private fun toCredential(request: AuthenticateRequest): AuthCredential = when {
-        AuthMethods.isPasswordless(request.provider) && request.code != null && request.challengeId != null -> {
-            val challengeId = Ids.parseOrNull(request.challengeId)
-                ?: badRequest("Invalid challengeId")
-            AuthCredential.EmailOtp(challengeId, request.code)
+    private fun AuthenticateRequest.toCredential(): AuthCredential {
+        return when {
+            AuthMethods.isPasswordless(provider) && code != null && challengeId != null -> {
+                val challengeId = Ids.parseOrNull(challengeId)
+                    ?: badRequest("Invalid challengeId")
+                AuthCredential.EmailOtp(challengeId, code)
+            }
+
+            provider == AuthMethods.MAGIC_LINK && magicLinkToken != null ->
+                AuthCredential.MagicLink(magicLinkToken)
+
+            provider == AuthMethods.DEV && code != null ->
+                AuthCredential.DevBypass(
+                    secret = code,
+                    email = deviceInfo,
+                )
+
+            idToken != null ->
+                AuthCredential.OAuthIdToken(
+                    idToken = idToken,
+                    providerRefreshToken = providerRefreshToken,
+                    scopes = scopes,
+                )
+
+            else -> badRequest("Invalid credential for provider $provider")
         }
-
-        request.provider == AuthMethods.MAGIC_LINK && request.magicLinkToken != null ->
-            AuthCredential.MagicLink(request.magicLinkToken)
-
-        request.provider == AuthMethods.DEV && request.code != null ->
-            AuthCredential.DevBypass(
-                secret = request.code,
-                email = request.deviceInfo,
-            )
-
-        request.idToken != null ->
-            AuthCredential.OAuthIdToken(
-                idToken = request.idToken,
-                providerRefreshToken = request.providerRefreshToken,
-                scopes = request.scopes,
-            )
-
-        else -> badRequest("Invalid credential for provider ${request.provider}")
     }
 
     private fun createUserWithUniqueUsername(identity: Identity): Uuid {
@@ -267,9 +265,8 @@ class AuthService(
             suffix++
             username = "${base.take(32)}_$suffix"
         }
-        val id = Ids.next()
-        repository.createUser(id, username)
-        return id
+
+        return repository.createUser(username)
     }
 
     private fun generateUsername(identity: Identity): String {

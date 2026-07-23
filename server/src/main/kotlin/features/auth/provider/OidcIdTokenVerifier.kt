@@ -3,9 +3,9 @@ package com.zula.features.auth.provider
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.interfaces.DecodedJWT
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -13,29 +13,15 @@ import java.math.BigInteger
 import java.security.KeyFactory
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.RSAPublicKeySpec
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 class OidcIdTokenVerifier(
-    private val httpClient: HttpClient,
-    private val jwksUrl: String,
-    private val issuers: List<String>,
-    private val audiences: List<String>,
+    val httpClient: HttpClient,
+    val jwksUrl: String,
+    val issuers: List<String>,
+    val audiences: List<String>,
 ) {
-    constructor(
-        httpClient: HttpClient,
-        jwksUrl: String,
-        issuer: String,
-        audience: String,
-    ) : this(httpClient, jwksUrl, listOf(issuer), listOf(audience))
-
-    constructor(
-        httpClient: HttpClient,
-        jwksUrl: String,
-        issuers: List<String>,
-        audience: String,
-    ) : this(httpClient, jwksUrl, issuers, listOf(audience))
-
     private val json = Json { ignoreUnknownKeys = true }
     private val keyCache = ConcurrentHashMap<String, Algorithm>()
     private var keysLoadedAt = 0L
