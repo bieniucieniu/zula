@@ -62,7 +62,7 @@ Legacy `JWT_SECRET` (HMAC) is replaced by asymmetric JWT keys in `core/security`
 | `AUTH_COOKIE_SECURE` | Cookie `Secure` flag (`security.cookies.secure`). Use `false` for local `http://` APP_URL. |
 | `PROVIDER_TOKEN_ENCRYPTION_KEY` | Required when `AUTH_REQUIRE_PROVIDER_REFRESH_ON_LOGIN=true` (boot fails if missing). |
 
-Kubernetes API access is **runtime only** — `KeysManager` in the running backend (`DefaultKeysManager` + `KubernetesJwtKeysStore`). No Gradle/CLI tasks talk to the cluster.
+Kubernetes API access is **runtime only** — `loadJwtKeySet` + `pullJwtKeySet` / `pushJwtKeySet` in the running backend. No Gradle/CLI tasks talk to the cluster.
 
 **Bootstrap options**
 
