@@ -8,6 +8,7 @@ data class SecurityConfig(
     val appUrl: String?,
     val jwt: JwtConfig,
     val oauth: OAuthConfig,
+    val cookies: CookieConfig = CookieConfig(),
     val devAuth: DevAuthConfig?,
 )
 
@@ -15,9 +16,21 @@ class SecurityConfigBuilder {
     var appUrl: String? = null
     lateinit var jwt: JwtConfig
     lateinit var oauth: OAuthConfig
+    var cookies: CookieConfig = CookieConfig()
     var devAuth: DevAuthConfig? = null
 
-    fun build(): SecurityConfig = SecurityConfig(appUrl, jwt, oauth, devAuth)
+    fun build(): SecurityConfig = SecurityConfig(appUrl, jwt, oauth, cookies, devAuth)
+}
+
+data class CookieConfig(
+    /** When false, auth/oauth cookies are set without the Secure attribute (local http). */
+    val secure: Boolean = true,
+) {
+    companion object {
+        fun from(config: ApplicationConfig?) = CookieConfig(
+            secure = config?.propertyOrNull("secure")?.getString()?.toBooleanStrictOrNull() ?: true,
+        )
+    }
 }
 
 data class DevAuthConfig(
@@ -40,7 +53,7 @@ data class DevAuthConfig(
 data class JwtConfig(
     val audience: String = "zula",
     val realm: String = "Zula",
-    val autoGenerateKey: Boolean = true,
+    val autoGenerateKey: Boolean = false,
     val keysJson: String? = null,
     val privateKeyPem: String? = null,
     val publicKeyPem: String? = null,
@@ -56,7 +69,7 @@ data class JwtConfig(
         fun from(config: ApplicationConfig?) = JwtConfig(
             audience = config?.stringOrNull("audience") ?: "zula",
             realm = config?.stringOrNull("realm") ?: "Zula",
-            autoGenerateKey = config?.propertyOrNull("autoGenerateKey")?.getString()?.toBooleanStrictOrNull() ?: true,
+            autoGenerateKey = config?.propertyOrNull("autoGenerateKey")?.getString()?.toBooleanStrictOrNull() ?: false,
             keysJson = config?.stringOrNull("keysJson"),
             privateKeyPem = config?.stringOrNull("privateKeyPem"),
             publicKeyPem = config?.stringOrNull("publicKeyPem"),

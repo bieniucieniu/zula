@@ -2,7 +2,8 @@ package com.zula.core.security.jwt
 
 import com.auth0.jwt.JWT
 import com.zula.core.security.JwtConfig
-import com.zula.core.security.jwtIssuer
+import com.zula.core.security.normalizeIssuer
+import com.zula.core.security.publicBaseUrl
 import io.ktor.server.application.*
 import java.time.Instant
 import java.util.*
@@ -22,8 +23,7 @@ class RsaSessionJwtIssuer(
         if (signingKey.privatePem.isNullOrBlank()) {
             error("JWT private key is not configured on this instance")
         }
-        val issuer = jwtIssuer(configuredAppUrl)
-            ?: error("security.appUrl / APP_URL is required for JWT issuance")
+        val issuer = normalizeIssuer(call.publicBaseUrl(configuredAppUrl))
         val expiresAt = Date.from(Instant.now().plusSeconds(config.accessTokenTtlSeconds))
         var builder = JWT.create()
             .withKeyId(signingKey.kid)

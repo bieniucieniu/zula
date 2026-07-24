@@ -176,6 +176,9 @@ Clients obtain the initial session via OAuth (web backend popup or native `POST 
 | OAuth nonce | Server Google start stores nonce cookie; verified against id_token |
 | Identity link | Reject if provider identity already owned by another user; update scopes on login |
 | Username allocate | Retry on unique violation (race-safe) |
+| Public URL / JWT iss | Same Forwarded/Host policy via `publicBaseUrl` for OAuth callbacks and JWT issuer |
+| Cookie Secure | `security.cookies.secure` / `AUTH_COOKIE_SECURE` |
+| OIDC JWKS cache | Refresh replaces map (TTL 1h); rotated kids dropped |
 
 ---
 

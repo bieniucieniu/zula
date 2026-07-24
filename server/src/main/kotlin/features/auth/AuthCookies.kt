@@ -10,6 +10,8 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import org.koin.ktor.ext.get
 
+fun ApplicationCall.cookieSecure(): Boolean = get<SecurityConfig>().cookies.secure
+
 fun ApplicationCall.setAccessCookies(tokens: AuthTokensResponse) {
     setAccessCookie(tokens.accessToken, tokens.expiresIn)
     if (tokens.refreshToken != null) {
@@ -25,7 +27,7 @@ fun ApplicationCall.setAccessCookie(token: String, maxAgeSeconds: Long) {
             value = token,
             maxAge = maxAgeSeconds.toInt(),
             path = "/",
-            secure = true,
+            secure = cookieSecure(),
             httpOnly = true,
             extensions = mapOf("SameSite" to "Lax"),
         ),
@@ -39,7 +41,7 @@ fun ApplicationCall.setRefreshCookie(token: String, maxAgeSeconds: Long) {
             value = token,
             maxAge = maxAgeSeconds.toInt(),
             path = "/",
-            secure = true,
+            secure = cookieSecure(),
             httpOnly = true,
             extensions = mapOf("SameSite" to "Strict"),
         ),
@@ -47,13 +49,14 @@ fun ApplicationCall.setRefreshCookie(token: String, maxAgeSeconds: Long) {
 }
 
 fun ApplicationCall.clearAuthCookies() {
+    val secure = cookieSecure()
     response.cookies.append(
         Cookie(
             name = ACCESS_COOKIE_NAME,
             value = "",
             maxAge = 0,
             path = "/",
-            secure = true,
+            secure = secure,
             httpOnly = true,
             extensions = mapOf("SameSite" to "Lax"),
         ),
@@ -64,7 +67,7 @@ fun ApplicationCall.clearAuthCookies() {
             value = "",
             maxAge = 0,
             path = "/",
-            secure = true,
+            secure = secure,
             httpOnly = true,
             extensions = mapOf("SameSite" to "Strict"),
         ),

@@ -7,7 +7,7 @@ import kotlin.test.assertNull
 
 class JwtIssuerTest {
     @Test
-    fun `jwtIssuer uses configured APP_URL only`() {
+    fun `jwtIssuer normalizes configured APP_URL`() {
         assertEquals("https://api.zula.app", jwtIssuer("https://api.zula.app/"))
         assertEquals("http://localhost:8000", jwtIssuer("http://localhost:8000"))
         assertNull(jwtIssuer(null))

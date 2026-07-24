@@ -60,7 +60,7 @@ class DefaultKeysManager(
     }
 
     override fun pullFromKubernetes(): JwtKeys? {
-        if (!config.kubernetes.enabled) return null
+        if (!config.kubernetes.enabled || !config.kubernetes.autoPull) return null
         return store.pull(config.kubernetes.toTarget())
     }
 

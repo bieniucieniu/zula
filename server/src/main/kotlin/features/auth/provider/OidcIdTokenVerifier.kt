@@ -51,11 +51,15 @@ class OidcIdTokenVerifier(
         if (!force && keyCache.isNotEmpty()) return
         val remote: String = httpClient.get(jwksUrl).body()
         val jwks: RemoteJwks = json.decodeFromString(remote)
+        val next = ConcurrentHashMap<String, Algorithm>()
         jwks.keys.forEach { key ->
             if (key.kty == "RSA") {
-                keyCache[key.kid] = Algorithm.RSA256(key.toPublicKey(), null)
+                next[key.kid] = Algorithm.RSA256(key.toPublicKey(), null)
             }
         }
+        // Replace cache so rotated-away kids are dropped.
+        keyCache.clear()
+        keyCache.putAll(next)
         keysLoadedAt = System.currentTimeMillis()
     }
 }
