@@ -108,10 +108,12 @@ fun Route.configureAuthRouting() {
                 val sessionId = principal.payload.getClaim("sid").asString()?.let(Ids::parseOrNull)
                     ?: unauthorized("Invalid session")
                 authService.ensureAuthenticatedSession(sessionId, forceProviderCheck = false)
+                val email = principal.payload.getClaim("email").asString()
+                    ?: authService.sessionEmail(sessionId)
                 call.respond(
                     SessionResponse(
                         expiresIn = jwtConfig.accessTokenTtlSeconds,
-                        email = principal.payload.getClaim("username").asString(),
+                        email = email,
                     ),
                 )
                 return@get

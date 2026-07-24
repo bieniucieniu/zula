@@ -14,30 +14,17 @@ class DevAuthProviderTest {
   )
 
   @Test
-  fun `accepts shared secret and default email`() = runTest {
+  fun `accepts shared secret and fixed email only`() = runTest {
     val identity = provider.verify(
       AuthCredential.DevBypass(
         secret = "local-dev-bypass",
-        email = null,
+        email = "ignored@example.com",
       ),
     )
 
     assertEquals("dev", identity.provider)
     assertEquals("dev@zula.local", identity.email)
     assertEquals("dev@zula.local", identity.providerUserId)
-  }
-
-  @Test
-  fun `accepts custom email via deviceInfo`() = runTest {
-    val identity = provider.verify(
-      AuthCredential.DevBypass(
-        secret = "local-dev-bypass",
-        email = "native-tester@zula.local",
-      ),
-    )
-
-    assertEquals("native-tester@zula.local", identity.email)
-    assertEquals("native-tester@zula.local", identity.providerUserId)
   }
 
   @Test
