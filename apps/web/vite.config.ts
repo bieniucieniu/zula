@@ -9,6 +9,7 @@ import { devtools } from "@tanstack/devtools-vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import react, { reactCompilerPreset } from "@vitejs/plugin-react"
 import { playwright } from "@vitest/browser-playwright"
+import { nitro } from "nitro/vite"
 import { defineConfig } from "vite"
 
 const dirname =
@@ -23,6 +24,7 @@ const config = defineConfig({
     devtools(),
     tailwindcss(),
     tanstackStart(),
+    nitro({ preset: "bun" }),
     react(),
     babel({
       presets: [reactCompilerPreset()],

@@ -18,13 +18,23 @@ permissions:
   contents: read
 
 jobs:
-  # Build inside Dockerfile (Gradle shadowJar), publish multi-arch JRE image.
+  # Build inside Dockerfiles, publish multi-arch images.
   # Platforms: linux/amd64 (x64) + linux/arm64 (Apple Silicon, Raspberry Pi 4 / ARMv8).
-  server-image:
+  image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: server
+            file: docker/server/Dockerfile
+            cache_scope: zula-server
+          - name: web
+            file: docker/web/Dockerfile
+            cache_scope: zula-web
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,7 +42,7 @@ jobs:
       - name: Lowercase image name
         run: |
           owner_repo="${{ github.repository }}"
-          echo "IMAGE_NAME=${REGISTRY}/${owner_repo,,}/server" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME=${REGISTRY}/${owner_repo,,}/${{ matrix.name }}" >> "$GITHUB_ENV"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -67,11 +77,11 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: docker/server/Dockerfile
+          file: ${{ matrix.file }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=zula-server
-          cache-to: type=gha,mode=max,scope=zula-server
+          cache-from: type=gha,scope=${{ matrix.cache_scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache_scope }}
           provenance: false
