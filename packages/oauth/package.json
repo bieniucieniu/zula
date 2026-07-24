@@ -15,7 +15,6 @@
   },
   "peerDependencies": {
     "@tanstack/react-query": "^5",
-    "@zula/api": "workspace:*",
     "react": ">=19",
     "@types/react": ">=19"
   },

@@ -3,9 +3,8 @@ export { randomString } from "./core/crypto"
 export { parseOAuthRedirect } from "./core/parse-response"
 export {
   getProviderDefinition,
-  listProviderDefinitions,
-  registerProviderDefinition,
-} from "./providers/registry"
+  PROVIDER_DEFINITIONS,
+} from "./providers/definitions"
 export type {
   BuildAuthorizeUrlInput,
   OAuthProviderDefinition,
