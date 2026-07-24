@@ -5,6 +5,7 @@ import com.zula.core.database.databaseModule
 import com.zula.core.openapi.openApiModule
 import com.zula.core.security.*
 import com.zula.core.serialization.serializationModule
+import com.zula.features.auth.AuthSettings
 import com.zula.features.auth.authModule
 import com.zula.features.chat.chatModule
 import com.zula.features.feed.feedModule
@@ -18,6 +19,7 @@ import com.zula.lib.utils.configOrNull
 import com.zula.lib.utils.stringOrNull
 import io.ktor.server.application.*
 import org.koin.core.logger.Level
+import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
 
@@ -40,6 +42,12 @@ fun Application.configureKoin() {
                     apple = AppleOAuthConfig.from(security?.configOrNull("oauth.apple"))
                 )
                 devAuth = DevAuthConfig.from(security?.configOrNull("devAuth"))
+            },
+            module {
+                single {
+                    val security = environment.config.configOrNull("security")
+                    AuthSettings.from(security?.configOrNull("auth"))
+                }
             },
             serializationModule(
                 environment.config.propertyOrNull("ktor.development")?.getString()?.toBooleanStrictOrNull() ?: false

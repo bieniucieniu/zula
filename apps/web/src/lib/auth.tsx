@@ -30,6 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     query: {
       retry: false,
       placeholderData: undefined,
+      refetchInterval: 10 * 60 * 1000,
+      refetchIntervalInBackground: true,
+      refetchOnWindowFocus: true,
     },
   })
 

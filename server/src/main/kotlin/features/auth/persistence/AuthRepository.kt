@@ -79,8 +79,12 @@ class AuthRepository(
     fun listIdentitiesByUser(userId: Uuid): List<User_identities> =
         queries.listIdentitiesByUser(userId).executeAsList()
 
+    fun findIdentityById(id: Uuid): User_identities? =
+        queries.findIdentityById(id).executeAsOneOrNull()
+
     fun insertSession(
         userId: Uuid,
+        identityId: Uuid?,
         authMethod: String,
         refreshHash: String?,
         deviceInfo: String?,
@@ -90,6 +94,7 @@ class AuthRepository(
     ): Uuid {
         return queries.insertSession(
             user_id = userId,
+            identity_id = identityId,
             auth_method = authMethod,
             refresh_token_hash = refreshHash,
             device_info = deviceInfo,
@@ -116,6 +121,10 @@ class AuthRepository(
         queries.findSessionsRotatedFrom(sessionId).executeAsList()
 
     fun revokeSession(id: Uuid) = queries.revokeSession(id)
+
+    fun revokeSessionsForIdentity(identityId: Uuid) {
+        queries.revokeSessionsByIdentity(identityId)
+    }
 
     fun revokeRotationFamily(sessionId: Uuid) {
         val queue = ArrayDeque<Uuid>()
@@ -146,17 +155,13 @@ class AuthRepository(
             if (session.expires_at < now) {
                 unauthorized("Refresh token expired")
             }
-            if (session.auth_method == AuthMethods.OAUTH) {
-                badRequest(
-                    "OAuth sessions must re-authenticate with provider id_token",
-                )
-            }
 
             queries.claimSessionForRefresh(session.id, now).executeAsOneOrNull()
                 ?: unauthorized("Invalid refresh token")
 
             val id = queries.insertSession(
                 user_id = session.user_id,
+                identity_id = session.identity_id,
                 auth_method = session.auth_method,
                 refresh_token_hash = newRefreshHash,
                 device_info = session.device_info,

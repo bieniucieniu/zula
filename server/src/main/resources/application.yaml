@@ -43,6 +43,10 @@ security:
   devAuth:
     secret: ${AUTH_DEV_BYPASS_SECRET:}
     defaultEmail: ${AUTH_DEV_BYPASS_EMAIL:dev@zula.local}
+  auth:
+    providerCheckIntervalSeconds: ${AUTH_PROVIDER_CHECK_INTERVAL_SECONDS:21600}
+    requireProviderRefreshOnLogin: ${AUTH_REQUIRE_PROVIDER_REFRESH_ON_LOGIN:true}
+    appleCodeFlowEnabled: ${AUTH_APPLE_CODE_FLOW_ENABLED:false}
 
 ktor:
   deployment:

@@ -70,7 +70,7 @@ class AuthSessionLogicTest {
         val userId = Ids.next()
         val sessionId = store.insert(
             userId = userId,
-            authMethod = AuthMethods.EMAIL_OTP,
+            authMethod = AuthMethods.DEV,
             refreshHash = hash,
             expiresAt = now + 3600,
         )
@@ -162,9 +162,6 @@ private class InMemorySessionStore {
             unauthorized("Refresh token reuse detected")
         }
         if (session.expiresAt < now) unauthorized("Refresh token expired")
-        if (session.authMethod == AuthMethods.OAUTH) {
-            unauthorized("OAuth sessions must re-authenticate")
-        }
         session.revoked = true
         return insert(session.userId, session.authMethod, newHash, newExpires, rotatedFrom = session.id)
     }

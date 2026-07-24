@@ -1,8 +1,10 @@
 package com.zula.features.auth
 
 import com.zula.User_identities
+import com.zula.core.http.HttpException
 import com.zula.core.http.badRequest
 import com.zula.core.http.conflict
+import com.zula.core.http.unauthorized
 import com.zula.core.security.SecurityConfig
 import com.zula.features.auth.crypto.TokenEncryption
 import com.zula.features.auth.domain.CredentialsStatus
@@ -21,8 +23,9 @@ class ProviderTokenService(
     val repository: AuthRepository,
     val encryption: TokenEncryption,
     val securityConfig: SecurityConfig,
+    val authSettings: AuthSettings,
     val httpClient: HttpClient,
-    val json: Json
+    val json: Json,
 ) {
 
     suspend fun <T> withProviderAccess(userId: Uuid, provider: String, block: suspend (String) -> T): T {
@@ -38,7 +41,6 @@ class ProviderTokenService(
     fun storeProviderRefresh(identityId: Uuid, refreshToken: String?) {
         if (refreshToken.isNullOrBlank()) return
         if (!encryption.isConfigured) {
-            // Sign-in still succeeds; provider API calls need the key later.
             return
         }
         val enc = encryption.encrypt(refreshToken)
@@ -50,11 +52,50 @@ class ProviderTokenService(
         )
     }
 
-    private suspend fun resolveAccessToken(identity: User_identities): String {
+    fun hasStoredProviderRefresh(identity: User_identities): Boolean =
+        !identity.provider_refresh_token_enc.isNullOrBlank()
+
+    suspend fun ensureProviderCredentialsValid(identityId: Uuid, force: Boolean = false) {
+        val identity = repository.findIdentityById(identityId) ?: return
+        if (identity.provider == "dev") return
+        if (!hasStoredProviderRefresh(identity)) return
+
+        val now = Instant.now().epochSecond
+        val checkedAt = identity.credentials_checked_at ?: 0
+        if (!force && now - checkedAt < authSettings.providerCheckIntervalSeconds) {
+            return
+        }
+
+        try {
+            resolveAccessToken(identity, forceRefresh = true)
+        } catch (error: HttpException) {
+            if (error.status == HttpStatusCode.Conflict) {
+                repository.revokeIdentityCredentials(identity.id, now)
+                repository.revokeSessionsForIdentity(identity.id)
+                unauthorized("Provider credentials revoked")
+            }
+            throw error
+        } catch (error: Exception) {
+            if (isProviderRevoked(error)) {
+                repository.revokeIdentityCredentials(identity.id, now)
+                repository.revokeSessionsForIdentity(identity.id)
+                unauthorized("Provider credentials revoked")
+            }
+            // Fail open on transient provider/network errors.
+        }
+    }
+
+    suspend fun ensureProviderCredentialsValidForSession(sessionId: Uuid, force: Boolean = false) {
+        val session = repository.findSession(sessionId) ?: unauthorized("Invalid session")
+        val identityId = session.identity_id ?: return
+        ensureProviderCredentialsValid(identityId, force)
+    }
+
+    private suspend fun resolveAccessToken(identity: User_identities, forceRefresh: Boolean = false): String {
         val now = Instant.now().epochSecond
         val cachedEnc = identity.provider_access_token_enc
         val expiresAt = identity.provider_token_expires_at
-        if (cachedEnc != null && expiresAt != null && expiresAt > now + 60) {
+        if (!forceRefresh && cachedEnc != null && expiresAt != null && expiresAt > now + 60) {
             return encryption.decrypt(cachedEnc)
         }
 
@@ -69,7 +110,7 @@ class ProviderTokenService(
     }
 
     private suspend fun refreshGoogleAccess(identity: User_identities, refresh: String, now: Long): String {
-        val response: GoogleTokenResponse = runCatching {
+        val response: GoogleTokenResponse = try {
             val body: String = httpClient.submitForm(
                 url = "https://oauth2.googleapis.com/token",
                 formParameters = Parameters.build {
@@ -79,14 +120,21 @@ class ProviderTokenService(
                     append("client_secret", securityConfig.oauth.google.clientSecret.orEmpty())
                 },
             ).bodyAsText()
-            val decoded: GoogleTokenResponse = json.decodeFromString(body)
-            decoded
-        }.getOrElse { conflict("Provider credentials revoked: ${identity.provider}") }
+            json.decodeFromString(body)
+        } catch (_: Exception) {
+            repository.revokeIdentityCredentials(identity.id, now)
+            conflict("Provider credentials revoked: ${identity.provider}")
+        }
+
+        if (response.error != null) {
+            repository.revokeIdentityCredentials(identity.id, now)
+            throw conflict("Provider credentials revoked: ${identity.provider}")
+        }
 
         val accessToken: String? = response.accessToken
-        if (response.error != null || accessToken.isNullOrBlank()) {
-            repository.revokeIdentityCredentials(identity.id)
-            conflict("Provider credentials revoked: ${identity.provider}")
+        if (accessToken.isNullOrBlank()) {
+            repository.revokeIdentityCredentials(identity.id, now)
+            throw conflict("Provider credentials revoked: ${identity.provider}")
         }
 
         val accessEnc = encryption.encrypt(accessToken)
@@ -99,6 +147,11 @@ class ProviderTokenService(
             checkedAt = now,
         )
         return accessToken
+    }
+
+    private fun isProviderRevoked(error: Exception): Boolean {
+        val message = error.message?.lowercase().orEmpty()
+        return message.contains("invalid_grant") || message.contains("credentials revoked")
     }
 }
 

@@ -5,8 +5,10 @@ export {
   setAccessToken,
   setApiAuthMode,
   setApiBaseUrl,
+  setUnauthorizedHandler,
 } from "./mutator"
 export {
+  authenticateWithCode,
   authenticateWithDevBypass,
   authenticateWithIdToken,
   decodeJwtPayload,

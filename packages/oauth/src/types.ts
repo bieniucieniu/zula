@@ -8,7 +8,10 @@ export type OAuthProviderInfo = {
 
 export type OAuthSignInResult = {
   provider: string
-  idToken: string
+  idToken?: string
+  code?: string
+  codeVerifier?: string
+  redirectUri?: string
   accessToken?: string | null
   refreshToken?: string | null
 }

@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import type { SessionResponse } from "@zula/api"
 import { getGetSessionQueryKey, useGetSession } from "@zula/api/endpoints"
 import { createContext, type ReactNode, use, useEffect, useState } from "react"
+import "@/lib/api"
 import { readStoredSession, writeStoredSession } from "@/lib/session-storage"
 import { setAccessToken } from "@zula/api"
 
@@ -44,7 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     query: {
       enabled: bootstrapped,
       retry: false,
-      placeholderData: undefined,
+      refetchInterval: 10 * 60 * 1000,
+      refetchOnWindowFocus: true,
     },
   })
 

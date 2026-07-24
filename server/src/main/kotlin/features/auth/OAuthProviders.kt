@@ -17,19 +17,19 @@ data class OAuthProviderInfo(
     val scopes: List<String>,
 )
 
-fun OAuthConfig.configuredProviders(): List<OAuthProviderInfo> = buildList {
-    if (google.isIdTokenConfigured) {
+fun OAuthConfig.configuredProviders(authSettings: AuthSettings = AuthSettings()): List<OAuthProviderInfo> = buildList {
+    if (google.isConfigured || google.isIdTokenConfigured) {
         add(
             OAuthProviderInfo(
                 id = "google",
                 clientId = google.clientId.orEmpty(),
                 authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-                tokenUrl = "https://accounts.google.com/o/oauth2/token",
+                tokenUrl = "https://oauth2.googleapis.com/token",
                 scopes = listOf("openid", "email", "profile"),
             ),
         )
     }
-    if (apple.isIdTokenConfigured) {
+    if (apple.isIdTokenConfigured && authSettings.appleCodeFlowEnabled) {
         add(
             OAuthProviderInfo(
                 id = "apple",

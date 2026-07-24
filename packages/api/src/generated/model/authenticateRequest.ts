@@ -16,5 +16,9 @@ export interface AuthenticateRequest {
   /** @nullable */
   code?: string | null
   /** @nullable */
+  codeVerifier?: string | null
+  /** @nullable */
+  redirectUri?: string | null
+  /** @nullable */
   deviceInfo?: string | null
 }

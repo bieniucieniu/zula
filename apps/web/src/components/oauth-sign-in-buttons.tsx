@@ -1,50 +1,43 @@
-import { authenticateWithIdToken } from "@zula/api"
 import { useListProviders } from "@zula/api/endpoints"
-import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import { getProviderDefinition } from "@zula/oauth"
 import { Button } from "@/components/ui/button"
-import { useWebOAuthSignIn } from "@/lib/oauth/use-web-oauth-sign-in"
+import { signInWithBackendGooglePopup } from "@/lib/oauth/backend-popup-sign-in"
+import { useState } from "react"
 
 type OAuthSignInButtonsProps = {
   disabled?: boolean
   onSuccess: () => Promise<void> | void
 }
 
-type ProviderSignInButtonProps = {
-  provider: OAuthProviderInfo
+function GoogleSignInButton({
+  disabled,
+  onAuthenticated,
+}: {
   disabled?: boolean
   onAuthenticated: () => Promise<void> | void
-}
-
-function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderSignInButtonProps) {
-  const definition = getProviderDefinition(provider.id)
-
-  const oauth = useWebOAuthSignIn({
-    provider,
-    onSuccess: async (result: OAuthSignInResult) => {
-      await authenticateWithIdToken({
-        provider: result.provider,
-        idToken: result.idToken,
-        providerRefreshToken: result.refreshToken,
-      })
-      await onAuthenticated()
-    },
-    onError: (error) => {
-      console.error(`${provider.id} sign-in failed`, error)
-    },
-  })
-
-  if (!oauth.ready) return null
+}) {
+  const definition = getProviderDefinition("google")
+  const [pending, setPending] = useState(false)
 
   return (
     <Button
       type="button"
       variant="outline"
       className="w-full"
-      disabled={disabled || oauth.pending}
-      onClick={() => void oauth.signIn()}
+      disabled={disabled || pending}
+      onClick={() => {
+        setPending(true)
+        void signInWithBackendGooglePopup()
+          .then(() => onAuthenticated())
+          .catch((error: unknown) => {
+            console.error("google sign-in failed", error)
+          })
+          .finally(() => {
+            setPending(false)
+          })
+      }}
     >
-      {oauth.pending ? "Signing in…" : `Continue with ${definition?.label ?? provider.id}`}
+      {pending ? "Signing in…" : `Continue with ${definition?.label ?? "Google"}`}
     </Button>
   )
 }
@@ -61,20 +54,14 @@ export function OAuthSignInButtons({ disabled, onSuccess }: OAuthSignInButtonsPr
     )
   }
 
-  if (providers.length === 0) {
+  const google = providers.find((provider) => provider.id === "google")
+  if (!google) {
     return null
   }
 
   return (
     <div className="flex flex-col gap-2">
-      {providers.map((provider) => (
-        <ProviderSignInButton
-          key={provider.id}
-          provider={provider}
-          disabled={disabled}
-          onAuthenticated={onSuccess}
-        />
-      ))}
+      <GoogleSignInButton disabled={disabled} onAuthenticated={onSuccess} />
     </div>
   )
 }
