@@ -47,7 +47,7 @@ Feature layout:
 |-------|------|---------|
 | Routing | `ValidationRouting.kt` | HTTP paths, OpenAPI metadata |
 | Service | `ValidationService.kt` | Code generation, verify, trust coordination |
-| Integration | — | Trust writes via Koin `TrustLedgerWriter` (no MQ in MVP) |
+| Integration | — | Trust writes via Koin `TrustLedgerWriter` when contract added (no MQ in MVP) |
 
 Register in Koin (`validationModule`) and mount routes from `Application.kt` via `configureValidationRouting()`.
 
@@ -93,7 +93,7 @@ Trade participants only. [auth_and_permissions.md](./auth_and_permissions.md)
 ### Phase validation-B — Verify & complete
 
 - [ ] `VerifyHandoff` — **MVP policy:** single device dual entry OR both scan (pick one in PR)
-- [ ] On success: trade → completed, trust ledger for both users (via `TrustLedgerWriter`)
+- [ ] On success: trade → completed, trust ledger for both users (via `TrustLedgerWriter` contract)
 - [ ] Gate `RecordPeerRating` on validation success
 
 ### Phase validation-C — Abuse controls

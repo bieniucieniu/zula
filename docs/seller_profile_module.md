@@ -534,7 +534,7 @@ Server-side filter preferred (thin client rule).
 
 ### 4.5 Keep `seller_activity_stats` in sync
 
-In `FeedService.createFeedItem` / status update handlers (feed module), inject `SellerActivityWriter`:
+In `FeedService.createFeedItem` / status update handlers (feed module), inject `SellerActivityWriter` (add contract when feed ships):
 
 ```kotlin
 // Koin contract — features:feed calls features:user without direct import
@@ -609,7 +609,7 @@ Add avatar upload route when implementing Phase D; until then accept HTTPS URLs 
 
 - [ ] `GET /api/feed/by-author/{id}` on seller page
 - [ ] `kind` query param on author feed
-- [ ] Sync `seller_activity_stats` from feed writes via `SellerActivityWriter`
+- [ ] Sync `seller_activity_stats` from feed writes via `SellerActivityWriter` contract
 - [ ] Tests: counts update when item created / fulfilled
 
 ### Phase seller-D — Media & polish
