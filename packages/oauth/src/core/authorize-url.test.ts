@@ -14,7 +14,7 @@ describe("buildAuthorizeUrl", () => {
   it("builds an id_token authorize url", () => {
     const url = buildAuthorizeUrl({
       provider,
-      redirectUri: "http://localhost:3000/oauth/callback",
+      redirectUri: "http://localhost:3000/oauth/complete",
       state: "state-123",
       nonce: "nonce-456",
       extraParams: { response_mode: "fragment" },
@@ -31,7 +31,7 @@ describe("buildAuthorizeUrl", () => {
 describe("parseOAuthRedirect", () => {
   it("parses id_token from hash fragment", () => {
     const parsed = parseOAuthRedirect(
-      "http://localhost:3000/oauth/callback#id_token=abc&state=state-123"
+      "http://localhost:3000/oauth/complete#id_token=abc&state=state-123"
     )
 
     expect(parsed.idToken).toBe("abc")
