@@ -18,36 +18,9 @@ permissions:
   contents: read
 
 jobs:
-  # Fat JAR is arch-independent; build once on amd64, then bake into multi-arch JRE images.
+  # Build inside Dockerfile (Gradle shadowJar), publish multi-arch JRE image.
   # Platforms: linux/amd64 (x64) + linux/arm64 (Apple Silicon, Raspberry Pi 4 / ARMv8).
-  server-jar:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Build server shadow JAR
-        run: ./gradlew :server:shadowJar --no-daemon -x test
-
-      - name: Upload server JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: server-all-jar
-          path: server/build/libs/server-all.jar
-          if-no-files-found: error
-          retention-days: 7
-
   server-image:
-    needs: server-jar
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -55,17 +28,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Download server JAR
-        uses: actions/download-artifact@v4
-        with:
-          name: server-all-jar
-          path: .ci-docker/server
-
-      - name: Prepare build context
-        run: |
-          test -f .ci-docker/server/server-all.jar
-          cp docker/server/Dockerfile .ci-docker/server/Dockerfile
 
       - name: Lowercase image name
         run: |
@@ -104,9 +66,8 @@ jobs:
       - name: Build and push multi-arch image
         uses: docker/build-push-action@v6
         with:
-          context: .ci-docker/server
-          file: .ci-docker/server/Dockerfile
-          target: runtime-prebuilt
+          context: .
+          file: docker/server/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
