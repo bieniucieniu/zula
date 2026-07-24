@@ -173,30 +173,5 @@ class AuthRepository(
         }
     }
 
-    fun extendOAuthSession(id: Uuid, userId: Uuid, expiresAt: Long) {
-        queries.extendOAuthSession(expiresAt, id, userId)
-    }
-
     fun getUserById(id: Uuid): Users? = queries.getUserById(id).executeAsOneOrNull()
-
-    fun insertChallenge(
-        channel: String,
-        target: String,
-        codeHash: String,
-        purpose: String,
-        expiresAt: Long,
-    ): Uuid =
-        queries.insertAuthChallenge(channel, target, codeHash, purpose, expiresAt).executeAsOne()
-
-    fun findChallenge(id: Uuid): Auth_challenges? =
-        queries.findAuthChallenge(id).executeAsOneOrNull()
-
-    fun findChallengeByTokenHash(hash: String): Auth_challenges? =
-        queries.findAuthChallengeByCodeHash(hash).executeAsOneOrNull()
-
-    fun consumeChallenge(id: Uuid, now: Long = System.currentTimeMillis() / 1000): Boolean {
-        return queries.consumeAuthChallenge(now, id).executeAsOneOrNull() != null
-    }
-
-    fun incrementChallengeAttempts(id: Uuid) = queries.incrementChallengeAttempts(id)
 }

@@ -100,9 +100,6 @@ UPDATE user_sessions SET is_revoked = 1
 WHERE id = ? AND is_revoked = 0 AND expires_at > ?
 RETURNING id;
 
-extendOAuthSession:
-UPDATE user_sessions SET expires_at = ? WHERE id = ? AND is_revoked = 0 AND user_id = ?;
-
 getUserById:
 SELECT * FROM users WHERE id = ? LIMIT 1;
 
@@ -123,23 +120,3 @@ UPDATE user_profiles SET
     seller_headline = ?,
     updated_at = ?
 WHERE user_id = ?;
-
-insertAuthChallenge:
-INSERT INTO auth_challenges (
-    channel, target, code_hash, purpose, expires_at
-) VALUES (?, ?, ?, ?, ?)
-RETURNING id;
-
-findAuthChallenge:
-SELECT * FROM auth_challenges WHERE id = ? LIMIT 1;
-
-consumeAuthChallenge:
-UPDATE auth_challenges SET consumed_at = ?
-WHERE id = ? AND consumed_at IS NULL
-RETURNING id;
-
-findAuthChallengeByCodeHash:
-SELECT * FROM auth_challenges WHERE code_hash = ? LIMIT 1;
-
-incrementChallengeAttempts:
-UPDATE auth_challenges SET attempts = attempts + 1 WHERE id = ?;

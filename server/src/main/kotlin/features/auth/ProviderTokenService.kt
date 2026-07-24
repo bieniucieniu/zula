@@ -27,17 +27,6 @@ class ProviderTokenService(
     val httpClient: HttpClient,
     val json: Json,
 ) {
-
-    suspend fun <T> withProviderAccess(userId: Uuid, provider: String, block: suspend (String) -> T): T {
-        val identity = repository.findIdentityByUserAndProvider(userId, provider)
-            ?: badRequest("Provider $provider not linked")
-        if (identity.credentials_status == CredentialsStatus.REVOKED) {
-            conflict("Provider credentials revoked: $provider")
-        }
-        val access = resolveAccessToken(identity)
-        return block(access)
-    }
-
     fun storeProviderRefresh(identityId: Uuid, refreshToken: String?) {
         if (refreshToken.isNullOrBlank()) return
         if (!encryption.isConfigured) {
