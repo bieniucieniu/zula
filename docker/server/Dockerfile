@@ -1,12 +1,15 @@
 # syntax=docker/dockerfile:1
 # Multi-arch: linux/amd64 (x64) + linux/arm64 (Apple Silicon, Raspberry Pi 4 / ARMv8)
 #
+# Fat JAR is arch-independent — compile once on the builder CPU ($BUILDPLATFORM),
+# then copy into per-arch JRE images ($TARGETPLATFORM).
+#
 #   docker build -f docker/server/Dockerfile -t zula-server .
 
 ARG JRE_IMAGE=eclipse-temurin:21-jre-jammy
 ARG JDK_IMAGE=eclipse-temurin:21-jdk-jammy
 
-FROM ${JDK_IMAGE} AS build
+FROM --platform=$BUILDPLATFORM ${JDK_IMAGE} AS build
 WORKDIR /workspace
 
 COPY gradlew ./
