@@ -1,6 +1,7 @@
 package com.zula.app
 
 import com.zula.core.http.ProblemDetails
+import com.zula.core.jobrunr.configureJobRunrRouting
 import com.zula.core.security.jwt.configureJwksRouting
 import com.zula.features.auth.configureAuthRouting
 import com.zula.features.chat.configureChatRouting
@@ -19,8 +20,8 @@ import io.ktor.server.routing.openapi.*
 
 fun Application.configureRouting() {
     routing {
-
         configureJwksRouting()
+        configureJobRunrRouting()
 
         route("/api") {
             configureAuthRouting()
@@ -40,5 +41,4 @@ fun Application.configureRouting() {
             }
         }
     }
-
 }

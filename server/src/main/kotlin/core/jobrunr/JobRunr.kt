@@ -1,8 +1,10 @@
 package com.zula.core.jobrunr
 
 import com.zaxxer.hikari.HikariDataSource
+import com.zula.core.security.AuthProviderNames
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.jobrunr.configuration.JobRunr
@@ -12,7 +14,7 @@ import org.jobrunr.storage.sql.common.SqlStorageProviderFactory
 import org.koin.ktor.ext.getKoin
 import org.slf4j.LoggerFactory
 
-private object JobRunrSmokeJobs {
+object JobRunrSmokeJobs {
     private val log = LoggerFactory.getLogger(JobRunrSmokeJobs::class.java)
 
     fun ping() {
@@ -22,7 +24,6 @@ private object JobRunrSmokeJobs {
 
 fun Application.configureJobRunr() {
     val dataSource: HikariDataSource? = getKoin().getOrNull()
-    val enabled = dataSource != null
 
     if (dataSource != null) {
         val dashboardEnabled =
@@ -50,8 +51,12 @@ fun Application.configureJobRunr() {
     } else {
         log.info("JobRunr disabled, no database DataSource")
     }
+}
 
-    routing {
+/** Mount after JWT Authentication is installed (see configureRouting). */
+fun Route.configureJobRunrRouting() {
+    val enabled = application.getKoin().getOrNull<HikariDataSource>() != null
+    authenticate(AuthProviderNames.JWT) {
         get("/jobs/ping") {
             if (!enabled) {
                 call.respond(

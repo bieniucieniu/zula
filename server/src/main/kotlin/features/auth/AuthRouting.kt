@@ -21,7 +21,8 @@ import org.koin.ktor.ext.inject
 import kotlin.time.Duration.Companion.hours
 
 fun Route.configureAuthRouting() {
-    val config: SecurityConfig = application.getKoin().getOrNull() ?: return
+    val config: SecurityConfig = application.getKoin().getOrNull()
+        ?: error("SecurityConfig is required to mount auth routes; ensure security module is installed")
     val authSettings: AuthSettings by inject()
     val authService: AuthService by inject()
     val jwtConfig = config.jwt
