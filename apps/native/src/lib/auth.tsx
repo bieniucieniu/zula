@@ -1,27 +1,9 @@
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-  authenticateWithDevBypass,
-  authenticateWithIdToken,
-  type StoredOAuthSession,
-  setAccessToken,
-} from "@zula/api"
-import { logout as apiLogout, getSession } from "@zula/api/endpoints"
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
-import { configureApiClient } from "@/lib/api"
-import { getDevAuthEmail, getDevAuthSecret } from "@/lib/dev-auth"
-
-const SESSION_STORAGE_KEY = "zula.oauth.session"
-
-configureApiClient()
+import { useQueryClient } from "@tanstack/react-query"
+import type { SessionResponse } from "@zula/api"
+import { getGetSessionQueryKey, useGetSession } from "@zula/api/endpoints"
+import { createContext, type ReactNode, use, useEffect, useState } from "react"
+import { readStoredSession, writeStoredSession } from "@/lib/session-storage"
+import { setAccessToken } from "@zula/api"
 
 export type AuthSession = {
   email: string
@@ -31,32 +13,17 @@ export type AuthSession = {
 type AuthContextValue = {
   session: AuthSession | null
   ready: boolean
-  signInWithIdToken: (input: {
-    provider: string
-    idToken: string
-    providerRefreshToken?: string | null
-  }) => Promise<void>
-  signInWithDevBypass: () => Promise<void>
-  signOut: () => Promise<void>
+  refreshing: boolean
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-async function readStoredSession(): Promise<StoredOAuthSession | null> {
-  const raw = await AsyncStorage.getItem(SESSION_STORAGE_KEY)
-  if (!raw) return null
-  return JSON.parse(raw) as StoredOAuthSession
-}
-
-async function writeStoredSession(session: StoredOAuthSession | null) {
-  if (!session) {
-    await AsyncStorage.removeItem(SESSION_STORAGE_KEY)
-    setAccessToken(null)
-    return
+function toSession(remote: SessionResponse): AuthSession {
+  return {
+    email: remote.email ?? "",
+    expiresIn: remote.expiresIn,
   }
-
-  await AsyncStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session))
-  setAccessToken(session.accessToken)
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -73,76 +40,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })()
   }, [])
 
-  const sessionQuery = useQuery({
-    queryKey: ["auth", "session"],
-    enabled: bootstrapped,
-    retry: 0,
-    queryFn: async () => {
-      const { data } = await getSession()
-      return data
+  const sessionQuery = useGetSession({
+    query: {
+      enabled: bootstrapped,
+      retry: false,
+      placeholderData: undefined,
     },
   })
 
-  const session = useMemo<AuthSession | null>(() => {
-    if (!sessionQuery.data || sessionQuery.isError) return null
-    return {
-      email: sessionQuery.data.email ?? "",
-      expiresIn: sessionQuery.data.expiresIn,
+  useEffect(() => {
+    if (sessionQuery.isError) {
+      void writeStoredSession(null)
+      queryClient.setQueryData(getGetSessionQueryKey(), null)
     }
-  }, [sessionQuery.data, sessionQuery.isError])
+  }, [sessionQuery.isError, queryClient])
 
-  const signInWithIdToken = useCallback(
-    async (input: { provider: string; idToken: string; providerRefreshToken?: string | null }) => {
-      const stored = await readStoredSession()
-      const next = await authenticateWithIdToken({
-        provider: input.provider,
-        idToken: input.idToken,
-        providerRefreshToken: input.providerRefreshToken,
-        sessionId: stored?.sessionId,
-        deviceInfo: "native",
-      })
-      await writeStoredSession(next)
-      await queryClient.invalidateQueries({ queryKey: ["auth", "session"] })
-    },
-    [queryClient]
-  )
-
-  const signInWithDevBypass = useCallback(async () => {
-    const secret = getDevAuthSecret()
-    if (!secret) {
-      throw new Error("Dev auth is not configured")
-    }
-
-    const stored = await readStoredSession()
-    const next = await authenticateWithDevBypass({
-      secret,
-      email: getDevAuthEmail(),
-      sessionId: stored?.sessionId,
-    })
-    await writeStoredSession(next)
-    await queryClient.invalidateQueries({ queryKey: ["auth", "session"] })
-  }, [queryClient])
-
-  const signOut = useCallback(async () => {
-    try {
-      await apiLogout({})
-    } catch {
-      // clear local session even if server logout fails
-    }
-    await writeStoredSession(null)
-    await queryClient.resetQueries({ queryKey: ["auth", "session"] })
-  }, [queryClient])
-
-  const ready = bootstrapped && !sessionQuery.isPending
+  const remote = sessionQuery.data?.data
+  const session = remote && !sessionQuery.isError ? toSession(remote) : null
 
   return (
     <AuthContext
       value={{
         session,
-        ready,
-        signInWithIdToken,
-        signInWithDevBypass,
-        signOut,
+        refreshing: sessionQuery.isFetching,
+        ready: bootstrapped && !sessionQuery.isLoading,
+        refresh: async () => {
+          await sessionQuery.refetch()
+        },
       }}
     >
       {children}
