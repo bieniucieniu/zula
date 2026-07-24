@@ -44,7 +44,7 @@ security:
       additionalClientIds: ${APPLE_ADDITIONAL_CLIENT_IDS:}
   devAuth:
     secret: ${AUTH_DEV_BYPASS_SECRET:}
-    defaultEmail: ${AUTH_DEV_BYPASS_EMAIL:dev@zula.local}
+    defaultEmail: ${AUTH_DEV_BYPASS_EMAIL:}
   auth:
     providerCheckIntervalSeconds: ${AUTH_PROVIDER_CHECK_INTERVAL_SECONDS:21600}
     requireProviderRefreshOnLogin: ${AUTH_REQUIRE_PROVIDER_REFRESH_ON_LOGIN:true}
@@ -55,7 +55,7 @@ ktor:
     port: 8000
     watch:
       - classes
-  development: true
+  development: ${KTOR_DEVELOPMENT:false}
   application:
     modules:
       - com.zula.app.KoinKt.configureKoin
@@ -67,3 +67,4 @@ ktor:
       - com.zula.core.jobrunr.JobRunrKt.configureJobRunr
       - com.zula.core.security.SecurityKt.configureSecurity
       - com.zula.app.RoutingKt.configureRouting
+
