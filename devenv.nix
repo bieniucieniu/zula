@@ -8,6 +8,10 @@
 let
   secrets = config.secretspec.secrets;
   root = config.devenv.root;
+  defaultDevAuthSecret = "local-dev-bypass";
+  defaultDevAuthEmail = "dev@zula.local";
+  devAuthSecret = secrets.AUTH_DEV_BYPASS_SECRET or defaultDevAuthSecret;
+  devAuthEmail = secrets.AUTH_DEV_BYPASS_EMAIL or defaultDevAuthEmail;
   syncSchema = ''
     set -eu
     cd "${root}"
@@ -108,7 +112,10 @@ in
               host="''${lan_ip:-127.0.0.1}"
               export EXPO_PUBLIC_API_URL="http://''${host}:8000/api"
             fi
+            export EXPO_PUBLIC_DEV_AUTH_SECRET="''${EXPO_PUBLIC_DEV_AUTH_SECRET:-''${AUTH_DEV_BYPASS_SECRET:-${defaultDevAuthSecret}}}"
+            export EXPO_PUBLIC_DEV_AUTH_EMAIL="''${EXPO_PUBLIC_DEV_AUTH_EMAIL:-''${AUTH_DEV_BYPASS_EMAIL:-${defaultDevAuthEmail}}}"
             echo "native: EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
+            echo "native: dev auth bypass enabled ($EXPO_PUBLIC_DEV_AUTH_EMAIL)"
             cd ${root}/apps/native && bun run dev
           '';
         };
@@ -122,7 +129,12 @@ in
     };
   };
 
-  env = secrets;
+  env = secrets // {
+    AUTH_DEV_BYPASS_SECRET = devAuthSecret;
+    AUTH_DEV_BYPASS_EMAIL = devAuthEmail;
+    EXPO_PUBLIC_DEV_AUTH_SECRET = secrets.EXPO_PUBLIC_DEV_AUTH_SECRET or devAuthSecret;
+    EXPO_PUBLIC_DEV_AUTH_EMAIL = secrets.EXPO_PUBLIC_DEV_AUTH_EMAIL or devAuthEmail;
+  };
 
   scripts.pg = {
     exec = ''
@@ -159,6 +171,7 @@ in
     echo "  db:      psql                          # interactive (needs devenv up)"
     echo "  jdbc:    $DATABASE_JDBC_URL"
     echo "  app:     $APP_URL"
+    echo "  devauth: $AUTH_DEV_BYPASS_EMAIL (bypass secret set for server + native)"
     if lan_ip="$("${root}/scripts/lan-ip.sh" 2>/dev/null)"; then
       echo "  lan:     $lan_ip  # native uses http://$lan_ip:8000/api unless EXPO_PUBLIC_API_URL set"
     fi
@@ -174,8 +187,10 @@ in
     test -n "$DATABASE_JDBC_URL"
     test -n "$APP_URL"
     test -n "$PROVIDER_TOKEN_ENCRYPTION_KEY"
+    test -n "$AUTH_DEV_BYPASS_SECRET"
+    test -n "$EXPO_PUBLIC_DEV_AUTH_SECRET"
 
-    echo "Checking docker compose accessibility (warn-only if absent on CI without Docker)"
+    echo "Checking docker compose accessibility (warn-only if CI without Docker)"
     if command -v docker >/dev/null 2>&1; then
       docker compose version
     else

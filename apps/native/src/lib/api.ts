@@ -1,5 +1,6 @@
 import {
   authenticateWithCode,
+  authenticateWithDevBypass,
   createApiClient,
   setDefaultApiClient,
   toStoredOAuthSession,
@@ -48,6 +49,12 @@ export async function authenticateNativeCode(input: {
     redirectUri: input.redirectUri,
     deviceInfo: "native",
   })
+  await writeStoredSession(next)
+  return next
+}
+
+export async function authenticateNativeDevBypass(secret: string) {
+  const next = await authenticateWithDevBypass({ secret })
   await writeStoredSession(next)
   return next
 }
