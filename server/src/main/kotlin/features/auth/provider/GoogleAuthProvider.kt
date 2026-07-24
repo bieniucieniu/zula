@@ -1,6 +1,7 @@
 package com.zula.features.auth.provider
 
 import com.auth0.jwt.interfaces.DecodedJWT
+import com.zula.core.http.unauthorized
 import com.zula.core.security.GoogleOAuthConfig
 import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
@@ -38,9 +39,14 @@ class GoogleAuthProvider(
     }
 
     override suspend fun verify(credential: AuthCredential): Identity {
-        val idToken = (credential as? AuthCredential.OAuthIdToken)?.idToken
+        val token = credential as? AuthCredential.OAuthIdToken
             ?: error("Google auth requires OAuthIdToken credential")
-        val decoded = verifier.verify(idToken)
+        val decoded = verifier.verify(token.idToken)
+        val expectedNonce = token.expectedNonce
+        if (expectedNonce != null) {
+            val nonce = decoded.getClaim("nonce").asString()
+            if (nonce != expectedNonce) unauthorized("Invalid OAuth nonce")
+        }
         return Identity(
             provider = id,
             providerUserId = decoded.subject,

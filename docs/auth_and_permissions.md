@@ -173,6 +173,9 @@ Clients obtain the initial session via OAuth (web backend popup or native `POST 
 | Logout | Soft provider credential check; local session always revoked; logout does not fail the client |
 | Google refresh revoke | Only on OAuth `invalid_grant` (not network/transient errors) |
 | Dev bypass | Fixed `dev@zula.local` only when `AUTH_DEV_BYPASS_SECRET` set |
+| OAuth nonce | Server Google start stores nonce cookie; verified against id_token |
+| Identity link | Reject if provider identity already owned by another user; update scopes on login |
+| Username allocate | Retry on unique violation (race-safe) |
 
 ---
 

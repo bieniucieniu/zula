@@ -15,6 +15,7 @@ sealed class AuthCredential {
         val idToken: String,
         val providerRefreshToken: String? = null,
         val scopes: String? = null,
+        val expectedNonce: String? = null,
     ) : AuthCredential()
 
     data class DevBypass(

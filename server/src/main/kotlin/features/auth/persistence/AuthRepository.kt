@@ -51,8 +51,8 @@ class AuthRepository(
     fun findIdentity(provider: String, providerUserId: String): User_identities? =
         queries.findIdentityByProvider(provider, providerUserId).executeAsOneOrNull()
 
-    fun updateIdentityLogin(id: Uuid, email: String?, metadata: String?, status: String) {
-        queries.updateIdentityLogin(email, metadata, status, id)
+    fun updateIdentityLogin(id: Uuid, email: String?, metadata: String?, status: String, scopes: String?) {
+        queries.updateIdentityLogin(email, metadata, status, scopes, id)
     }
 
     fun updateIdentityProviderRefresh(id: Uuid, refreshEnc: String?, status: String, checkedAt: Long) {
