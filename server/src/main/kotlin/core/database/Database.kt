@@ -42,6 +42,7 @@ fun Application.configureDatabase() {
 internal fun migrateSchema(driver: SqlDriver) {
     migrateLegacyUuidDefaults(driver)
     migrateAuthSessionIdentityColumn(driver)
+    dropAuthChallengesTable(driver)
     ensureSchemaVersionTable(driver)
     val target = Database.Schema.version
     val current = readSchemaVersion(driver)
@@ -70,7 +71,6 @@ private fun migrateLegacyUuidDefaults(driver: SqlDriver) {
         "users",
         "user_identities",
         "user_sessions",
-        "auth_challenges",
     )
 
     for (table in uuidPrimaryKeyTables) {
@@ -98,6 +98,14 @@ private fun migrateAuthSessionIdentityColumn(driver: SqlDriver) {
     driver.execute(
         identifier = null,
         sql = "CREATE INDEX IF NOT EXISTS user_sessions_identity_id ON user_sessions(identity_id)",
+        parameters = 0,
+    )
+}
+
+private fun dropAuthChallengesTable(driver: SqlDriver) {
+    driver.execute(
+        identifier = null,
+        sql = "DROP TABLE IF EXISTS auth_challenges",
         parameters = 0,
     )
 }
@@ -169,9 +177,6 @@ private fun writeSchemaVersion(driver: SqlDriver, version: Long) {
 fun createDatabase(driver: SqlDriver): Database =
     Database(
         driver = driver,
-        auth_challengesAdapter = Auth_challenges.Adapter(
-            idAdapter = KotlinUuidAdapter
-        ),
         user_identitiesAdapter = User_identities.Adapter(
             idAdapter = KotlinUuidAdapter,
             user_idAdapter = KotlinUuidAdapter,

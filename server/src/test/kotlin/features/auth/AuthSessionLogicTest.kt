@@ -9,9 +9,6 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.uuid.Uuid
 
@@ -22,7 +19,7 @@ class AuthSessionLogicTest {
     private val store = InMemorySessionStore()
 
     @Test
-    fun `oauth sessionId only extends when owned active and same user`() {
+    fun `active session is owned by user only`() {
         val userA = Ids.next()
         val userB = Ids.next()
         val now = Instant.now().epochSecond
@@ -33,33 +30,11 @@ class AuthSessionLogicTest {
             expiresAt = now + 900,
         )
 
-        assertNotNull(store.findActiveOwned(sessionId, userA, now))
-        assertNull(store.findActiveOwned(sessionId, userB, now))
+        assertTrue(store.findActiveOwned(sessionId, userA, now) != null)
+        assertTrue(store.findActiveOwned(sessionId, userB, now) == null)
 
         store.revoke(sessionId)
-        assertNull(store.findActiveOwned(sessionId, userA, now))
-    }
-
-    @Test
-    fun `missing or foreign sessionId creates new session not orphan extend`() {
-        val userId = Ids.next()
-        val now = Instant.now().epochSecond
-        val foreign = store.insert(
-            userId = Ids.next(),
-            authMethod = AuthMethods.OAUTH,
-            refreshHash = null,
-            expiresAt = now + 900,
-        )
-
-        val resolved = resolveOAuthSession(
-            store = store,
-            requestedSessionId = foreign,
-            userId = userId,
-            now = now,
-            sessionExpires = now + 900,
-        )
-        assertNotEquals(foreign, resolved)
-        assertNotNull(store.findActiveOwned(resolved, userId, now))
+        assertTrue(store.findActiveOwned(sessionId, userA, now) == null)
     }
 
     @Test
@@ -93,23 +68,6 @@ class AuthSessionLogicTest {
     }
 }
 
-private fun resolveOAuthSession(
-    store: InMemorySessionStore,
-    requestedSessionId: Uuid?,
-    userId: Uuid,
-    now: Long,
-    sessionExpires: Long,
-): Uuid {
-    if (requestedSessionId != null) {
-        val owned = store.findActiveOwned(requestedSessionId, userId, now)
-        if (owned != null) {
-            store.extend(owned, sessionExpires)
-            return owned
-        }
-    }
-    return store.insert(userId, AuthMethods.OAUTH, null, sessionExpires)
-}
-
 private class InMemorySessionStore {
     private data class Row(
         val id: Uuid,
@@ -139,10 +97,6 @@ private class InMemorySessionStore {
         val row = rows[sessionId] ?: return null
         if (row.userId != userId || row.revoked || row.expiresAt <= now) return null
         return row.id
-    }
-
-    fun extend(sessionId: Uuid, expiresAt: Long) {
-        rows[sessionId]?.let { if (!it.revoked) it.expiresAt = expiresAt }
     }
 
     fun revoke(sessionId: Uuid) {
