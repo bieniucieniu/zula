@@ -1,6 +1,6 @@
 # Cleanup impl plan (from review decisions)
 
-Scope: simplify + harden what exists. Keep placeholders / future UI kits. No new product features.
+Scope: simplify + harden what exists. Keep placeholders / future UI kits. No new product features. **Update contradicting docs in the same PR as each WP** (docs round Q15A).
 
 ---
 
@@ -11,14 +11,14 @@ Scope: simplify + harden what exists. Keep placeholders / future UI kits. No new
 | # | Item | Decision |
 |---|------|----------|
 | — | Empty feature packs | Keep placeholders |
-| — | `core/contracts` + multi-bind | Remove |
+| — | `core/contracts` + multi-bind | Remove + rewrite docs (docs Q1A) |
 | — | `BlockResolver` always false | Remove with contracts |
-| — | put/patch profile identical | Collapse to one write |
+| — | put/patch profile identical | Collapse to one write + scrub leftover PUT wording (docs Q6B) |
 | — | JWT key zoo | Simplify to functions / fewer types |
-| — | Dead auth APIs + phantom tests | Remove |
-| — | Dual provider metadata | Collapse to one source |
-| — | Web dead OAuth client stack | Remove |
-| — | `@zula/oauth` registry + unused `@zula/api` peerDep | Remove |
+| — | Dead auth APIs + phantom tests | Remove + schema/auth notes (docs Q9A) |
+| — | Dual provider metadata | **Keep `AuthProvider.info()` as source** — skip collapse (docs Q2B) |
+| — | Web dead OAuth client stack | Remove + doc server callback + `/oauth/complete` (docs Q12A) |
+| — | `@zula/oauth` registry + unused `@zula/api` peerDep | Remove (docs Q13A — interpreted) |
 | — | `SessionJwtIssuer` interface | Keep |
 | — | Dead `OAuthSettings.kt` | Leave |
 | — | Web action-group / layouts / form / lazy | Keep for future |
@@ -58,69 +58,93 @@ Scope: simplify + harden what exists. Keep placeholders / future UI kits. No new
 | 26 | A | Ephemeral JWT keys default off outside dev |
 | 27 | C | Separate cookie `secure` flag in config |
 
+### Docs vs cleanup (round 3 picks)
+
+Parsed from reply `1A 2B 2A 4A 5A 6B 7A 8A 9A 10A 11A 12A 14B 14A 15A` as:
+
+`1A 2B 3A 4A 5A 6B 7A 8A 9A 10A 11A 12A 13A 14B 15A`
+
+(Assumed typos: `2B 2A` → `2B 3A`; `14B 14A` → `13A 14B`. Say if wrong.)
+
+| # | Pick | Decision |
+|---|------|----------|
+| 1 | A | Delete contract stubs now; rewrite architecture/conventions/module docs → add ports when 2nd caller exists |
+| 2 | B | Keep `info()` as documented; **cancel WP5** (no config-only provider list) |
+| 3 | A | Auth-protect `/jobs/ping`; patch `architecture.md` |
+| 4 | A | Rewrite `clients.md` → web + Expo native + `@zula/*` packages (truth) |
+| 5 | A | Docs describe both sign-in paths: web backend-popup; native PKCE/idToken → authenticate |
+| 6 | B | Fix code KDoc + scrub any leftover PUT profile wording in module docs |
+| 7 | A | `autoGenerateKey` off outside dev + update `secrets.md` |
+| 8 | A | Wire `enabled && autoPull` + one line in `secrets.md` |
+| 9 | A | WP4 delete leftover challenge SQL/repo + note in schema/auth docs |
+| 10 | A | Ship auth-hardening WPs + short “Auth hardening” in `auth_and_permissions.md` / `secrets.md` |
+| 11 | A | Fail-fast SecurityConfig/plugin deps + note in `architecture.md` |
+| 12 | A | Delete SPA `/oauth/callback`; docs mention `/oauth/complete` + server `/auth/callback/google` |
+| 13 | A | Remove `@zula/oauth` registry (unchanged from WP7) |
+| 14 | B | Keep empty feature packs; add one line in `implementation_plan.md`: scaffolding present; contracts deferred until 2nd caller |
+| 15 | A | Doc updates in **same PR** as each contradicting WP |
+
 ---
 
 ## Work packages
 
-### WP1 — Kill unused contracts / stub ports
+### WP1 — Kill unused contracts / stub ports (+ docs Q1A, Q14B)
 
 **Do**
 - Delete `core/contracts/{BlockResolver,TrustLedgerWriter,SellerActivityWriter}.kt`
 - Strip `UserService` implements + Koin `binds`
 - Drop stub methods (`resolveViewerBlock`, empty trust/seller TODOs)
 - Keep profile write API only (WP2)
+- **Docs (same PR):** rewrite `architecture.md` (tree, Koin examples, cross-feature table), `conventions.md` (prefer interfaces → add when 2nd caller), strip/adjust contract mentions in `feed_module.md`, `chat_module.md`, `user_module.md`, `validation_module.md`, `moderation_module.md`, `seller_profile_module.md`, `auth_and_permissions.md`
+- **Docs:** one line in `implementation_plan.md` — scaffolding present; contracts deferred until 2nd caller
 
-**Done when:** no multi-interface binds for user; no `core/contracts`; compile green.
+**Done when:** no `core/contracts`; docs no longer mandate dead ports; compile green.
 
-### WP2 — One profile write
+### WP2 — One profile write (+ docs Q6B)
 
 **Do**
 - Collapse `putMyProfile` / `patchMyProfile` → `updateMyProfile` (null = unchanged)
-- Update `UserProfileWriter` + docs that claim PUT full-replace
+- Fix code KDoc; scrub leftover PUT full-replace wording in module docs if any
 - No clear-field sentinel unless product needs later
 
-**Done when:** one write entrypoint; no duplicate bodies.
+**Done when:** one write entrypoint; docs/KDoc match PATCH/`UpdateMyProfile`.
 
-### WP3 — Flatten JWT keys (+ autoPull + ephemeral default)
+### WP3 — Flatten JWT keys (+ autoPull + ephemeral default) (+ docs Q7A, Q8A)
 
 **Do**
-- Collapse `KeysManager` / `KeysManagers` / `DefaultKeysManager` / dual `JwtKeys`+`JwtKeySet`+`toLegacyJwtKeys` → config → key set → sign/verify
-- Keep used paths: k8s / PEM / JSON / auto-generate
-- Wire `autoPull`: k8s pull only when `enabled && autoPull` (#9)
-- Default `autoGenerateKey` off outside dev (#26); fail loud if no keys in non-dev
-- Keep `KoinComponent` / `get<Json>()`; keep `SessionJwtIssuer` interface
+- Collapse key-manager zoo → config → key set → sign/verify
+- Wire `autoPull`: pull only when `enabled && autoPull`
+- Default `autoGenerateKey` off outside dev; fail loud if no keys in non-dev
+- Keep `KoinComponent` / `SessionJwtIssuer` interface
+- **Docs:** update `secrets.md` for defaults + `autoPull` conjunction
 
-**Done when:** fewer files; one key model; autoPull honored; key tests pass.
+**Done when:** fewer files; secrets.md matches; key tests pass.
 
-### WP4 — Dead auth surface
+### WP4 — Dead auth surface (+ docs Q9A)
 
 **Do**
 - Remove `extendOAuthSession`, challenge insert/find/consume (+ SQLDelight if unused)
 - Remove unused `withProviderAccess`
-- Rewrite/delete `AuthSessionLogicTest` inventing `resolveOAuthSession`
-- Grep before schema drop
+- Rewrite/delete phantom `AuthSessionLogicTest` / `resolveOAuthSession`
+- **Docs:** note in `schema.md` / `auth_and_permissions.md` that leftover challenge storage removed
 
-**Done when:** no dead challenge/extend APIs; tests cover real code only.
+**Done when:** no dead challenge/extend APIs; docs note cleanup.
 
-### WP5 — One provider metadata source
+### WP5 — CANCELLED (docs Q2B)
 
-**Do**
-- Single source for `/auth/providers` (prefer config-driven `configuredProviders`)
-- Stop duplicating scopes/display in `*AuthProvider.info()` if config owns them
-- Leave AuthProvider strategy hierarchy as-is (#1C)
+Keep `AuthProvider.info()` as `GET /auth/providers` source per `user_module.md`. No config-only collapse.
 
-**Done when:** one function builds provider list; no drift.
-
-### WP6 — Remove dead web OAuth client path
+### WP6 — Remove dead web OAuth client path (+ docs Q12A, Q5A)
 
 **Do**
 - Delete `popup-sign-in.ts`, `use-web-oauth-sign-in.ts`, route `/oauth/callback` (regen route tree)
 - Keep `backend-popup-sign-in.ts` + `/oauth/complete`
-- Depends on WP8 (message-type unify) first or do unify inside survivors only
+- After WP8 message unify
+- **Docs:** clients/auth — only `/oauth/complete` + server `/auth/callback/google`; both sign-in paths (web popup vs native authenticate)
 
-**Done when:** login via backend popup; no `/oauth/callback`.
+**Done when:** no SPA `/oauth/callback`; docs match.
 
-### WP7 — Slim `@zula/oauth`
+### WP7 — Slim `@zula/oauth` (+ docs Q13A)
 
 **Do**
 - Remove registry Map API + exports
@@ -129,101 +153,104 @@ Scope: simplify + harden what exists. Keep placeholders / future UI kits. No new
 
 **Done when:** package builds; native OAuth works.
 
-### WP8 — Unify OAuth popup message type (#15B)
+### WP8 — Unify OAuth popup message type
 
 **Do**
-- One constant (prefer `zula.oauth.complete`) in backend HTML + `backend-popup-sign-in.ts`
-- Align any remaining client popup before WP6 deletes it (or delete first then only one name remains — still rename server/client survivor to same string)
+- One constant (`zula.oauth.complete`) in backend HTML + `backend-popup-sign-in.ts`
+- Align then delete client duplicate in WP6
 
 **Done when:** single message type string in repo.
 
-### WP9 — Fail fast security / plugin deps (#2A, #10C)
+### WP9 — Fail fast security / plugin deps (+ docs Q11A)
 
 **Do**
-- `configureAuthRouting`: require `SecurityConfig` — throw / `error()` if missing (no silent return)
-- Audit related plugins (DB, JobRunr, Security): missing required dep → fail startup, not soft skip
-- Keep intentional optionals explicit (e.g. DB off = health degraded only if product allows)
+- `configureAuthRouting`: require `SecurityConfig` — throw if missing
+- Audit DB/JobRunr/Security: missing required dep → fail startup
+- **Docs:** short boot/plugins note in `architecture.md`
 
-**Done when:** misconfig crashes boot; auth routes never silently vanish.
+**Done when:** misconfig crashes boot; architecture notes it.
 
-### WP10 — Auth correctness: session email, nonce, identity, username (#18–23)
-
-**Do**
-- `#18`: put real email in session response (JWT email claim or load from DB); stop labeling username as email — pick one field name and stick to it
-- `#19`: persist OAuth nonce with state; verify against id_token `nonce`
-- `#22`: `ensureIdentity` update scopes; reject if existing identity `user_id` ≠ current user
-- `#23`: username insert catch unique violation → retry loop
-- Leave GET `/auth/session` refresh behavior (#6A)
-- Document JWT DB session check: revoked/missing session ⇒ no principal (#5A)
-
-**Done when:** tests cover nonce verify, identity ownership, username retry; session email correct.
-
-### WP11 — Provider tokens / logout / Google refresh (#7C, #20A, #21A)
+### WP10 — Auth correctness: session email, nonce, identity, username (+ docs Q10A)
 
 **Do**
-- `#20`: Google refresh revoke only on `invalid_grant` / explicit OAuth error bodies; network/5xx do not revoke
-- `#21`: startup fail if `requireProviderRefreshOnLogin` (or equivalent) && encryption key unset
-- `#7`: logout soft provider check — errors logged; local session always revoked; logout never fails user
+- Real email in session response (not username claim)
+- Persist + verify OAuth nonce vs id_token
+- `ensureIdentity`: update scopes; reject foreign `user_id`
+- Username unique-violation → retry
+- Keep GET `/auth/session` refresh behavior
+- Document JWT DB session check: revoked ⇒ unauthenticated
+- **Docs:** “Auth hardening” subsection in `auth_and_permissions.md`
 
-**Done when:** logout always 2xx on valid session cookie; refresh revoke policy tested; boot fails without key when required.
+**Done when:** tests + hardening doc section.
 
-### WP12 — URL trust + cookie secure flag (#8B, #27C)
-
-**Do**
-- Same forward-header trust for OAuth redirect base URL and JWT issuer/audience construction (trust `X-Forwarded-*` / Host behind known proxy)
-- Add config flag for cookie `secure` (e.g. `security.cookies.secure`); wire cookie helpers; document local http vs prod https
-
-**Done when:** one public-URL helper/policy; cookies use config flag.
-
-### WP13 — Delete token log (#4A)
+### WP11 — Provider tokens / logout / Google refresh (+ docs Q10A)
 
 **Do**
-- Remove `log.info("token: $token")` from JWT plugin (`Security.kt`)
+- Google refresh revoke only on `invalid_grant` / explicit OAuth errors
+- Startup fail if require provider-refresh && encryption key unset
+- Logout soft provider check; always revoke local session; never fail logout
+- **Docs:** touch `auth_and_permissions.md` / `secrets.md` as needed
 
-**Done when:** no access token in logs; grep clean.
+**Done when:** logout always succeeds locally; revoke policy tested; boot fails without key when required.
 
-### WP14 — Dev auth fixed email (#11C)
-
-**Do**
-- Dev bypass: fixed `dev@zula.local` (or existing default); ignore `deviceInfo` as email
-- Update `DevAuthProvider` + tests; remove “custom email via deviceInfo” test
-
-**Done when:** only fixed email; tests updated.
-
-### WP15 — Jobs ping auth (#17A); consumers leave (#16A)
+### WP12 — URL trust + cookie secure flag (+ docs Q10A)
 
 **Do**
-- Protect `GET /jobs/ping` with JWT (or admin role if exists — else authenticated user minimum)
-- Leave empty feature consumers registered
+- Same forward-header trust for OAuth base URL and JWT issuer/audience
+- Config flag `security.cookies.secure`; wire cookie helpers
+- **Docs:** `secrets.md` / auth — cookie secure + Forwarded policy
 
-**Done when:** unauthenticated ping → 401; authed still enqueues.
+**Done when:** one public-URL policy; cookies use config flag; docs updated.
 
-### WP16 — OIDC JWKS cache eviction (#24A)
-
-**Do**
-- TTL and/or max entries on `OidcIdTokenVerifier` key cache; evict stale kids
-
-**Done when:** rotated-away keys eventually drop; test or clear comment on TTL.
-
-### WP17 — `@zula/api` client factory + web 401 + native entry (#12B, #13A, #14B)
+### WP13 — Delete token log
 
 **Do**
-- Replace module globals with `createApiClient(opts)` (baseUrl, authMode, getAccessToken, setAccessToken, onUnauthorized)
-- Orval mutator uses injected client instance (or thin adapter set once at boot via explicit `setApiClient`)
-- Prefer: factory returns client; `setDefaultApiClient(client)` once at app entry — still explicit, not import-order accidental
-- Web boot: create cookie-mode client + `onUnauthorized` → `POST /auth/refresh` (credentials include) → retry
-- Native boot: call configure/create from app entry (not side-effect `import "@/lib/api"`)
-- Update web/native AuthProvider + session storage to use new API
+- Remove `log.info("token: $token")` from JWT plugin
 
-**Done when:** no hidden mutator globals; web 401 refreshes; native entry configures visibly; typecheck green.
+**Done when:** grep clean.
 
-### WP18 — Native platform OAuth client id (#25A)
+### WP14 — Dev auth fixed email
 
 **Do**
-- `use-native-oauth-sign-in` / config: pick ios vs android vs web client id by `Platform.OS`
-- Keep fallback chain documented
+- Fixed `dev@zula.local` only; ignore `deviceInfo` as email
+- Update provider + tests
 
-**Done when:** ios/android builds use platform client ids; web Expo uses web id.
+**Done when:** only fixed email.
+
+### WP15 — Jobs ping auth (+ docs Q3A); consumers leave
+
+**Do**
+- Protect `GET /jobs/ping` with JWT (or admin if exists)
+- Leave empty feature consumers
+- **Docs:** patch `architecture.md` smoke → authenticated
+
+**Done when:** unauth → 401; architecture.md updated.
+
+### WP16 — OIDC JWKS cache eviction (+ docs Q10A)
+
+**Do**
+- TTL and/or max entries on key cache
+- Mention in auth hardening docs if relevant
+
+**Done when:** stale kids eventually drop.
+
+### WP17 — `@zula/api` client factory + web 401 + native entry (+ docs Q4A, Q5A)
+
+**Do**
+- `createApiClient(opts)` / explicit set-at-boot (no accidental import-order globals)
+- Web: cookie mode + 401 → `POST /auth/refresh` → retry
+- Native: configure from app entry
+- **Docs:** rewrite `clients.md` to web + Expo native + `@zula/api` / `@zula/oauth`; both sign-in paths
+
+**Done when:** clients.md matches reality; typecheck green.
+
+### WP18 — Native platform OAuth client id (+ docs Q4A)
+
+**Do**
+- Pick ios/android/web client id by `Platform.OS`
+- Document fallback in clients.md or native readme pointer
+
+**Done when:** platform ids used; docs mention.
 
 ---
 
@@ -232,22 +259,24 @@ Scope: simplify + harden what exists. Keep placeholders / future UI kits. No new
 | Phase | WPs | Why |
 |-------|-----|-----|
 | A — quick wins | WP13, WP8 | token leak; message unify |
-| B — dead client code | WP6, WP7 | low risk deletes |
-| C — user/contracts | WP1, WP2 | small server |
-| D — auth dead + meta | WP4, WP5 | schema/API cleanup |
-| E — fail-fast / config | WP9, WP12, WP3 | boot + keys + cookies/URL |
-| F — auth correctness | WP10, WP11, WP14, WP15, WP16 | security logic |
-| G — clients | WP17, WP18 | api factory + native ids |
+| B — dead client code | WP6, WP7 | deletes + clients/oauth docs |
+| C — user/contracts | WP1, WP2 | contracts gone + doc rewrite |
+| D — auth dead | WP4 | SQL/API + schema note (**no WP5**) |
+| E — fail-fast / config | WP9, WP12, WP3 | boot + keys + cookies/URL + secrets.md |
+| F — auth correctness | WP10, WP11, WP14, WP15, WP16 | security + hardening docs |
+| G — clients | WP17, WP18 | api factory + `clients.md` rewrite |
 
-Commit per WP (or tight pairs). After each phase: server tests + web/native typecheck.
+Commit per WP (docs in same commit/PR as code). After each phase: server tests + web/native typecheck.
 
 ---
 
-## Explicit non-goals (this plan)
+## Explicit non-goals
 
-- Implementing empty feature pack bodies (chat/feed/…)
-- Rewriting AuthProvider strategy (#1C leave)
-- Removing JobRunr / empty consumers (#16A)
-- Changing GET `/auth/session` refresh-on-missing-JWT (#6A keep)
-- Replacing Cookie/Problem Koin `get()` (#3B leave)
+- Implementing empty feature pack bodies
+- Rewriting AuthProvider strategy
+- Removing JobRunr / empty consumers
+- Changing GET `/auth/session` refresh-on-missing-JWT
+- Replacing Cookie/Problem Koin `get()`
+- Collapsing provider list to config-only (**WP5 cancelled**)
 - Building product UI on action-group / layouts
+- Compose/SwiftUI client apps (docs stop claiming them as current)
