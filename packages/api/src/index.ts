@@ -1,11 +1,15 @@
 export type * from "./generated/model"
 export { ProblemDetailsError } from "./problemDetails"
 export {
+  createApiClient,
   getAccessToken,
+  getDefaultApiClient,
   setAccessToken,
-  setApiAuthMode,
-  setApiBaseUrl,
+  setDefaultApiClient,
   setUnauthorizedHandler,
+  type ApiAuthMode,
+  type ApiClient,
+  type ApiClientOptions,
 } from "./mutator"
 export {
   authenticateWithCode,
