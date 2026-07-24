@@ -18,10 +18,10 @@ Conventions: thin clients, backend-owned business rules, SQLDelight, REST via Kt
 
 | Goal | Detail |
 |------|--------|
-| **Primary feed** | `GET /api/v1/feed/for-you` — personalized, hybrid-ranked page |
-| **Fallback feed** | `GET /api/v1/feed` — chronological when viewer has no interest profile (cold start) |
-| **Filtered feeds** | By trait (`GET /api/v1/feed/by-trait/{traitId}`) and by author (`GET /api/v1/feed/by-author/{authorId}`) |
-| **Writes** | `POST /api/v1/feed/items`, `GET /api/v1/feed/items/{id}` |
+| **Primary feed** | `GET /api/feed/for-you` — personalized, hybrid-ranked page |
+| **Fallback feed** | `GET /api/feed` — chronological when viewer has no interest profile (cold start) |
+| **Filtered feeds** | By trait (`GET /api/feed/by-trait/{traitId}`) and by author (`GET /api/feed/by-author/{authorId}`) |
+| **Writes** | `POST /api/feed/items`, `GET /api/feed/items/{id}` |
 | **No N+1** | Fixed ~4–5 SQL round-trips per page regardless of `limit` |
 | **Controllable ranking** | Hard SQL filters first; vectors re-rank inside a bounded candidate set |
 
@@ -82,7 +82,7 @@ Hard gates always apply in SQL: `status = active`, `visibility = public`, blocke
 
 ## Step 1: Database Migration
 
-Create `core/database/src/main/resources/db/migration/000002_feed.sql` (and matching `_rollback.sql`).
+Create `server/src/main/sqldelight/com/zula/feed_schema.sq` (or a versioned SQL migration when introduced).
 
 ### 1.1 Trait taxonomy
 
@@ -90,8 +90,8 @@ Adjacency-list tree shared by products and services (per README).
 
 ```sql
 CREATE TABLE traits (
-    id          bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    parent_id   bigint REFERENCES traits(id) ON DELETE CASCADE,
+    id          UUID PRIMARY KEY DEFAULT uuidv7(),
+    parent_id   UUID REFERENCES traits(id) ON DELETE CASCADE,
     slug        varchar(100) NOT NULL,
     label       varchar(200) NOT NULL,
     sort_order  int NOT NULL DEFAULT 0,
@@ -102,7 +102,7 @@ CREATE TABLE traits (
 CREATE INDEX traits_parent_idx ON traits (parent_id, sort_order);
 ```
 
-Seed root traits and a small subtree in `core/database/src/main/resources/db/seed.sql` (e.g. `goods`, `services`, `travel`).
+Seed root traits in application seed data when feed ships (e.g. `goods`, `services`, `travel`).
 
 ### 1.2 Feed items (source of truth)
 
@@ -110,8 +110,8 @@ Single table for all feed kinds.
 
 ```sql
 CREATE TABLE feed_items (
-    id               bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    author_id        bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id               UUID PRIMARY KEY DEFAULT uuidv7(),
+    author_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     kind             varchar(20) NOT NULL
                      CHECK (kind IN ('need', 'offer', 'trip')),
     title            varchar(200) NOT NULL,
@@ -149,16 +149,16 @@ CREATE INDEX feed_items_embedding_hnsw_idx
 
 ```sql
 CREATE TABLE feed_item_traits (
-    feed_item_id bigint NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
-    trait_id     bigint NOT NULL REFERENCES traits(id) ON DELETE CASCADE,
+    feed_item_id UUID NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
+    trait_id     UUID NOT NULL REFERENCES traits(id) ON DELETE CASCADE,
     PRIMARY KEY (feed_item_id, trait_id)
 );
 
 CREATE INDEX feed_item_traits_trait_idx ON feed_item_traits (trait_id, feed_item_id);
 
 CREATE TABLE feed_item_media (
-    id           bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    feed_item_id bigint NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
+    id           UUID PRIMARY KEY DEFAULT uuidv7(),
+    feed_item_id UUID NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
     object_key   text NOT NULL,
     sort_order   int NOT NULL DEFAULT 0,
     embedding    vector(768),  -- phase 1b: async after upload
@@ -172,14 +172,14 @@ CREATE INDEX feed_item_media_item_idx ON feed_item_media (feed_item_id, sort_ord
 
 ```sql
 CREATE TABLE user_trait_follows (
-    user_id   bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    trait_id  bigint NOT NULL REFERENCES traits(id) ON DELETE CASCADE,
+    user_id   UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    trait_id  UUID NOT NULL REFERENCES traits(id) ON DELETE CASCADE,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, trait_id)
 );
 
 CREATE TABLE user_interest_profiles (
-    user_id      bigint PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    user_id      UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     embedding    vector(768),
     source       varchar(50) NOT NULL DEFAULT 'onboarding',
     updated_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -219,14 +219,14 @@ Add route summaries to `core/openapi/src/main/resources/openapi.yaml` and DTOs u
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
-| `GET` | `/api/v1/feed/for-you` | Auth | Personalized hybrid-ranked page |
-| `GET` | `/api/v1/feed` | Public | Chronological feed (cold start fallback) |
-| `GET` | `/api/v1/feed/by-trait/{traitId}` | Public | Filter by trait |
-| `GET` | `/api/v1/feed/by-author/{authorId}` | Public | Author listings tab |
-| `POST` | `/api/v1/feed/items` | Auth | Create listing |
-| `GET` | `/api/v1/feed/items/{id}` | Public | Single item detail |
-| `POST` | `/api/v1/feed/traits/{traitId}/follow` | Auth | Follow trait (interest profile) |
-| `DELETE` | `/api/v1/feed/traits/{traitId}/follow` | Auth | Unfollow trait |
+| `GET` | `/api/feed/for-you` | Auth | Personalized hybrid-ranked page |
+| `GET` | `/api/feed` | Public | Chronological feed (cold start fallback) |
+| `GET` | `/api/feed/by-trait/{traitId}` | Public | Filter by trait |
+| `GET` | `/api/feed/by-author/{authorId}` | Public | Author listings tab |
+| `POST` | `/api/feed/items` | Auth | Create listing |
+| `GET` | `/api/feed/items/{id}` | Public | Single item detail |
+| `POST` | `/api/feed/traits/{traitId}/follow` | Auth | Follow trait (interest profile) |
+| `DELETE` | `/api/feed/traits/{traitId}/follow` | Auth | Unfollow trait |
 
 Full auth matrix: [auth_and_permissions.md](./auth_and_permissions.md) · [api_index.md](./api_index.md)
 
@@ -236,7 +236,7 @@ Full auth matrix: [auth_and_permissions.md](./auth_and_permissions.md) · [api_i
 // core/openapi/.../dto/feed/FeedCursor.kt
 data class FeedCursor(
     val anchorA: String,   // RFC3339 created_at OR score as string
-    val anchorB: String,   // snowflake id
+    val anchorB: String,   // UUIDv7 id (tie-breaker for keyset)
     val mode: String,      // "chrono" | "ranked"
 )
 
@@ -773,7 +773,7 @@ Invalidation is simple at MVP: feed reads hit source tables. Profile changes may
 # - POST /feed/traits/{id}/follow → GET /feed/for-you returns ranked items
 # - New user with no profile → GET /feed/for-you behaves like GET /feed
 # - Block author → their items absent from both feeds
-curl -H "Authorization: Bearer $TOKEN" "http://localhost:8000/api/v1/feed/for-you?limit=20"
+curl -H "Authorization: Bearer $TOKEN" "http://localhost:8000/api/feed/for-you?limit=20"
 ```
 
 ### Pagination tests to add

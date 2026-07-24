@@ -12,7 +12,7 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 |-----|---------|
 | [architecture.md](./architecture.md) | Ktor `app` / `core` / `features` layout, boundaries, ownership |
 | [schema.md](./schema.md) | Canonical database tables by module |
-| [api_index.md](./api_index.md) | REST routes (see also `core/openapi/`) |
+| [api_index.md](./api_index.md) | REST routes (see also `/swagger`) |
 | [auth_and_permissions.md](./auth_and_permissions.md) | Public vs authenticated vs admin |
 | [conventions.md](./conventions.md) | Pagination, markdown, SQLDelight, OpenAPI, tests |
 | [secrets.md](./secrets.md) | APP_URL / API_URL, Infisical, K8s routing |

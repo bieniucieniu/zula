@@ -21,12 +21,14 @@ WebSocket chat (planned) uses the same JWT at connect time.
 
 | RPC | Level | Notes |
 |-----|-------|-------|
-| `GetAuthProviders` | Public | |
-| `Authenticate` | Public | Returns JWT |
-| `GetProviderAccountInfo` | Public | |
-| `LinkProvider` | Auth | Recent session (~10m); links verified provider identity to JWT user |
+| `GetAuthProviders` | Public | Configured OAuth providers (Google, Apple) |
+| `Authenticate` | Public | Exchange provider `idToken` → access JWT (+ optional refresh token) |
+| `Refresh` | Public | Rotate refresh token; issue new access JWT |
+| `GetSession` | Public / Auth | Optional Bearer JWT; else refresh cookie → session probe |
+| `Logout` | Auth | Revoke session by `sid` and/or refresh token |
 | `ListLinkedProviders` | Auth | Own linked identities only |
-| `StartLinkProvider` | Auth | Recent session (~10m); returns OAuth URL with signed link intent in `state` |
+
+**Removed:** email OTP / magic-link login (`POST /auth/challenge` and `provider: email_otp`). Sign-in is OAuth-only (plus optional dev bypass when `AUTH_DEV_BYPASS_SECRET` is set).
 
 ---
 
@@ -148,7 +150,12 @@ Central helper: `enforcePublicTargetAccess` in `UserService`; feed/chat inject `
 
 ## Session lifetime
 
-JWT lifetime: **15 minutes** (`auth.SessionTokenLifetime`). Clients refresh via `Authenticate` before expiry.
+| Token | TTL | Refresh |
+|-------|-----|---------|
+| Access JWT | **15 minutes** (`JWT_ACCESS_TOKEN_TTL_SECONDS`, default 900) | `POST /api/auth/refresh` or `GET /api/auth/session` with refresh cookie |
+| Refresh token | **30 days** (`JWT_REFRESH_TOKEN_TTL_SECONDS`, default 2592000) | Rotated on each refresh |
+
+Clients obtain the initial session via `POST /api/auth/authenticate` (OAuth `idToken`). They must refresh before access JWT expiry — not re-run the OAuth flow on every 15-minute window.
 
 ---
 

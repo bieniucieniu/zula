@@ -34,8 +34,8 @@ In Zula there is no separate seller account: any user can buy, sell, or barter. 
 |--------|------|
 | Profile README | `user_profile_readme` → `documents` |
 | Pinned repositories | `user_profile_pins` → `user_portfolio_items` |
-| Repository list | Portfolio grid + `GET /api/v1/feed/by-author/{id}` (active listings) |
-| Contribution graph | `GET /api/v1/activity/public` (fulfilled items, public deals) |
+| Repository list | Portfolio grid + `GET /api/feed/by-author/{id}` (active listings) |
+| Contribution graph | `GET /api/activity/public` (fulfilled items, public deals) |
 | Stars / reputation | `user_stats` + `user_ratings` (existing) |
 | Short name / bio line | `seller_headline` + short `bio` on `user_profiles` |
 
@@ -48,22 +48,22 @@ In Zula there is no separate seller account: any user can buy, sell, or barter. 
 ```text
 Client (profile page)
    │
-   ├─ GET /api/v1/sellers/{idOrUsername}
+   ├─ GET /api/sellers/{idOrUsername}
    │     ├─ header: user_profiles + user_stats
    │     ├─ readme: documents (source markdown)
    │     └─ pins[]: user_profile_pins → user_portfolio_items
    │
-   ├─ GET /api/v1/portfolio?user_id=
-   ├─ GET /api/v1/activity/public?user_id=
-   ├─ GET /api/v1/feed/by-author/{id}       -- active listings (features:feed)
-   └─ GET /api/v1/reviews/seller/{userId}
+   ├─ GET /api/portfolio?user_id=
+   ├─ GET /api/activity/public?user_id=
+   ├─ GET /api/feed/by-author/{id}       -- active listings (features:feed)
+   └─ GET /api/reviews/seller/{userId}
 
 Owner editing
-   ├─ PATCH /api/v1/users/me/profile       -- short fields
-   ├─ PUT /api/v1/users/me/readme          -- documents
-   ├─ POST /api/v1/portfolio/items
-   ├─ POST /api/v1/portfolio/pins / DELETE …
-   └─ PUT /api/v1/portfolio/pins/reorder
+   ├─ PATCH /api/users/me/profile       -- short fields
+   ├─ PUT /api/users/me/readme          -- documents
+   ├─ POST /api/portfolio/items
+   ├─ POST /api/portfolio/pins / DELETE …
+   └─ PUT /api/portfolio/pins/reorder
 
 App-wide long text
    └─ documents table referenced by:
@@ -86,16 +86,16 @@ Long text appears in profiles, feed posts, portfolio case studies, and trade sum
 
 ### 1.1 Schema
 
-Tables are in **`000001_init.sql`**. Canonical reference: [schema.md](./schema.md#profile--portfolio-module).
+Tables are in **`auth_schema.sq`** (documents planned in a future migration). Canonical reference: [schema.md](./schema.md#profile--portfolio-module).
 
 ```sql
--- excerpt — see migration for full DDL
+-- excerpt — ids assigned by DB DEFAULT uuidv7()
 CREATE TABLE documents (
-    id bigint PRIMARY KEY,
-    owner_user_id bigint NOT NULL REFERENCES users(id),
-    format varchar(30) NOT NULL DEFAULT 'markdown' CHECK (format = 'markdown'),
-    source text NOT NULL DEFAULT '',
-    revision int NOT NULL DEFAULT 1,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    owner_user_id UUID NOT NULL REFERENCES users(id),
+    format TEXT NOT NULL DEFAULT 'markdown' CHECK (format = 'markdown'),
+    source TEXT NOT NULL DEFAULT '',
+    revision BIGINT NOT NULL DEFAULT 1,
     ...
 );
 ```
@@ -132,9 +132,9 @@ CREATE TABLE documents (
 
 ```sql
 CREATE TABLE user_profile_readme (
-    user_id       bigint PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    document_id   bigint NOT NULL REFERENCES documents(id) ON DELETE RESTRICT,
-    updated_at    timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    user_id       UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    document_id   UUID NOT NULL REFERENCES documents(id) ON DELETE RESTRICT,
+    updated_at    BIGINT NOT NULL
 );
 ```
 
@@ -166,15 +166,15 @@ Portfolio is **curated** work. It is not the same as the full post history or ac
 
 ```sql
 CREATE TABLE user_portfolio_items (
-    id                bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    user_id           bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    id                UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id           UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     kind              varchar(30) NOT NULL
                       CHECK (kind IN ('creation', 'offer', 'case_study', 'external_link')),
     title             varchar(200) NOT NULL,
     summary           text,
-    body_document_id  bigint REFERENCES documents(id) ON DELETE SET NULL,
-    feed_item_id      bigint REFERENCES feed_items(id) ON DELETE SET NULL,
-    trade_id          bigint,  -- REFERENCES trades(id) when trade module exists
+    body_document_id  UUID REFERENCES documents(id) ON DELETE SET NULL,
+    feed_item_id      UUID REFERENCES feed_items(id) ON DELETE SET NULL,
+    trade_id          UUID,  -- REFERENCES trades(id) when trade module exists
     external_url      text,
     cover_object_key  text,
     sort_order        int NOT NULL DEFAULT 0,
@@ -200,8 +200,8 @@ CREATE INDEX user_portfolio_items_user_idx
 
 ```sql
 CREATE TABLE user_profile_pins (
-    user_id             bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    portfolio_item_id   bigint NOT NULL REFERENCES user_portfolio_items(id) ON DELETE CASCADE,
+    user_id             UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    portfolio_item_id   UUID NOT NULL REFERENCES user_portfolio_items(id) ON DELETE CASCADE,
     sort_order          int NOT NULL DEFAULT 0,
     PRIMARY KEY (user_id, portfolio_item_id)
 );
@@ -235,7 +235,7 @@ Automatic timeline vs manual portfolio:
 | **Portfolio tab** | `user_portfolio_items` | Curated grid |
 | **Pins** | `user_profile_pins` | Top of overview |
 | **Activity tab** | `feed_items` + `trades` | Auto-generated public history |
-| **Listings tab** | `GET /api/v1/feed/by-author/{id}` | Active marketplace posts |
+| **Listings tab** | `GET /api/feed/by-author/{id}` | Active marketplace posts |
 
 ### 4.1 Public activity query (depends on feed module)
 
@@ -254,7 +254,7 @@ Never auto-publish full trade details (addresses, PINs, meetup notes).
 
 ```sql
 CREATE TABLE trade_public_disclosures (
-    trade_id                    bigint PRIMARY KEY,  -- REFERENCES trades(id)
+    trade_id                    UUID PRIMARY KEY,  -- REFERENCES trades(id)
     show_on_initiator_profile   boolean NOT NULL DEFAULT false,
     show_on_recipient_profile   boolean NOT NULL DEFAULT false,
     public_title                varchar(200),
@@ -277,16 +277,16 @@ Extend DTOs in `core/openapi/src/main/kotlin/dto/` (`document.kt`, `portfolio.kt
 
 | Method | Path | Request | Response | Auth |
 |--------|------|---------|----------|------|
-| `GET` | `/api/v1/sellers/{idOrUsername}` | — | `SellerProfileResponse` (+ readme, pins) | Public |
-| `GET` | `/api/v1/users/{userId}/readme` | — | `RichDocument` | Public |
-| `PUT` | `/api/v1/users/me/readme` | `UpdateProfileReadmeRequest` | `RichDocument` | Auth |
-| `GET` | `/api/v1/portfolio` | `user_id`, `PortfolioCursor`, `limit` | `ListPortfolioItemsResponse` | Public |
-| `POST` | `/api/v1/portfolio/items` | `UpsertPortfolioItemRequest` | `PortfolioItem` | Auth |
-| `DELETE` | `/api/v1/portfolio/items/{id}` | — | `DeletePortfolioItemResponse` | Auth |
-| `POST` | `/api/v1/portfolio/pins` | `PinPortfolioItemRequest` | `PinPortfolioItemResponse` | Auth |
-| `DELETE` | `/api/v1/portfolio/pins/{id}` | — | `UnpinPortfolioItemResponse` | Auth |
-| `PUT` | `/api/v1/portfolio/pins/reorder` | `ReorderProfilePinsRequest` | `ReorderProfilePinsResponse` | Auth |
-| `GET` | `/api/v1/activity/public` | `user_id`, `ProfileCursor`, `limit` | `ListPublicActivityResponse` | Public |
+| `GET` | `/api/sellers/{idOrUsername}` | — | `SellerProfileResponse` (+ readme, pins) | Public |
+| `GET` | `/api/users/{userId}/readme` | — | `RichDocument` | Public |
+| `PUT` | `/api/users/me/readme` | `UpdateProfileReadmeRequest` | `RichDocument` | Auth |
+| `GET` | `/api/portfolio` | `user_id`, `PortfolioCursor`, `limit` | `ListPortfolioItemsResponse` | Public |
+| `POST` | `/api/portfolio/items` | `UpsertPortfolioItemRequest` | `PortfolioItem` | Auth |
+| `DELETE` | `/api/portfolio/items/{id}` | — | `DeletePortfolioItemResponse` | Auth |
+| `POST` | `/api/portfolio/pins` | `PinPortfolioItemRequest` | `PinPortfolioItemResponse` | Auth |
+| `DELETE` | `/api/portfolio/pins/{id}` | — | `UnpinPortfolioItemResponse` | Auth |
+| `PUT` | `/api/portfolio/pins/reorder` | `ReorderProfilePinsRequest` | `ReorderProfilePinsResponse` | Auth |
+| `GET` | `/api/activity/public` | `user_id`, `ProfileCursor`, `limit` | `ListPublicActivityResponse` | Public |
 
 ### 5.2 DTO summaries
 
@@ -370,7 +370,7 @@ Public routes (`GET /sellers/…`, `GET /portfolio`, `GET /activity/public`, `GE
 ```kotlin
 // features/user/src/main/kotlin/.../UserRouting.kt (portfolio subset)
 fun Route.configurePortfolioRouting(userService: UserService) {
-    route("/api/v1") {
+    route("/api") {
         get("/users/{userId}/readme") {
             call.respond(userService.getProfileReadme(call.parameters["userId"]!!, call.optionalUserId()))
         }
@@ -484,23 +484,23 @@ Q3  pins (listProfilePins, LIMIT 6)
 
 **3 queries** for overview. Tabs load separately:
 
-- `GET /api/v1/portfolio` — keyset
-- `GET /api/v1/activity/public` — keyset
-- `GET /api/v1/feed/by-author/{id}` — FeedService
-- `GET /api/v1/reviews/seller/{userId}` — UserService
+- `GET /api/portfolio` — keyset
+- `GET /api/activity/public` — keyset
+- `GET /api/feed/by-author/{id}` — FeedService
+- `GET /api/reviews/seller/{userId}` — UserService
 
 ### 7.3 Portfolio flows
 
 **"I'm proud of this deal"**
 
 1. Trade completes → prompt for `trade_public_disclosures` opt-in.
-2. User taps "Add to portfolio" → `POST /api/v1/portfolio/items` kind `case_study`, link `tradeId`, pre-fill markdown template document.
-3. Optional `POST /api/v1/portfolio/pins`.
+2. User taps "Add to portfolio" → `POST /api/portfolio/items` kind `case_study`, link `tradeId`, pre-fill markdown template document.
+3. Optional `POST /api/portfolio/pins`.
 
 **Pin an active offer**
 
-1. `POST /api/v1/portfolio/items` kind `offer`, `feedItemId` set.
-2. `POST /api/v1/portfolio/pins` if desired.
+1. `POST /api/portfolio/items` kind `offer`, `feedItemId` set.
+2. `POST /api/portfolio/pins` if desired.
 
 ### 7.4 N+1 checklist
 
@@ -578,27 +578,27 @@ Use `documents` for every long text field:
 
 - [x] `documents` + `document_revisions` in `000001_init.sql`
 - [x] Document helpers in `UserService`
-- [x] `user_profile_readme` + `PUT /api/v1/users/me/readme` / `GET …/readme`
-- [x] `GET /api/v1/sellers/{idOrUsername}` includes readme + pins
+- [x] `user_profile_readme` + `PUT /api/users/me/readme` / `GET …/readme`
+- [x] `GET /api/sellers/{idOrUsername}` includes readme + pins
 - [x] Tests: length limits, source persistence
 
 ### Phase portfolio-B — Portfolio & pins ✅
 
 - [x] `user_portfolio_items` + `user_profile_pins`
 - [x] Portfolio CRUD + pin/unpin/reorder (max 6)
-- [x] `GET /api/v1/portfolio` keyset pagination
+- [x] `GET /api/portfolio` keyset pagination
 - [ ] Link `offer` items to `feed_items` (needs feed)
 
 ### Phase portfolio-C — Feed body migration
 
 - [ ] `feed_items.body_document_id` migration
-- [ ] `POST /api/v1/feed/items` creates document for body
+- [ ] `POST /api/feed/items` creates document for body
 - [ ] List feed omits body; detail returns `RichDocument.sourceMarkdown`
 - [ ] Depends on [feed module](./feed_module.md) Phase feed-B+
 
 ### Phase portfolio-D — Public activity
 
-- [ ] `GET /api/v1/activity/public` from fulfilled/expired `feed_items`
+- [ ] `GET /api/activity/public` from fulfilled/expired `feed_items`
 - [ ] Depends on feed module
 
 ### Phase portfolio-E — Trades & case studies
@@ -630,10 +630,10 @@ db-seed
 
 ### Manual checks
 
-- `GET /api/v1/sellers/{id}` returns readme markdown + up to 6 pins
-- `PUT /api/v1/users/me/readme` persists markdown source
+- `GET /api/sellers/{id}` returns readme markdown + up to 6 pins
+- `PUT /api/users/me/readme` persists markdown source
 - Portfolio grid paginates without loading full documents
-- `GET /api/v1/feed` omits full body; detail view returns markdown
+- `GET /api/feed` omits full body; detail view returns markdown
 - Pin 7th item → rejected
 - `offer` portfolio item references another user's listing → rejected
 

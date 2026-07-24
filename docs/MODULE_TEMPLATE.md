@@ -45,7 +45,7 @@ Feature layout:
 
 ## Schema
 
-Tables owned by this module. **Canonical DDL:** [schema.md](./schema.md#{anchor}) — SQLDelight `.sq` in `core/database/`.
+Tables owned by this module. **Canonical DDL:** [schema.md](./schema.md#{anchor}) — SQLDelight `.sq` in `server/src/main/sqldelight/com/zula/`.
 
 | Table | Purpose |
 |-------|---------|
@@ -88,9 +88,8 @@ Move completed phases here with `[x]` and date.
 ## Verification
 
 ```bash
-./gradlew :core:database:generateSqlDelightInterface
-./gradlew :features:{name}:test
-./gradlew test
+./gradlew :server:generateSqlDelightInterface
+./gradlew :server:test
 ```
 
 ---
@@ -103,7 +102,7 @@ Move completed phases here with `[x]` and date.
 | `features/{name}/src/main/kotlin/.../{Name}Service.kt` | Business logic |
 | `features/{name}/src/main/kotlin/.../{Name}Publisher.kt` | MQ publish (if any) |
 | `features/{name}/src/main/kotlin/.../{Name}Consumer.kt` | MQ consume (if any) |
-| `core/database/src/main/sqldelight/.../*.sq` | SQLDelight queries |
+| `server/src/main/sqldelight/com/zula/*.sq` | SQLDelight queries |
 | `features/{name}/src/test/kotlin/...` | Tests |
 
 ---

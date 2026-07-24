@@ -1,10 +1,10 @@
 # REST API index
 
-Quick reference for HTTP routes under `/api/v1`. OpenAPI spec: `core/openapi/src/main/resources/openapi.yaml`. Auth: [auth_and_permissions.md](./auth_and_permissions.md).
+Quick reference for HTTP routes under `/api`. OpenAPI is generated from Ktor route metadata at runtime (`/swagger`). Auth: [auth_and_permissions.md](./auth_and_permissions.md).
 
 > Legacy RPC names below map to REST paths; prefer the OpenAPI spec for client generation.
 
-Request/response shapes: `core/openapi/` DTOs (also in OpenAPI spec).
+Request/response shapes: feature `domain` DTOs + Ktor OpenAPI (`/swagger`).
 
 **Legend:** ✅ implemented · 🔜 planned
 
@@ -12,11 +12,16 @@ Request/response shapes: `core/openapi/` DTOs (also in OpenAPI spec).
 
 ## AuthService ✅
 
-| RPC | Auth |
-|-----|------|
-| `GetAuthProviders` | Public |
-| `Authenticate` | Public |
-| `GetProviderAccountInfo` | Public |
+| RPC | Auth | HTTP |
+|-----|------|------|
+| `GetAuthProviders` | Public | `GET /api/auth/providers` |
+| `Authenticate` | Public | `POST /api/auth/authenticate` |
+| `Refresh` | Public | `POST /api/auth/refresh` |
+| `GetSession` | Public / Auth | `GET /api/auth/session` |
+| `Logout` | Auth | `POST /api/auth/logout` |
+| `ListLinkedProviders` | Auth | `GET /api/auth/providers/linked` |
+
+OAuth-only login (Google, Apple `idToken`). No email OTP challenge flow.
 
 ---
 

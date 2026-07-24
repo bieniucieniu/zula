@@ -96,7 +96,7 @@ Each feature is three layers:
 Example (`server/src/main/kotlin/features/feed/`):
 
 ```text
-FeedRouting.kt      →  POST /api/v1/feed/items, GET /api/v1/feed/for-you
+FeedRouting.kt      →  POST /api/feed/items, GET /api/feed/for-you
 FeedService.kt      →  ranking SQL, trait batching, block filtering
 FeedPublisher.kt    →  feed.item.created events
 FeedConsumer.kt     →  media.embedding.completed → update item vector
@@ -193,11 +193,11 @@ flowchart TB
 Clients stitch multiple REST calls:
 
 ```text
-GET /api/v1/sellers/{id}           → header + readme + pins (user)
-GET /api/v1/portfolio              → portfolio tab (user)
-GET /api/v1/feed/by-author/{id}    → listings tab (feed)
-GET /api/v1/activity/public        → activity tab (user; needs feed data)
-GET /api/v1/reviews/seller/{id}    → reviews tab (user)
+GET /api/sellers/{id}           → header + readme + pins (user)
+GET /api/portfolio              → portfolio tab (user)
+GET /api/feed/by-author/{id}    → listings tab (feed)
+GET /api/activity/public        → activity tab (user; needs feed data)
+GET /api/reviews/seller/{id}    → reviews tab (user)
 ```
 
 ---

@@ -39,7 +39,7 @@ Follow [architecture.md](./architecture.md#ktor-project-layout):
 | `FeedCursor` | `core:openapi` | Feed lists, author feed, trait feed |
 | `ProfileCursor` | `core:openapi` | Reviews, portfolio, public activity |
 
-Do not invent a third cursor shape without updating [api_index.md](./api_index.md) and `core/openapi/`.
+Do not invent a third cursor shape without updating [api_index.md](./api_index.md) and the Ktor OpenAPI route metadata.
 
 ---
 
@@ -66,26 +66,35 @@ See [profile_portfolio_module.md](./profile_portfolio_module.md) for length limi
 
 ## Database & migrations
 
-- SQLDelight `.sq` files live in `core/database/src/main/sqldelight/`.
-- Versioned migrations: `core/database/src/main/resources/db/migration/000NNN_*.sql`.
-- **Auto-migrate:** `Application.kt` runs pending migrations at startup (disable via env `AUTO_MIGRATE=false`).
-- Never run destructive SQL outside migration files.
+- SQLDelight `.sq` files live in `server/src/main/sqldelight/com/zula/`.
+- Schema is applied at startup via SQLDelight `Schema.create` + `ensureUuidV7Defaults` (disable auto-migrate via env `AUTO_MIGRATE=false`).
+- Never run destructive SQL outside versioned migration files when those are introduced.
 
 Canonical table list: [schema.md](./schema.md).
+
+---
+
+## Entity IDs
+
+- **Primary keys:** `UUID PRIMARY KEY DEFAULT uuidv7()` on entity tables (PostgreSQL 18+).
+- **Default:** omit `id` on `INSERT`; read the assigned value from `RETURNING id` (SQLDelight `insert*` queries).
+- **Avoid app-generated ids** (`Ids.next()`, `Uuid.generateV7()`) unless the id must exist before insert (rare).
+- **No redundant `created_at`** on UUID PK tables — creation time is in the UUIDv7 timestamp (`Ids.createdAtMillis(id)`).
+- **Clients:** never mint entity ids; use ids returned by create endpoints (e.g. `AuthTokensResponse.sessionId`).
+- **Pagination cursors:** keyset on UUIDv7 `id` only — see [Pagination](#pagination).
 
 ---
 
 ## API type workflow
 
 ```bash
-./gradlew :core:database:generateSqlDelightInterface   # SQLDelight DAOs
-./gradlew :core:openapi:build                            # refresh OpenAPI spec
-npm run gen-api -w apps/web                              # Orval client (when web ships)
+./gradlew :server:generateSqlDelightInterface   # SQLDelight DAOs
+npm run gen-api -w apps/web                      # Orval client (when web ships)
 ```
 
-- Request/response DTOs: `core/openapi/src/main/kotlin/.../dto/`.
-- Shared types: `RichDocument`, `ProfileCursor`, `FeedCursor`.
-- Live spec: `core/openapi/src/main/resources/openapi.yaml` (served at `/swagger`).
+- Request/response DTOs: `server/src/main/kotlin/features/*/domain/` and Ktor OpenAPI route metadata.
+- Shared types: `RichDocument`, `ProfileCursor`, `FeedCursor` (when feed ships).
+- Live spec: `/swagger` on running server.
 
 ---
 

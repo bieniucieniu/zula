@@ -1,9 +1,9 @@
 # Zula database schema
 
-**Canonical DDL** lives in `core/database/src/main/resources/db/migration/`. SQLDelight `.sq` query files live in `core/database/src/main/sqldelight/`. This document is the index by module — update it when adding migrations.
+**Canonical DDL** lives in SQLDelight schema files under `server/src/main/sqldelight/com/zula/` (e.g. `auth_schema.sq`, `user.sq`). This document is the index by module — update it when adding tables or migrations.
 
-**Baseline migration:** `000001_init.sql`  
-**Next planned:** `000002_feed.sql` (traits + feed — see [implementation_plan.md](./implementation_plan.md))
+**Shipped schema:** `auth_schema.sq` (users, profiles, identities, sessions, stats)  
+**Next planned:** feed/traits tables in a new `.sq` file (see [implementation_plan.md](./implementation_plan.md))
 
 **PostgreSQL:** 18+ required (`uuidv7()` is built-in). The server checks `server_version_num >= 180000` at startup.
 
@@ -13,13 +13,13 @@
 
 | Object | Purpose |
 |--------|---------|
-| `uuidv7()` | UUID PKs (PostgreSQL 18+ built-in UUIDv7; app uses `Uuid.generateV7()`) |
+| `uuidv7()` | UUID PKs (PostgreSQL 18+ built-in UUIDv7) |
 
 Entity tables use `id UUID PRIMARY KEY DEFAULT uuidv7()` and **no `created_at`** — create time is in the UUIDv7 timestamp field (`Ids.createdAtMillis`).
 
-Explicit mint: `Ids.next()` / `Uuid.generateV7()` before insert when the id must be known up front (JWT `sid`). Omit `id` on INSERT to use DB DEFAULT (`insert*Auto` + `RETURNING id`).
+**Assignment rule:** omit `id` on `INSERT` and use `RETURNING id`. Do **not** generate ids in application code or clients unless unavoidable (e.g. ephemeral username suffix). Session ids (`sid` JWT claim) are DB-assigned via `insertSession` before the access token is issued.
 
-Create endpoints return persisted ids in the response (e.g. `ChallengeResponse.challengeId`, `AuthTokensResponse.sessionId`) so clients can reconcile optimistic UI after the server assigns ids.
+Create endpoints return persisted ids in the response (e.g. `AuthTokensResponse.sessionId`, feed item id after `POST /api/feed/items`) so clients can reconcile optimistic UI after the server assigns ids.
 
 ---
 
@@ -106,7 +106,7 @@ Create endpoints return persisted ids in the response (e.g. `ChallengeResponse.c
 ```sql
 CREATE TABLE media_objects (
     object_key     text PRIMARY KEY,
-    owner_user_id  bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    owner_user_id  UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status         text NOT NULL CHECK (status IN ('pending', 'active', 'deleted')),
     content_type   text,
     byte_size      bigint,
