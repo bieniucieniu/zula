@@ -32,7 +32,7 @@ RETURNING id;
 
 updateIdentityLogin:
 UPDATE user_identities
-SET email = ?, provider_metadata = ?, credentials_status = ?
+SET email = ?, provider_metadata = ?, credentials_status = ?, scopes = ?
 WHERE id = ?;
 
 updateIdentityProviderRefresh:

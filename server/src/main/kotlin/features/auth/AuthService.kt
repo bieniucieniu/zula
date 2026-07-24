@@ -2,6 +2,7 @@ package com.zula.features.auth
 
 import com.zula.User_identities
 import com.zula.core.http.badRequest
+import com.zula.core.http.conflict
 import com.zula.core.http.unauthorized
 import com.zula.core.security.SecurityConfig
 import com.zula.core.security.jwt.SessionJwtIssuer
@@ -16,6 +17,7 @@ import com.zula.lib.id.Ids
 import io.ktor.server.application.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import org.postgresql.util.PSQLException
 import java.security.SecureRandom
 import java.time.Instant
 import java.util.Base64
@@ -39,11 +41,12 @@ class AuthService(
     fun startGoogleOAuth(call: ApplicationCall, mode: String): String {
         googleOAuthClient.requireConfigured()
         val state = randomOAuthState()
-        call.setOAuthStateCookies(state, mode)
+        val nonce = randomOAuthState()
+        call.setOAuthStateCookies(state, nonce, mode)
         return googleOAuthClient.buildAuthorizeUrl(
             redirectUri = googleCallbackRedirectUri(call),
             state = state,
-            nonce = randomOAuthState(),
+            nonce = nonce,
             promptConsent = true,
         )
     }
@@ -51,6 +54,7 @@ class AuthService(
     suspend fun completeGoogleOAuthCallback(call: ApplicationCall, code: String, state: String): AuthTokensResponse {
         val expectedState = call.readOAuthStateCookie() ?: unauthorized("Invalid OAuth state")
         if (state != expectedState) unauthorized("Invalid OAuth state")
+        val expectedNonce = call.readOAuthNonceCookie() ?: unauthorized("Invalid OAuth nonce")
         call.clearOAuthStateCookies()
 
         val tokenResponse = googleOAuthClient.exchangeCode(
@@ -67,6 +71,7 @@ class AuthService(
             idToken = tokenResponse.idToken!!,
             providerRefreshToken = tokenResponse.refreshToken,
             deviceInfo = null,
+            expectedNonce = expectedNonce,
         )
     }
 
@@ -102,11 +107,15 @@ class AuthService(
                 scopes = scopes,
             )
         }
+        if (existingIdentity.user_id != userId) {
+            conflict("Identity already linked to another user")
+        }
         repository.updateIdentityLogin(
             id = existingIdentity.id,
             email = identity.email,
             metadata = metadataJson,
             status = existingIdentity.credentials_status,
+            scopes = scopes ?: existingIdentity.scopes,
         )
         return existingIdentity.id
     }
@@ -178,6 +187,7 @@ class AuthService(
         providerRefreshToken: String?,
         deviceInfo: String?,
         scopes: String? = null,
+        expectedNonce: String? = null,
     ): AuthTokensResponse {
         val authProvider = providers[provider] ?: badRequest("Unknown auth provider: $provider")
         val identity = authProvider.verify(
@@ -185,6 +195,7 @@ class AuthService(
                 idToken = idToken,
                 providerRefreshToken = providerRefreshToken,
                 scopes = scopes,
+                expectedNonce = expectedNonce,
             ),
         )
 
@@ -349,14 +360,32 @@ class AuthService(
 
     private fun createUserWithUniqueUsername(identity: Identity): Uuid {
         val base = generateUsername(identity)
-        var username = base
-        var suffix = 0
-        while (repository.findUserByUsername(username) != null) {
-            suffix++
-            username = "${base.take(32)}_$suffix"
+        repeat(8) { attempt ->
+            val username = if (attempt == 0) {
+                base
+            } else {
+                "${base.take(32)}_${Ids.next().toHexString().take(6)}"
+            }
+            try {
+                return repository.createUser(username)
+            } catch (error: Exception) {
+                if (!isUniqueViolation(error)) throw error
+            }
         }
+        error("Could not allocate unique username")
+    }
 
-        return repository.createUser(username)
+    private fun isUniqueViolation(error: Throwable): Boolean {
+        var current: Throwable? = error
+        while (current != null) {
+            if (current is PSQLException && current.sqlState == "23505") return true
+            val message = current.message.orEmpty()
+            if (message.contains("unique", ignoreCase = true) && message.contains("username", ignoreCase = true)) {
+                return true
+            }
+            current = current.cause
+        }
+        return false
     }
 
     private fun generateUsername(identity: Identity): String {
