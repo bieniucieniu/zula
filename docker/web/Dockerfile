@@ -18,8 +18,7 @@ WORKDIR /workspace
 # --- 1. Install deps (invalidates when manifests / lockfile change) ---
 COPY package.json bun.lock ./
 COPY apps/web/package.json ./apps/web/
-COPY packages/api/package.json ./packages/api/
-COPY packages/oauth/package.json ./packages/oauth/
+COPY --parents packages/*/package.json ./
 RUN bun install --frozen-lockfile --filter zula --filter zula-web --filter '@zula/*'
 
 # --- 2. Build workspace packages (invalidates when package sources change) ---
