@@ -25,7 +25,7 @@ export function useOAuthSignIn({
 
   const mutation = useMutation({
     mutationKey: ["oauth", "sign-in", provider?.id],
-    mutationFn: async (activeProvider: OAuthProviderInfo) => signIn(activeProvider),
+    mutationFn: async (opt: { provider: OAuthProviderInfo }) => signIn(opt),
     onSuccess: async (result) => {
       await onSuccessRef.current?.(result)
     },
@@ -40,7 +40,7 @@ export function useOAuthSignIn({
       return
     }
 
-    await mutation.mutateAsync(provider)
+    await mutation.mutateAsync({ provider })
   }, [enabled, provider, mutation])
 
   return {

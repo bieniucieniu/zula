@@ -12,6 +12,7 @@ type AuthContextValue = {
   session: AuthSession | null
   ready: boolean
   refreshing: boolean
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -47,6 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         refreshing: sessionQuery.isFetching,
         ready: !sessionQuery.isLoading,
+        refresh: async () => {
+          await sessionQuery.refetch()
+        },
       }}
     >
       {children}
@@ -58,9 +62,4 @@ export function useAuth() {
   const ctx = use(AuthContext)
   if (!ctx) throw new Error("useAuth must be used within AuthProvider")
   return ctx
-}
-
-export function useInvalidateSession() {
-  const queryClient = useQueryClient()
-  return () => queryClient.invalidateQueries({ queryKey: getGetSessionQueryKey() })
 }

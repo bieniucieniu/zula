@@ -55,6 +55,12 @@ export async function signInWithPopup({
       return
     }
 
+    function cleanup() {
+      window.clearTimeout(timeout)
+      window.removeEventListener("message", onMessage)
+      if (!popup?.closed) popup?.close()
+    }
+
     const timeout = window.setTimeout(() => {
       cleanup()
       reject(new Error("OAuth sign-in timed out"))
@@ -87,12 +93,6 @@ export async function signInWithPopup({
         accessToken: event.data.accessToken ?? null,
         refreshToken: event.data.refreshToken ?? null,
       })
-    }
-
-    function cleanup() {
-      window.clearTimeout(timeout)
-      window.removeEventListener("message", onMessage)
-      if (!popup?.closed) popup?.close()
     }
 
     window.addEventListener("message", onMessage)

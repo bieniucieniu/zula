@@ -1,7 +1,6 @@
-import { useCallback } from "react"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import { useOAuthSignIn } from "@zula/oauth/react"
-import { signInOnWeb } from "./sign-in"
+import { signInWithPopup } from "./popup-sign-in"
 
 export type UseWebOAuthSignInOptions = {
   provider?: OAuthProviderInfo
@@ -10,14 +9,9 @@ export type UseWebOAuthSignInOptions = {
 }
 
 export function useWebOAuthSignIn({ provider, onSuccess, onError }: UseWebOAuthSignInOptions) {
-  const signInExecutor = useCallback(
-    async (activeProvider: OAuthProviderInfo) => signInOnWeb(activeProvider),
-    []
-  )
-
   return useOAuthSignIn({
     provider,
-    signIn: signInExecutor,
+    signIn: signInWithPopup,
     onSuccess,
     onError,
   })
