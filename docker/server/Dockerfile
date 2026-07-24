@@ -13,9 +13,12 @@ ARG JDK_IMAGE=eclipse-temurin:21-jdk-jammy
 FROM ${JDK_IMAGE} AS build
 WORKDIR /workspace
 
-COPY gradlew settings.gradle.kts build.gradle.kts gradle.properties ./
-COPY gradle ./gradle
-COPY server ./server
+COPY gradlew ./
+COPY settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY gradle/libs.versions.toml ./gradle/
+COPY gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties ./gradle/wrapper/
+COPY server/build.gradle.kts ./server/
+COPY server/src/main ./server/src/main
 
 RUN chmod +x ./gradlew \
   && ./gradlew :server:shadowJar --no-daemon -x test
