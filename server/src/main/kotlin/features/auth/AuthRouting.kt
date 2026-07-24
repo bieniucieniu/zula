@@ -10,7 +10,6 @@ import com.zula.features.auth.domain.RefreshRequest
 import com.zula.features.auth.domain.SessionResponse
 import com.zula.lib.id.Ids
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
@@ -39,8 +38,6 @@ fun Route.configureAuthRouting() {
 
     get("/auth/oauth/google/start") {
         val mode = call.request.queryParameters["mode"] ?: "redirect"
-        application.log.info(
-            call.request.headers.entries().joinToString(";\n") { "${it.key}: ${it.value.joinToString()}" })
         val authorizeUrl = authService.startGoogleOAuth(call, mode)
         call.respondRedirect(authorizeUrl)
     }.describe {
