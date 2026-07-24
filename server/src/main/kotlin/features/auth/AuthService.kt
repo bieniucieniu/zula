@@ -130,7 +130,7 @@ class AuthService(
 
     private suspend fun authenticateDev(call: ApplicationCall, request: AuthenticateRequest): AuthTokensResponse {
         val provider = providers[request.provider] ?: badRequest("Unknown auth provider: ${request.provider}")
-        val identity = provider.verify(AuthCredential.DevBypass(request.code!!, request.deviceInfo))
+        val identity = provider.verify(AuthCredential.DevBypass(request.code!!, email = null))
         val existingUser = repository.findUserByIdentity(identity.provider, identity.providerUserId)
         val userId = existingUser?.id ?: createUserWithUniqueUsername(identity)
         val identityId = ensureIdentity(userId, identity, CredentialsStatus.MISSING, scopes = null)
@@ -244,14 +244,16 @@ class AuthService(
 
         val user = repository.getUserById(oldSession.user_id)
             ?: unauthorized("User not found")
+        val email = resolveEmail(oldSession.user_id, oldSession.identity_id)
         val accessToken = jwtIssuer.issue(
             call = call,
             subject = oldSession.user_id.toString(),
-            claims = mapOf(
-                "sid" to nextId.toString(),
-                "amr" to oldSession.auth_method,
-                "username" to user.username,
-            ),
+            claims = buildMap {
+                put("sid", nextId.toString())
+                put("amr", oldSession.auth_method)
+                put("username", user.username)
+                if (email != null) put("email", email)
+            },
         )
 
         return AuthTokensResponse(
@@ -263,7 +265,11 @@ class AuthService(
     }
 
     suspend fun logout(sessionId: Uuid?, refreshToken: String?) {
-        sessionId?.let { providerTokenService.ensureProviderCredentialsValidForSession(it, force = true) }
+        if (sessionId != null) {
+            runCatching {
+                providerTokenService.ensureProviderCredentialsValidForSession(sessionId, force = false)
+            }
+        }
         when {
             sessionId != null -> repository.revokeSession(sessionId)
             refreshToken != null -> {
@@ -271,6 +277,18 @@ class AuthService(
                 repository.findAnySessionByRefreshHash(hash)?.let { repository.revokeRotationFamily(it.id) }
             }
         }
+    }
+
+    fun sessionEmail(sessionId: Uuid): String? {
+        val session = repository.findSession(sessionId) ?: return null
+        return resolveEmail(session.user_id, session.identity_id)
+    }
+
+    private fun resolveEmail(userId: Uuid, identityId: Uuid?): String? {
+        identityId?.let { id ->
+            repository.findIdentityById(id)?.email?.let { return it }
+        }
+        return repository.listIdentitiesByUser(userId).firstNotNullOfOrNull { it.email }
     }
 
     fun listLinkedProviders(userId: Uuid): LinkedProvidersResponse {
@@ -309,14 +327,16 @@ class AuthService(
         )
 
         val user = repository.getUserById(userId) ?: unauthorized("User not found")
+        val email = resolveEmail(userId, identityId)
         val accessToken = jwtIssuer.issue(
             call = call,
             subject = userId.toString(),
-            claims = mapOf(
-                "sid" to sessionId.toString(),
-                "amr" to amr,
-                "username" to user.username,
-            ),
+            claims = buildMap {
+                put("sid", sessionId.toString())
+                put("amr", amr)
+                put("username", user.username)
+                if (email != null) put("email", email)
+            },
         )
 
         return AuthTokensResponse(

@@ -20,7 +20,7 @@ class DevAuthProvider(
             unauthorized("Invalid dev credentials")
         }
 
-        val email = dev.email?.takeIf { it.contains('@') } ?: defaultEmail
+        val email = defaultEmail
         return Identity(
             provider = id,
             providerUserId = email.lowercase(),

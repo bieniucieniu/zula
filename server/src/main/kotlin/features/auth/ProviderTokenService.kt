@@ -99,31 +99,29 @@ class ProviderTokenService(
     }
 
     private suspend fun refreshGoogleAccess(identity: User_identities, refresh: String, now: Long): String {
-        val response: GoogleTokenResponse = try {
-            val body: String = httpClient.submitForm(
-                url = "https://oauth2.googleapis.com/token",
-                formParameters = Parameters.build {
-                    append("grant_type", "refresh_token")
-                    append("refresh_token", refresh)
-                    append("client_id", securityConfig.oauth.google.clientId.orEmpty())
-                    append("client_secret", securityConfig.oauth.google.clientSecret.orEmpty())
-                },
-            ).bodyAsText()
-            json.decodeFromString(body)
-        } catch (_: Exception) {
-            repository.revokeIdentityCredentials(identity.id, now)
-            conflict("Provider credentials revoked: ${identity.provider}")
-        }
+        val body: String = httpClient.submitForm(
+            url = "https://oauth2.googleapis.com/token",
+            formParameters = Parameters.build {
+                append("grant_type", "refresh_token")
+                append("refresh_token", refresh)
+                append("client_id", securityConfig.oauth.google.clientId.orEmpty())
+                append("client_secret", securityConfig.oauth.google.clientSecret.orEmpty())
+            },
+        ).bodyAsText()
+
+        val response: GoogleTokenResponse = json.decodeFromString(body)
 
         if (response.error != null) {
-            repository.revokeIdentityCredentials(identity.id, now)
-            throw conflict("Provider credentials revoked: ${identity.provider}")
+            if (response.error == "invalid_grant") {
+                repository.revokeIdentityCredentials(identity.id, now)
+                throw conflict("Provider credentials revoked: ${identity.provider}")
+            }
+            badRequest("Provider token refresh failed: ${response.error}")
         }
 
         val accessToken: String? = response.accessToken
         if (accessToken.isNullOrBlank()) {
-            repository.revokeIdentityCredentials(identity.id, now)
-            throw conflict("Provider credentials revoked: ${identity.provider}")
+            badRequest("Provider token refresh returned no access token")
         }
 
         val accessEnc = encryption.encrypt(accessToken)

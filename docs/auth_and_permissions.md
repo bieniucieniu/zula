@@ -159,7 +159,20 @@ Central helper: `enforcePublicTargetAccess` in `UserService` (when shipped); fee
 | Access JWT | **15 minutes** (`JWT_ACCESS_TOKEN_TTL_SECONDS`, default 900) | `POST /api/auth/refresh` or `GET /api/auth/session` with refresh cookie |
 | Refresh token | **30 days** (`JWT_REFRESH_TOKEN_TTL_SECONDS`, default 2592000) | Rotated on each refresh |
 
-Clients obtain the initial session via `POST /api/auth/authenticate` (OAuth `idToken`). They must refresh before access JWT expiry — not re-run the OAuth flow on every 15-minute window.
+Clients obtain the initial session via OAuth (web backend popup or native `POST /api/auth/authenticate`). They must refresh before access JWT expiry — not re-run the OAuth flow on every 15-minute window.
+
+---
+
+## Auth hardening (current)
+
+| Behavior | Rule |
+|----------|------|
+| JWT validate | Crypto OK **and** active DB session for `sid` + subject; revoked/missing session ⇒ no principal (unauthenticated) |
+| `GET /auth/session` | Optional JWT; if missing, refresh cookie may rotate tokens (SPA bootstrap) |
+| Session `email` | From JWT `email` claim or linked identity — **not** username |
+| Logout | Soft provider credential check; local session always revoked; logout does not fail the client |
+| Google refresh revoke | Only on OAuth `invalid_grant` (not network/transient errors) |
+| Dev bypass | Fixed `dev@zula.local` only when `AUTH_DEV_BYPASS_SECRET` set |
 
 ---
 
@@ -168,3 +181,4 @@ Clients obtain the initial session via `POST /api/auth/authenticate` (OAuth `idT
 - [user_module.md](./user_module.md) — signup creates `user_profiles` + `user_stats`
 - [conventions.md](./conventions.md) — thin-client rules
 - [architecture.md](./architecture.md) — service boundaries
+- [clients.md](./clients.md) — web vs native sign-in
