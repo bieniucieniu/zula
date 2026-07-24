@@ -30,9 +30,12 @@ jobs:
       matrix:
         include:
           - name: server
+            image: zula/server
             file: docker/server/Dockerfile
             cache_scope: zula-server
           - name: web
+            # Flat name: nested ghcr.io/.../zula/web returns 403 on push.
+            image: zula-web
             file: docker/web/Dockerfile
             cache_scope: zula-web
     steps:
@@ -41,8 +44,8 @@ jobs:
 
       - name: Lowercase image name
         run: |
-          owner_repo="${{ github.repository }}"
-          echo "IMAGE_NAME=${REGISTRY}/${owner_repo,,}/${{ matrix.name }}" >> "$GITHUB_ENV"
+          owner="${{ github.repository_owner }}"
+          echo "IMAGE_NAME=${REGISTRY}/${owner,,}/${{ matrix.image }}" >> "$GITHUB_ENV"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
