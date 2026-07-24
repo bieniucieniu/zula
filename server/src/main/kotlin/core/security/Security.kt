@@ -78,7 +78,6 @@ private fun Application.installJwt(
                     return@authHeader parseAuthorizationHeader(raw)
                 }
                 call.request.cookies[ACCESS_COOKIE_NAME]?.let { token ->
-                    this@installJwt.log.info("token: $token")
                     HttpAuthHeader.Single("Bearer", token)
                 }
             }
