@@ -7,9 +7,12 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { Stack } from "expo-router"
 import { StatusBar } from "expo-status-bar"
 import { useUniwind } from "uniwind"
+import { configureApiClient } from "@/lib/api"
 import { AuthProvider } from "@/lib/auth"
 import { persistOptions, queryClient } from "@/lib/query-client"
 import { NAV_THEME } from "@/lib/theme"
+
+configureApiClient()
 
 export {
   // Catch any errors thrown by the Layout component.

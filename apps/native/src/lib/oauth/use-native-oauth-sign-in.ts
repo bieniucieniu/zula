@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react"
+import { Platform } from "react-native"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import { getProviderDefinition } from "@zula/oauth"
 import { useOAuthSignIn } from "@zula/oauth/react"
@@ -21,6 +22,20 @@ async function ensureWebBrowserReady() {
   webBrowserReady = true
 }
 
+function pickPlatformClientId(clientIds: {
+  webClientId: string
+  iosClientId?: string
+  androidClientId?: string
+}): string {
+  if (Platform.OS === "ios") {
+    return clientIds.iosClientId ?? clientIds.webClientId
+  }
+  if (Platform.OS === "android") {
+    return clientIds.androidClientId ?? clientIds.webClientId
+  }
+  return clientIds.webClientId
+}
+
 export type UseNativeOAuthSignInOptions = {
   provider?: OAuthProviderInfo
   onSuccess?: (result: OAuthSignInResult) => void | Promise<void>
@@ -33,15 +48,16 @@ export function useNativeOAuthSignIn({
   onError,
 }: UseNativeOAuthSignInOptions) {
   const clientIds = provider ? resolveNativeClientIds(provider) : null
+  const clientId = clientIds ? pickPlatformClientId(clientIds) : null
   const redirectUri = getNativeOAuthRedirectUri()
   const discovery = provider ? createNativeDiscovery(provider) : null
   const extraParams = provider ? getProviderDefinition(provider.id)?.extraAuthParams : undefined
 
   const AuthSession: AuthSessionModule = require("expo-auth-session")
   const [request, , promptAsync] = AuthSession.useAuthRequest(
-    provider && clientIds
+    provider && clientId
       ? {
-          clientId: clientIds.webClientId,
+          clientId,
           scopes: provider.scopes,
           responseType: AuthSession.ResponseType.Code,
           redirectUri,
@@ -76,8 +92,7 @@ export function useNativeOAuthSignIn({
   )
 
   return useOAuthSignIn({
-    provider:
-      provider && clientIds?.webClientId && request ? provider : undefined,
+    provider: provider && clientId && request ? provider : undefined,
     signIn: signInExecutor,
     onSuccess,
     onError,

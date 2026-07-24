@@ -1,8 +1,7 @@
 import {
   authenticateWithCode,
-  setApiAuthMode,
-  setApiBaseUrl,
-  setUnauthorizedHandler,
+  createApiClient,
+  setDefaultApiClient,
   toStoredOAuthSession,
 } from "@zula/api"
 import { refresh as apiRefresh } from "@zula/api/endpoints"
@@ -16,21 +15,24 @@ function sanitizeUrl(url: string) {
 }
 
 export function configureApiClient() {
-  setApiBaseUrl(sanitizeUrl(process.env.EXPO_PUBLIC_API_URL ?? defaultApiUrl))
-  setApiAuthMode("bearer")
-  setUnauthorizedHandler(async () => {
-    const stored = await readStoredSession()
-    if (!stored?.refreshToken) return false
+  const client = createApiClient({
+    baseUrl: sanitizeUrl(process.env.EXPO_PUBLIC_API_URL ?? defaultApiUrl),
+    authMode: "bearer",
+    onUnauthorized: async () => {
+      const stored = await readStoredSession()
+      if (!stored?.refreshToken) return false
 
-    try {
-      const { data } = await apiRefresh({ data: { refreshToken: stored.refreshToken } })
-      await writeStoredSession(toStoredOAuthSession(data))
-      return true
-    } catch {
-      await writeStoredSession(null)
-      return false
-    }
+      try {
+        const { data } = await apiRefresh({ data: { refreshToken: stored.refreshToken } })
+        await writeStoredSession(toStoredOAuthSession(data))
+        return true
+      } catch {
+        await writeStoredSession(null)
+        return false
+      }
+    },
   })
+  setDefaultApiClient(client)
 }
 
 export async function authenticateNativeCode(input: {
@@ -49,5 +51,3 @@ export async function authenticateNativeCode(input: {
   await writeStoredSession(next)
   return next
 }
-
-configureApiClient()

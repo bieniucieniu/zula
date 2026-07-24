@@ -3,8 +3,11 @@ import { TanStackDevtools } from "@tanstack/react-devtools"
 import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router"
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { configureWebApiClient } from "@/lib/api"
 import { AuthProvider } from "@/lib/auth"
 import appCss from "../styles.css?url"
+
+configureWebApiClient()
 
 const queryClient = new QueryClient()
 
