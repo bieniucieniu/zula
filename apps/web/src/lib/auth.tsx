@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query"
-import { getGetSessionQueryKey, getSession, refresh, useGetSession } from "@zula/api/endpoints"
 import type { SessionResponse } from "@zula/api"
-import { createContext, use, useEffect, type ReactNode } from "react"
+import { getGetSessionQueryKey, useGetSession } from "@zula/api/endpoints"
+import { createContext, type ReactNode, use, useEffect } from "react"
 
 export type AuthSession = {
   email: string
@@ -11,6 +11,7 @@ export type AuthSession = {
 type AuthContextValue = {
   session: AuthSession | null
   ready: boolean
+  refreshing: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -27,14 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const sessionQuery = useGetSession({
     query: {
       retry: false,
-      queryFn: async () => {
-        try {
-          return await getSession()
-        } catch {
-          await refresh({})
-          return await getSession()
-        }
-      },
+      placeholderData: undefined,
     },
   })
 
@@ -46,12 +40,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const remote = sessionQuery.data?.data
   const session = remote && !sessionQuery.isError ? toSession(remote) : null
-  const ready = !sessionQuery.isPending && !sessionQuery.isFetching
 
-  // First load: ready once settled. Allow refetch after login while keeping prior session.
-  const settled = !sessionQuery.isLoading
-
-  return <AuthContext value={{ session, ready: settled }}>{children}</AuthContext>
+  return (
+    <AuthContext
+      value={{
+        session,
+        refreshing: sessionQuery.isFetching,
+        ready: !sessionQuery.isLoading,
+      }}
+    >
+      {children}
+    </AuthContext>
+  )
 }
 
 export function useAuth() {

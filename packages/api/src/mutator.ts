@@ -1,5 +1,3 @@
-import type { ProblemDetails } from "./generated/model"
-
 let apiBaseUrl: string | ((url: string, options: RequestInit) => string) = ""
 let accessToken: string | null = null
 let authMode: "cookie" | "bearer" = "cookie"
@@ -60,5 +58,4 @@ export const customInstance = async <T>(url: string, options: RequestInit): Prom
   return { data, status: res.status, headers: res.headers } as T
 }
 
-export type ErrorType<E> = ProblemDetails & E
 export type BodyType<BodyData> = BodyData

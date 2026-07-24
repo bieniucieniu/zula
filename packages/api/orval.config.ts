@@ -16,6 +16,9 @@ export default defineConfig({
           path: "./src/mutator.ts",
           name: "customInstance",
         },
+        fetch: {
+          forceSuccessResponse: true,
+        },
       },
     },
   },

@@ -6,14 +6,14 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
+import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.plugins.cachingheaders.*
 import io.ktor.server.plugins.compression.*
 import io.ktor.server.plugins.conditionalheaders.*
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.request.path
-import io.ktor.server.response.*
+import io.ktor.server.request.*
 import io.ktor.server.sse.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -41,21 +41,25 @@ fun Application.configureHttp() {
     install(SSE)
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+
             when (cause) {
                 is HttpException -> call.respondProblem(
                     cause.toProblemDetails(instance = call.request.path()),
                 )
+
                 is BadRequestException,
                 is CannotTransformContentToTypeException,
                 is ContentTransformationException,
-                -> call.respondProblem(
+                    -> call.respondProblem(
                     status = HttpStatusCode.BadRequest,
                     detail = cause.message ?: "Invalid request",
                 )
+
                 is IllegalArgumentException -> call.respondProblem(
                     status = HttpStatusCode.BadRequest,
                     detail = cause.message ?: "Invalid request",
                 )
+
                 else -> {
                     call.application.log.error("Unhandled error", cause)
                     call.respondProblem(

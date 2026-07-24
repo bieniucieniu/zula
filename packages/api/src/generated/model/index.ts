@@ -7,8 +7,6 @@
 
 export * from "./authenticateRequest"
 export * from "./authTokensResponse"
-export * from "./challengeRequest"
-export * from "./challengeResponse"
 export * from "./getHealth200One"
 export * from "./getHealth200Two"
 export * from "./getHealth503One"

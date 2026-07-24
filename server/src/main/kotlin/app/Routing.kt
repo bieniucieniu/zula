@@ -34,7 +34,6 @@ fun Application.configureRouting() {
             configureModerationRouting()
         }.describe {
             responses {
-                //expose ProblemDetails to openapi generation
                 HttpStatusCode.InternalServerError {
                     schema = jsonSchema<ProblemDetails>()
                 }

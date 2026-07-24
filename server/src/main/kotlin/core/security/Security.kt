@@ -7,6 +7,7 @@ import com.zula.core.security.jwt.SessionJwtIssuer
 import com.zula.core.security.jwt.keys.JwtKeySetVerifier
 import com.zula.core.security.jwt.keys.KeysManager
 import com.zula.core.security.jwt.keys.KeysManagers
+import com.zula.lib.id.Ids
 import io.ktor.client.*
 import io.ktor.http.*
 import io.ktor.http.auth.*
@@ -77,6 +78,7 @@ private fun Application.installJwt(
                     return@authHeader parseAuthorizationHeader(raw)
                 }
                 call.request.cookies[ACCESS_COOKIE_NAME]?.let { token ->
+                    this@installJwt.log.info("token: $token")
                     HttpAuthHeader.Single("Bearer", token)
                 }
             }
@@ -86,13 +88,15 @@ private fun Application.installJwt(
                 if (tokenIssuer != expectedIssuer) return@validate null
 
                 val sessionId = credential.payload.getClaim("sid").asString()
-                    ?.let(com.zula.lib.id.Ids::parseOrNull)
+                    ?.let(Ids::parseOrNull)
                     ?: return@validate null
                 val userId = credential.payload.subject
-                    ?.let(com.zula.lib.id.Ids::parseOrNull)
+                    ?.let(Ids::parseOrNull)
                     ?: return@validate null
-                if (!sessionValidator.isValid(sessionId, userId)) return@validate null
-
+                if (!sessionValidator.isValid(sessionId, userId)) {
+                    this@installJwt.log.info("sessionId: $sessionId userId: $userId")
+                    return@validate null
+                }
                 JWTPrincipal(credential.payload)
             }
         }

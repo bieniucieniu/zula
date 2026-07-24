@@ -2,7 +2,6 @@ package com.zula.features.auth.domain
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import kotlin.uuid.Uuid
 
 data class Identity(
     val provider: String,
@@ -18,15 +17,6 @@ sealed class AuthCredential {
         val scopes: String? = null,
     ) : AuthCredential()
 
-    data class EmailOtp(
-        val challengeId: Uuid,
-        val code: String,
-    ) : AuthCredential()
-
-    data class MagicLink(
-        val token: String,
-    ) : AuthCredential()
-
     data class DevBypass(
         val secret: String,
         val email: String?,
@@ -39,10 +29,7 @@ data class AuthenticateRequest(
     val idToken: String? = null,
     val providerRefreshToken: String? = null,
     val scopes: String? = null,
-    val challengeId: String? = null,
     val code: String? = null,
-    val magicLinkToken: String? = null,
-    val sessionId: String? = null,
     val deviceInfo: String? = null,
 )
 
@@ -97,21 +84,10 @@ data class LinkedProvidersResponse(
 
 object AuthMethods {
     const val OAUTH = "oauth"
-    const val EMAIL_OTP = "email_otp"
-    const val MAGIC_LINK = "magic_link"
     const val DEV = "dev"
-
-    fun isPasswordless(provider: String): Boolean =
-        provider == DEV ||
-                provider == EMAIL_OTP ||
-                provider == MAGIC_LINK ||
-                provider == "email" ||
-                provider == "phone"
 
     fun amrFor(provider: String): String = when (provider) {
         DEV -> DEV
-        EMAIL_OTP, "email", "phone" -> EMAIL_OTP
-        MAGIC_LINK -> MAGIC_LINK
         else -> OAUTH
     }
 }

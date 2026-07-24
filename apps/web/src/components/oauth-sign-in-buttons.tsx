@@ -1,8 +1,7 @@
 import { authenticateWithIdToken } from "@zula/api"
 import { useListProviders } from "@zula/api/endpoints"
-import { getProviderDefinition } from "@zula/oauth"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
-import { useCallback } from "react"
+import { getProviderDefinition } from "@zula/oauth"
 import { Button } from "@/components/ui/button"
 import { useWebOAuthSignIn } from "@/lib/oauth/use-web-oauth-sign-in"
 
@@ -19,8 +18,10 @@ type ProviderSignInButtonProps = {
 
 function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderSignInButtonProps) {
   const definition = getProviderDefinition(provider.id)
-  const handleSuccess = useCallback(
-    async (result: OAuthSignInResult) => {
+
+  const oauth = useWebOAuthSignIn({
+    provider,
+    onSuccess: async (result: OAuthSignInResult) => {
       await authenticateWithIdToken({
         provider: result.provider,
         idToken: result.idToken,
@@ -28,12 +29,6 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
       })
       await onAuthenticated()
     },
-    [onAuthenticated]
-  )
-
-  const oauth = useWebOAuthSignIn({
-    provider,
-    onSuccess: handleSuccess,
     onError: (error) => {
       console.error(`${provider.id} sign-in failed`, error)
     },

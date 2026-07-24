@@ -4,12 +4,12 @@ import com.ucasoft.ktor.simpleCache.cacheOutput
 import com.zula.core.http.badRequest
 import com.zula.core.http.unauthorized
 import com.zula.core.security.AuthProviderNames
-import com.zula.core.security.JwtConfig
 import com.zula.core.security.SecurityConfig
-import com.zula.features.auth.domain.*
+import com.zula.features.auth.domain.AuthenticateRequest
+import com.zula.features.auth.domain.RefreshRequest
+import com.zula.features.auth.domain.SessionResponse
 import com.zula.lib.id.Ids
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
@@ -104,18 +104,6 @@ fun Route.configureAuthRouting() {
             operationId = "logout"
             tag("auth")
         }
-    }
-
-    post("/auth/challenge") {
-        val request: ChallengeRequest = call.receive()
-        val response = when (request.purpose) {
-            "magic_link" -> authService.createMagicLinkChallenge(request.channel, request.target)
-            else -> authService.createChallenge(request)
-        }
-        call.respond(response)
-    }.describe {
-        operationId = "createChallenge"
-        tag("auth")
     }
 
     authenticate(AuthProviderNames.JWT) {

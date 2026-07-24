@@ -1,5 +1,5 @@
-import type { AuthenticateRequest, AuthTokensResponse } from "./generated/model"
 import { authenticate } from "./generated/endpoints"
+import type { AuthenticateRequest, AuthTokensResponse } from "./generated/model"
 
 export type StoredOAuthSession = {
   accessToken: string

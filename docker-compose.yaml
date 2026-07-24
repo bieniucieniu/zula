@@ -4,6 +4,7 @@ services:
       - .env
     image: pgvector/pgvector:pg18
     restart: always
+    command: ["postgres", "-c", "log_statement=all", "-c", "log_duration=on"]
     environment:
       - POSTGRES_USER=${DATABASE_USERNAME}
       - POSTGRES_DB=zula

@@ -4,7 +4,10 @@ import com.zula.core.security.JwtSessionValidator
 import com.zula.core.security.SecurityConfig
 import com.zula.features.auth.crypto.TokenEncryption
 import com.zula.features.auth.persistence.AuthRepository
-import com.zula.features.auth.provider.*
+import com.zula.features.auth.provider.AppleAuthProvider
+import com.zula.features.auth.provider.AuthProviders
+import com.zula.features.auth.provider.DevAuthProvider
+import com.zula.features.auth.provider.GoogleAuthProvider
 import io.ktor.client.*
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.singleOf
@@ -33,20 +36,12 @@ val authModule = module {
                 put("apple", AppleAuthProvider(security.oauth.apple, http, json))
             }
 
-            val emailOtp = EmailOtpAuthProvider(repo)
-            put("email_otp", emailOtp)
-            put("email", emailOtp)
-            put("phone", emailOtp)
-
-            val magicLink = MagicLinkAuthProvider(repo)
-            put("magic_link", magicLink)
-
             val devAuth = security.devAuth
-            if (devAuth.enabled) {
+            if (devAuth != null) {
                 put(
                     "dev",
                     DevAuthProvider(
-                        secret = devAuth.secret!!,
+                        secret = devAuth.secret,
                         defaultEmail = devAuth.defaultEmail,
                     ),
                 )

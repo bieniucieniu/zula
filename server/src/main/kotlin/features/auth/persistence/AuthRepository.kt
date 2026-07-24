@@ -87,8 +87,8 @@ class AuthRepository(
         ipAddress: String?,
         expiresAt: Long,
         rotatedFromId: Uuid?,
-    ) {
-        queries.insertSession(
+    ): Uuid {
+        return queries.insertSession(
             user_id = userId,
             auth_method = authMethod,
             refresh_token_hash = refreshHash,
@@ -103,7 +103,8 @@ class AuthRepository(
         queries.findSessionById(id).executeAsOneOrNull()
 
     fun findActiveSessionOwnedBy(sessionId: Uuid, userId: Uuid, now: Long = Instant.now().epochSecond): User_sessions? =
-        queries.findActiveSessionOwnedBy(sessionId, userId, now).executeAsOneOrNull()
+        queries.findActiveSessionOwnedBy(sessionId, userId, now)
+            .executeAsOneOrNull()
 
     fun findSessionByRefreshHash(hash: String): User_sessions? =
         queries.findSessionByRefreshHash(hash).executeAsOneOrNull()

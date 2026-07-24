@@ -14,13 +14,7 @@ export interface AuthenticateRequest {
   /** @nullable */
   scopes?: string | null
   /** @nullable */
-  challengeId?: string | null
-  /** @nullable */
   code?: string | null
-  /** @nullable */
-  magicLinkToken?: string | null
-  /** @nullable */
-  sessionId?: string | null
   /** @nullable */
   deviceInfo?: string | null
 }

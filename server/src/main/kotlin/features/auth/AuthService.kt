@@ -8,11 +8,10 @@ import com.zula.features.auth.crypto.RefreshTokenGenerator
 import com.zula.features.auth.domain.*
 import com.zula.features.auth.persistence.AuthRepository
 import com.zula.features.auth.provider.AuthProviders
-import com.zula.features.auth.provider.EmailOtpAuthProvider
-import com.zula.features.auth.provider.MagicLinkAuthProvider
 import com.zula.lib.id.Ids
 import io.ktor.server.application.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import java.time.Instant
 import kotlin.uuid.Uuid
 
@@ -25,6 +24,39 @@ class AuthService(
     val json: Json
 ) {
 
+    suspend fun ensureIdentity(
+        userId: Uuid,
+        identity: Identity,
+        status: String,
+        scopes: String?,
+    ): Uuid {
+        val metadataJson =
+            identity.metadata?.let {
+                val serializer = JsonObject.serializer()
+                json.encodeToString(serializer, it)
+            }
+        val existingIdentity = repository.findIdentity(identity.provider, identity.providerUserId)
+        if (existingIdentity?.id == null) {
+            return repository.insertIdentity(
+                userId = userId,
+                provider = identity.provider,
+                providerUserId = identity.providerUserId,
+                email = identity.email,
+                metadata = metadataJson,
+                refreshEnc = null,
+                status = status,
+                scopes = scopes,
+            )
+        }
+        repository.updateIdentityLogin(
+            id = existingIdentity.id,
+            email = identity.email,
+            metadata = metadataJson,
+            status = existingIdentity.credentials_status,
+        )
+        return existingIdentity.id
+    }
+
     suspend fun authenticate(call: ApplicationCall, request: AuthenticateRequest): AuthTokensResponse {
         val provider = providers[request.provider]
             ?: badRequest("Unknown auth provider: ${request.provider}")
@@ -35,57 +67,26 @@ class AuthService(
         val existingUser = repository.findUserByIdentity(identity.provider, identity.providerUserId)
         val userId = existingUser?.id ?: createUserWithUniqueUsername(identity)
 
-        val metadataJson =
-            identity.metadata?.let {
-                val serializer = kotlinx.serialization.json.JsonObject.serializer()
-                json.encodeToString(serializer, it)
-            }
-        val existingIdentity = repository.findIdentity(identity.provider, identity.providerUserId)
-        var identityId = existingIdentity?.id
-        if (identityId == null) {
-            identityId = repository.insertIdentity(
-                userId = userId,
-                provider = identity.provider,
-                providerUserId = identity.providerUserId,
-                email = identity.email,
-                metadata = metadataJson,
-                refreshEnc = null,
-                status = if (request.providerRefreshToken != null) CredentialsStatus.ACTIVE else CredentialsStatus.MISSING,
-                scopes = request.scopes,
-            )
-        } else {
-            repository.updateIdentityLogin(
-                id = existingIdentity.id,
-                email = identity.email,
-                metadata = metadataJson,
-                status = existingIdentity.credentials_status,
-            )
-        }
+        val identityId = ensureIdentity(
+            userId,
+            identity,
+            status = if (request.providerRefreshToken != null) CredentialsStatus.ACTIVE else CredentialsStatus.MISSING,
+            scopes = request.scopes,
+        )
 
         if (credential is AuthCredential.OAuthIdToken && !credential.providerRefreshToken.isNullOrBlank()) {
             providerTokenService.storeProviderRefresh(identityId, credential.providerRefreshToken)
         }
 
-        val passwordless = AuthMethods.isPasswordless(request.provider)
         val amr = AuthMethods.amrFor(request.provider)
         val now = Instant.now().epochSecond
-
-        val refreshToken = if (passwordless) RefreshTokenGenerator.generate() else null
-        val refreshHash = refreshToken?.let(RefreshTokenGenerator::hash)
-        val sessionExpires = if (passwordless) {
-            now + securityConfig.jwt.refreshTokenTtlSeconds
-        } else {
-            now + securityConfig.jwt.accessTokenTtlSeconds
-        }
+        val sessionExpires = now + securityConfig.jwt.accessTokenTtlSeconds
 
         val sessionId = resolveSessionId(
-            passwordless = passwordless,
-            requestedSessionId = request.sessionId?.let(Ids::parseOrNull),
             userId = userId,
             amr = amr,
-            now = now,
             sessionExpires = sessionExpires,
-            refreshHash = refreshHash,
+            refreshHash = null,
             deviceInfo = request.deviceInfo,
             ipAddress = call.request.local.remoteHost,
         )
@@ -106,7 +107,7 @@ class AuthService(
         return AuthTokensResponse(
             accessToken = accessToken,
             expiresIn = securityConfig.jwt.accessTokenTtlSeconds,
-            refreshToken = refreshToken,
+            refreshToken = null,
             sessionId = sessionId.toString(),
         )
     }
@@ -167,57 +168,16 @@ class AuthService(
         return LinkedProvidersResponse(providers)
     }
 
-    suspend fun createChallenge(request: ChallengeRequest): ChallengeResponse {
-        val now = Instant.now().epochSecond
-        val expiresIn = 600L
-        val code = EmailOtpAuthProvider.generateCode()
-        val hash = EmailOtpAuthProvider.hashCode(request.target, code)
-        val challengeId = repository.insertChallenge(
-            channel = request.channel,
-            target = request.target,
-            codeHash = hash,
-            purpose = request.purpose,
-            expiresAt = now + expiresIn,
-        )
-        return ChallengeResponse(challengeId = challengeId.toString(), expiresIn = expiresIn, token = code)
-    }
-
-    suspend fun createMagicLinkChallenge(channel: String, target: String): ChallengeResponse {
-        val token = MagicLinkAuthProvider.generateToken()
-        val hash = MagicLinkAuthProvider.hashToken(token)
-        val now = Instant.now().epochSecond
-        val expiresIn = 900L
-        val challengeId = repository.insertChallenge(
-            channel = channel,
-            target = target,
-            codeHash = hash,
-            purpose = "magic_link",
-            expiresAt = now + expiresIn,
-        )
-        return ChallengeResponse(challengeId = challengeId.toString(), expiresIn = expiresIn, token = token)
-    }
 
     private fun resolveSessionId(
-        passwordless: Boolean,
-        requestedSessionId: Uuid?,
         userId: Uuid,
         amr: String,
-        now: Long,
         sessionExpires: Long,
         refreshHash: String?,
         deviceInfo: String?,
         ipAddress: String?,
     ): Uuid {
-        if (!passwordless && requestedSessionId != null) {
-            val owned = repository.findActiveSessionOwnedBy(requestedSessionId, userId, now)
-            if (owned != null) {
-                repository.extendOAuthSession(owned.id, userId, sessionExpires)
-                return owned.id
-            }
-        }
-
-        val sessionId = Ids.next()
-        repository.insertSession(
+        return repository.insertSession(
             userId = userId,
             authMethod = amr,
             refreshHash = refreshHash,
@@ -226,20 +186,10 @@ class AuthService(
             expiresAt = sessionExpires,
             rotatedFromId = null,
         )
-        return sessionId
     }
 
     private fun AuthenticateRequest.toCredential(): AuthCredential {
         return when {
-            AuthMethods.isPasswordless(provider) && code != null && challengeId != null -> {
-                val challengeId = Ids.parseOrNull(challengeId)
-                    ?: badRequest("Invalid challengeId")
-                AuthCredential.EmailOtp(challengeId, code)
-            }
-
-            provider == AuthMethods.MAGIC_LINK && magicLinkToken != null ->
-                AuthCredential.MagicLink(magicLinkToken)
-
             provider == AuthMethods.DEV && code != null ->
                 AuthCredential.DevBypass(
                     secret = code,
