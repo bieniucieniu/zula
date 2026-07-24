@@ -17,19 +17,16 @@ Identity, OAuth sessions, trust cache, peer ratings, and user blocks.
 Ktor modular layout per [architecture.md](./architecture.md#ktor-project-layout). User & auth span two feature modules backed by shared `core:*` infrastructure (Koin DI, SQLDelight, OpenAPI, OAuth2/JWT in `core:security`).
 
 ```text
-core/database/          migrations + user.sql (SQLDelight)
-core/security/          OAuth2 configs, JWT validation
-core/openapi/           DTOs + openapi.yaml route contracts
+server/src/main/sqldelight/   migrations + user.sq (SQLDelight)
+server/src/main/kotlin/core/security/   OAuth configs, JWT validation
 
 features/auth/
-  AuthRouting.kt        POST /api/v1/auth/*, OAuth callbacks
-  AuthService.kt        provider registry, session JWT issuance
-  (no MQ for MVP)
+  AuthRouting.kt        POST /api/auth/*, session refresh
+  AuthService.kt        OAuth providers, JWT + refresh issuance
 
 features/user/
-  UserRouting.kt        GET/PATCH /api/v1/users/*, blocks, admin trust
+  UserRouting.kt        GET/PATCH /api/users/*, blocks, admin trust
   UserService.kt        profiles, trust cache, blocks, peer ratings
-  (TrustLedgerWriter)   internal contract for trade/validation callers
 ```
 
 | Layer | Auth | User |
@@ -38,7 +35,7 @@ features/user/
 | **Service** | `AuthService.kt` | `UserService.kt` |
 | **Integration** | — | — (MQ not used in MVP) |
 
-REST surface: [api_index.md](./api_index.md). OpenAPI spec: `core/openapi/src/main/resources/openapi.yaml`.
+REST surface: [api_index.md](./api_index.md). OpenAPI: `/swagger` on running server.
 
 ---
 
@@ -46,168 +43,94 @@ REST surface: [api_index.md](./api_index.md). OpenAPI spec: `core/openapi/src/ma
 
 Define the tables to store user details, OAuth identities, sessions, rating details, and trust ledgers.
 
-**Canonical DDL:** [schema.md](./schema.md#user--auth-module) in `core/database/src/main/resources/db/migration/000001_init.sql`.
+**Canonical DDL:** [schema.md](./schema.md#user--auth-module) in `server/src/main/sqldelight/com/zula/auth_schema.sq`.
 
-Key tables: `users`, `user_profiles` (includes `location_tag`, `seller_headline`), `user_identities`, `user_stats`, `user_sessions`, `user_ratings`, `user_trust_ledger`, `user_blocks`.
+Key tables: `users`, `user_profiles` (includes `location_tag`, `seller_headline`), `user_identities`, `user_stats`, `user_sessions`, `user_ratings`, `user_trust_ledger`, `user_blocks` (ratings/blocks/trust ledger planned in later migrations; same UUIDv7 conventions).
 
-Example excerpt (see migration file for full definitions):
+Example excerpt (see `auth_schema.sq` for full definitions):
 
 ```sql
--- 1. Base Users Table (Narrow, index-friendly)
+-- 1. Base users (id assigned by DB)
 CREATE TABLE users (
-    id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    username VARCHAR(50) UNIQUE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    username TEXT NOT NULL UNIQUE
 );
 
--- 2. User Profiles (Stores mutable display & localization details)
+-- 2. User profiles (mutable display & localization)
 CREATE TABLE user_profiles (
-    user_id bigint PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    display_name VARCHAR(100),
-    avatar_url text,
-    bio text,
-    timezone VARCHAR(10),
-    preferred_language VARCHAR(5),
-    location_tag varchar(100),
-    seller_headline varchar(160),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    display_name TEXT,
+    avatar_url TEXT,
+    bio TEXT,
+    timezone TEXT,
+    preferred_language TEXT,
+    location_tag TEXT,
+    seller_headline TEXT,
+    updated_at BIGINT NOT NULL
 );
 
--- 3. Simplified OAuth Identities (Linked by provider string, metadata in JSONB)
+-- 3. OAuth identities
 CREATE TABLE user_identities (
-    id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    provider VARCHAR(50) NOT NULL CHECK (provider IN ('google', 'apple')),
-    provider_user_id VARCHAR(255) NOT NULL,
-    email VARCHAR(255),
-    provider_metadata jsonb,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    provider_user_id TEXT NOT NULL,
+    email TEXT,
+    provider_metadata TEXT,
+    credentials_status TEXT NOT NULL DEFAULT 'missing',
     UNIQUE (provider, provider_user_id)
 );
 
--- 4. User Stats (Local cache for heavy aggregated ratings/trust calculations)
+-- 4. Cached ratings/trust
 CREATE TABLE user_stats (
-    user_id bigint PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-    explicit_rating_avg DECIMAL(3,2) DEFAULT 5.00,
-    implicit_trust_score INT DEFAULT 100,
-    last_calculated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    explicit_rating_avg REAL NOT NULL DEFAULT 5.0,
+    implicit_trust_score BIGINT NOT NULL DEFAULT 100,
+    last_calculated_at BIGINT NOT NULL
 );
 
--- 5. User Sessions (Enables token revocation and security controls)
+-- 5. Sessions (refresh rotation + JWT sid)
 CREATE TABLE user_sessions (
-    id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token_hash VARCHAR(255) UNIQUE NOT NULL,
-    device_info VARCHAR(100),
-    ip_address VARCHAR(45),
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    is_revoked boolean DEFAULT false NOT NULL
-);
-
--- 6. Peer Ratings Log
-CREATE TABLE user_ratings (
-    id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    reviewer_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    reviewee_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
-    comment text,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 7. Trust Ledger Log (Audit trail of score changes)
-CREATE TABLE user_trust_ledger (
-    id bigint PRIMARY KEY DEFAULT public.generate_snowflake_id(1),
-    user_id bigint NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    delta integer NOT NULL,
-    event_type VARCHAR(50) NOT NULL,
-    description text,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- 8. User Moderation (Blocks / Mutes)
-CREATE TABLE user_blocks (
-    blocker_id bigint REFERENCES users(id) ON DELETE CASCADE,
-    blocked_id bigint REFERENCES users(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (blocker_id, blocked_id)
+    id UUID PRIMARY KEY DEFAULT uuidv7(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    auth_method TEXT NOT NULL,
+    refresh_token_hash TEXT UNIQUE,
+    device_info TEXT,
+    ip_address TEXT,
+    expires_at BIGINT NOT NULL,
+    is_revoked BIGINT NOT NULL DEFAULT 0,
+    rotated_from_id UUID
 );
 ```
+
+Planned peer-rating, trust-ledger, and block tables use the same `UUID PRIMARY KEY DEFAULT uuidv7()` pattern and `UUID` foreign keys to `users(id)`.
 
 ---
 
 ## Step 2: Define SQLDelight Queries
 
-Write the following database queries to `core/database/src/main/sqldelight/user.sq` to specify how data is inserted, updated, and lazily aggregated.
+Write database queries to `server/src/main/sqldelight/com/zula/user.sq`. **Do not pass `id` on insert** — use `RETURNING id`:
 
-### 1. Lazy Recalculation Averages
-These queries perform time-decay calculations on ratings and sum trust score ledger entries on demand.
 ```sql
--- name: CalculateUserRatingAvg :one
-SELECT 
-    COALESCE(
-        SUM(rating::float8 * EXP(-0.005 * (EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400.0))) / 
-        NULLIF(SUM(EXP(-0.005 * (EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400.0))), 0),
-        5.0
-    )::float8 AS rating_avg
-FROM user_ratings 
-WHERE reviewee_id = ? AND created_at >= NOW() - INTERVAL '365 days';
+-- name: insertUser
+INSERT INTO users (username)
+VALUES (?)
+RETURNING id;
 
--- name: CalculateUserTrustScore :one
-SELECT COALESCE(100 + SUM(delta), 100)::integer AS trust_score
-FROM user_trust_ledger
-WHERE user_id = ?;
-```
+-- name: insertIdentity
+INSERT INTO user_identities (user_id, provider, provider_user_id, email, ...)
+VALUES (?, ?, ?, ?, ...)
+RETURNING id;
 
-### 2. Cache Mutations
-```sql
--- name: GetUser :one
-SELECT users.id, users.username, users.created_at,
-       COALESCE(us.explicit_rating_avg, 5.00)::numeric(3,2) AS explicit_rating_avg,
-       COALESCE(us.implicit_trust_score, 100)::integer AS implicit_trust_score,
-       us.last_calculated_at
-FROM users
-LEFT JOIN user_stats us ON users.id = us.user_id
-WHERE users.id = ? LIMIT 1;
-
--- name: UpsertUserStats :one
-INSERT INTO user_stats (user_id, explicit_rating_avg, implicit_trust_score, last_calculated_at)
-VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-ON CONFLICT (user_id) DO UPDATE
-SET explicit_rating_avg = EXCLUDED.explicit_rating_avg,
-    implicit_trust_score = EXCLUDED.implicit_trust_score,
-    last_calculated_at = CURRENT_TIMESTAMP
-RETURNING *;
-
--- name: UpdateImplicitTrust :one
-UPDATE user_stats
-SET implicit_trust_score = implicit_trust_score + ?,
-    last_calculated_at = CURRENT_TIMESTAMP
-WHERE user_id = ?
-RETURNING *;
-```
-
-### 3. Identity Provider and Audit Logs
-```sql
--- name: FindUserByIdentity :one
-SELECT users.id, users.username, users.created_at FROM users
-JOIN user_identities ON users.id = user_identities.user_id
-WHERE user_identities.provider = ? AND user_identities.provider_user_id = ? LIMIT 1;
-
--- name: LinkUserIdentity :one
-INSERT INTO user_identities (user_id, provider, provider_user_id, email, provider_metadata)
-VALUES (?, ?, ?, ?, ?)
-RETURNING *;
-
--- name: AddTrustLedgerEntry :one
-INSERT INTO user_trust_ledger (user_id, delta, event_type, description)
-VALUES (?, ?, ?, ?)
-RETURNING *;
+-- name: insertSession
+INSERT INTO user_sessions (user_id, auth_method, refresh_token_hash, ...)
+VALUES (?, ?, ?, ...)
+RETURNING id;
 ```
 
 Compile query methods by running SQLDelight generation from the repo root:
 ```bash
-./gradlew :core:database:generateSqlDelightInterface
+./gradlew :server:generateSqlDelightInterface
 ```
 
 ---
@@ -218,34 +141,26 @@ Wire services via Koin (`features/auth/di`, `features/user/di`) and mount routes
 
 ### 1. User Creation & Session Login (`features/auth/AuthService.kt`)
 
-Upon user registration/login via OAuth (`POST /api/v1/auth/authenticate`):
+Upon user registration/login via OAuth (`POST /api/auth/authenticate` with provider `idToken`):
 
-1.  Check if the provider identity is linked (`FindUserByIdentity`).
-2.  If it doesn't exist, create a new `User` record in a transaction.
-3.  Issue a short-lived JWT session token (`SessionTokenLifetime`, **15 minutes**). Clients must re-call `POST /api/v1/auth/authenticate` on a ~15-minute cadence (or before `exp`) to obtain a fresh token; expired tokens are rejected by the Ktor `Authentication` plugin in `core:security`.
-4.  **Crucial**: Immediately initialize the cache record inside `user_stats`:
-    ```kotlin
-    database.transaction {
-        userQueries.upsertUserStats(
-            userId = user.id,
-            explicitRatingAvg = BigDecimal("5.00"),
-            implicitTrustScore = 100,
-        )
-    }
-    ```
-5.  Link identity provider details by passing `provider` as a plain string parameter (e.g. `"google"` or `"apple"`).
-6.  **Create `user_profiles` row on signup** via `CreateUserProfile` in the auth transaction.
+1. Verify the provider token (`AuthProvider.verify`).
+2. Look up identity (`findUserByIdentity`); if missing, `insertUser` + `insertUserProfile` + `upsertUserStats` in one transaction — **ids come from `RETURNING id`**.
+3. `insertSession` → DB-assigned session id (`sid` JWT claim).
+4. Issue a short-lived access JWT (**15 minutes**). Clients refresh via `POST /api/auth/refresh` (refresh cookie or body) — not by re-running OAuth on every access-token expiry.
+5. Link or update `user_identities` (`insertIdentity` / `updateIdentityLogin`).
+
+**Not supported:** email OTP / `POST /api/auth/challenge`. Sign-in is OAuth-only (Google, Apple) plus optional dev bypass when configured.
 
 `AuthRouting.kt` exposes:
 
 | Route | Auth | Purpose |
 |-------|------|---------|
-| `GET /api/v1/auth/providers` | Public | List OAuth providers |
-| `POST /api/v1/auth/authenticate` | Public | Exchange provider token → JWT |
-| `GET /api/v1/auth/providers/{id}/account` | Public | Provider account metadata |
-| `GET /api/v1/auth/callback/{provider}` | Public | OAuth redirect handler |
-| `POST /api/v1/auth/providers/{id}/link` | Auth | Link provider to current user |
-| `GET /api/v1/auth/providers/linked` | Auth | List linked identities |
+| `GET /api/auth/providers` | Public | List OAuth providers |
+| `POST /api/auth/authenticate` | Public | Exchange `idToken` → access JWT (+ refresh when issued) |
+| `POST /api/auth/refresh` | Public | Rotate refresh token; new access JWT |
+| `GET /api/auth/session` | Public / Auth | Session probe (Bearer or refresh cookie) |
+| `POST /api/auth/logout` | Auth | Revoke session |
+| `GET /api/auth/providers/linked` | Auth | List linked identities |
 
 ### Auth policy
 
@@ -267,16 +182,14 @@ single<Map<String, AuthProvider>> {
 
 Each provider implements:
 
-- `verifyToken` — validate the upstream ID token and return a normalized `Identity`
-- `getAccountInfo` / `canVerifyToken` — used by `GET /api/v1/auth/providers/{id}/account`
-- `info` — metadata exposed through `GET /api/v1/auth/providers`
-- `handleOAuthCallback` — HTTP OAuth redirect handler wired from `GET /api/v1/auth/callback/{provider}`
+- `verify` — validate upstream `idToken` and return normalized `Identity`
+- `info` — metadata for `GET /api/auth/providers`
 
 `AuthService` receives the provider map via Koin. Add a new provider by implementing `AuthProvider`, registering it in `AuthModule.kt`, and adding the route in `AuthRouting.kt`.
 
 ### 2. Lazy Recalculation Cache (`features/user/UserService.kt`)
 
-When handling profile reads (`GET /api/v1/users/{id}/profile`, `GET /api/v1/users/me/profile`, etc.), evaluate if stats cache is stale (older than 1 hour):
+When handling profile reads (`GET /api/users/{id}/profile`, `GET /api/users/me/profile`, etc.), evaluate if stats cache is stale (older than 1 hour):
 
 ```kotlin
 var explicitRating = 5.0
@@ -302,7 +215,7 @@ if (isStale) {
 }
 ```
 
-`UserRouting.kt` mounts profile, block, and admin routes. Request/response DTOs live in `core/openapi/`.
+`UserRouting.kt` mounts profile, block, and admin routes. Request/response DTOs are defined in feature `domain` packages and exposed via Ktor OpenAPI.
 
 ### 3. Trust scoring from other modules
 
@@ -311,7 +224,7 @@ When the [trade](./trade_module.md) and [validation](./validation_module.md) mod
 1. Insert `user_trust_ledger` with an `event_type` from [trust_events.md](./trust_events.md) (e.g. `TRADE_COMPLETED`).
 2. Bump `user_stats.implicit_trust_score` in the same transaction.
 
-`recordPeerRating` is internal today; optional public `POST /api/v1/users/{id}/ratings` route is Wave 3.5 in [implementation_plan.md](./implementation_plan.md).
+`recordPeerRating` is internal today; optional public `POST /api/users/{id}/ratings` route is Wave 3.5 in [implementation_plan.md](./implementation_plan.md).
 
 Example pattern (implemented in validation/trade services, not a standalone file in `features/user`):
 
@@ -342,21 +255,21 @@ single<TrustLedgerWriter> { get<UserService>() }
 
 ### user-A — Core auth & identity ✅
 
-- [x] Google OAuth + session JWT
+- [x] Google OAuth + session JWT + refresh
 - [x] Apple OAuth provider
 - [x] `user_stats` seed on signup
 - [x] Lazy trust/rating recalc (1h TTL)
 
 ### user-B — Blocks & admin ✅
 
-- [x] `user_blocks` + `POST /api/v1/users/{id}/block` / `DELETE .../block`
+- [x] `user_blocks` + `POST /api/users/{id}/block` / `DELETE .../block`
 - [x] `UpdateImplicitTrust` (admin allowlist)
 
 ### user-C — Peer ratings (partial) 🔶
 
 - [x] `user_ratings` table + SQLDelight
 - [x] Internal `recordPeerRating`
-- [ ] Public `POST /api/v1/users/{id}/ratings` (Wave 3.5)
+- [ ] Public `POST /api/users/{id}/ratings` (Wave 3.5)
 
 ---
 
@@ -368,15 +281,11 @@ Reset the local Nix development PostgreSQL database schema and seed data to run 
 # Reset local PostgreSQL if needed (Docker / local dev)
 ./gradlew test
 
-# 3. Regenerate SQLDelight + OpenAPI
-./gradlew :core:database:generateSqlDelightInterface
-./gradlew :core:openapi:build
+# 3. Regenerate SQLDelight
+./gradlew :server:generateSqlDelightInterface
 
-# 4. Execute feature test suites
-./gradlew :features:auth:test :features:user:test
-
-# 5. Full backend test run
-./gradlew test
+# 4. Execute server tests
+./gradlew :server:test
 ```
 
 ---
@@ -385,19 +294,16 @@ Reset the local Nix development PostgreSQL database schema and seed data to run 
 
 | Path | Purpose |
 |------|---------|
-| `features/auth/src/main/kotlin/.../AuthRouting.kt` | OAuth + session HTTP routes |
-| `features/auth/src/main/kotlin/.../AuthService.kt` | Provider registry, JWT issuance |
-| `features/auth/src/main/kotlin/.../provider/` | Google, Apple `AuthProvider` impls |
-| `features/auth/src/main/kotlin/.../di/AuthModule.kt` | Koin bindings |
-| `features/auth/src/test/kotlin/...` | Auth integration tests |
-| `features/user/src/main/kotlin/.../UserRouting.kt` | Profile, block, admin routes |
-| `features/user/src/main/kotlin/.../UserService.kt` | Trust cache, blocks, ratings |
-| `features/user/src/main/kotlin/.../di/UserModule.kt` | Koin bindings + `TrustLedgerWriter` |
-| `features/user/src/test/kotlin/...` | User service tests |
-| `core/database/src/main/sqldelight/user.sq` | SQLDelight queries |
-| `core/database/src/main/resources/db/migration/000001_init.sql` | User/auth DDL |
-| `core/security/src/main/kotlin/.../` | JWT validation, OAuth2 client configs |
-| `core/openapi/src/main/resources/openapi.yaml` | REST contract (auth + user sections) |
+| `server/src/main/kotlin/features/auth/AuthRouting.kt` | OAuth + session HTTP routes |
+| `server/src/main/kotlin/features/auth/AuthService.kt` | Provider registry, JWT issuance |
+| `server/src/main/kotlin/features/auth/provider/` | Google, Apple providers |
+| `server/src/main/kotlin/features/auth/AuthModule.kt` | Koin bindings |
+| `server/src/test/kotlin/features/auth/` | Auth tests |
+| `server/src/main/kotlin/features/user/UserRouting.kt` | Profile, block, admin routes |
+| `server/src/main/kotlin/features/user/UserService.kt` | Trust cache, blocks, ratings |
+| `server/src/main/sqldelight/com/zula/user.sq` | SQLDelight queries |
+| `server/src/main/sqldelight/com/zula/auth_schema.sq` | User/auth DDL |
+| `server/src/main/kotlin/core/security/` | JWT validation, OAuth configs |
 
 ---
 

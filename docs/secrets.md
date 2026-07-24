@@ -7,7 +7,7 @@ Kubernetes deployment (Flux, Gateway routes, Infisical operator) lives in a **se
 | Variable | Used by | Purpose |
 |----------|---------|---------|
 | `APP_URL` | Backend ConfigMap (GitOps) | Public HTTP origin: OAuth callbacks, `/health`, web UI |
-| `API_URL` | Mobile clients only | REST API base URL (`https://host/api/v1`) |
+| `API_URL` | Mobile clients only | REST API base URL (`https://host/api`) |
 
 Backend accepts `APP_URL`; `HOST_BASE_URL` still works as a fallback.
 
@@ -34,11 +34,11 @@ Cloudflare tunnel (manual): both hosts → Traefik `:80`.
 
 ```properties
 # packages/client-config/dev.properties (Android emulator default)
-API_URL=http://10.0.2.2:8000/api/v1
+API_URL=http://10.0.2.2:8000/api
 APP_URL=http://10.0.2.2:8000
 ```
 
-Override via root `.env` for **iOS debug** (simulator or LAN IP), then run `gen-client-config`. Values must use `http://` or `https://` with `/api/v1` path.
+Override via root `.env` for **iOS debug** (simulator or LAN IP), then run `gen-client-config`. Values must use `http://` or `https://` with `/api` path.
 
 ## Infisical (credentials only)
 

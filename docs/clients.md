@@ -12,7 +12,7 @@ Zula ships three thin clients. Business rules stay on the backend ([conventions.
 
 ## OpenAPI client generation
 
-Source spec: `core/openapi/src/main/resources/openapi.yaml`.
+Source spec: Ktor OpenAPI at `/swagger` on a running server (or `server/docs/` export when generated).
 
 | Target | Command | Output |
 |--------|---------|--------|
@@ -20,7 +20,7 @@ Source spec: `core/openapi/src/main/resources/openapi.yaml`.
 | iOS | `gen-api-ios` | `apps/ios/ZulaKit/Sources/ZulaOpenAPI/` |
 | Android | `gen-api-android` | `apps/android/zula-openapi/` (Retrofit + Moshi) |
 
-Backend request/response DTOs live in `core/openapi/src/main/kotlin/.../dto/`.
+Backend request/response DTOs live in `server/src/main/kotlin/features/*/domain/` and Ktor OpenAPI route metadata.
 
 Regenerate clients after backend route/DTO changes.
 
@@ -28,13 +28,13 @@ Regenerate clients after backend route/DTO changes.
 
 ## Web API access
 
-- Browser uses **REST JSON** at `/api/v1/*` via Orval fetch client (`VITE_API_URL`, default `/api/v1`).
-- Local dev: Vite proxies `/api` → Ktor server `http://127.0.0.1:8000`.
+- Browser uses **REST JSON** at `/api/*` via Orval fetch client (`VITE_API_URL`, default `/api`).
+- Local dev: Vite proxies `/api`, `/login`, and `/callback` → Ktor server `http://127.0.0.1:8000`.
 - Production: ingress routes `/api/**` to the backend HTTP server; web nginx serves the SPA at `/`.
 
-Mobile clients use the same REST API at `API_URL` (must be `http(s)://host[:port]/api/v1`).
+Mobile clients use the same REST API at `API_URL` (must be `http(s)://host[:port]/api`).
 
-Contracts: `core/openapi/`.
+Contracts: Ktor OpenAPI (`/swagger`).
 
 ---
 
@@ -44,10 +44,12 @@ Contracts: `core/openapi/`.
 |---------|--------|---------|
 | Markdown display | Parse `source_markdown` → HTML / native | Store markdown only |
 | Feed card preview | Truncate markdown locally | Omit body on list responses |
-| OAuth UI | Provider SDK / web redirect | Token verify, session JWT |
+| Sign-in | OAuth provider SDK → `idToken` → `POST /api/auth/authenticate` | Verify token, DB-assign user/session ids, issue JWT |
+| Session refresh | `POST /api/auth/refresh` (cookie or body) | Rotate refresh token, new access JWT |
 | Image upload | PUT to presigned URL | Issue URL, validate `object_key` |
-| Pagination | Pass opaque cursor from previous response | Keyset SQL |
+| Pagination | Pass opaque cursor from previous response | Keyset SQL on UUIDv7 `id` |
 | Trade / validation UI | Show QR/PIN, scan | State machine, codes |
+| Entity ids | Use ids from API responses only | DB `DEFAULT uuidv7()` + `RETURNING id` |
 
 ---
 

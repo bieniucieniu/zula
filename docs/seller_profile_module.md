@@ -20,9 +20,9 @@ Conventions: [conventions.md](./conventions.md) (thin clients, keyset pagination
 
 | Goal | Detail |
 |------|--------|
-| **Public seller page** | `GET /api/v1/sellers/{idOrUsername}` — display, trust, counts, optional recent reviews |
-| **Owner profile** | `GET /api/v1/users/me/profile` + `PATCH /api/v1/users/me/profile` — edit bio, avatar, display name, locale |
-| **Seller listings tab** | Reuse `GET /api/v1/feed/by-author/{id}` (no duplicate query logic) |
+| **Public seller page** | `GET /api/sellers/{idOrUsername}` — display, trust, counts, optional recent reviews |
+| **Owner profile** | `GET /api/users/me/profile` + `PATCH /api/users/me/profile` — edit bio, avatar, display name, locale |
+| **Seller listings tab** | Reuse `GET /api/feed/by-author/{id}` (no duplicate query logic) |
 | **Trust display** | Read `user_stats` cache; lazy recalc only on profile view (not on feed scroll) |
 | **Safety** | Respect `user_blocks`; hide or 404 blocked profiles per policy |
 | **No N+1** | Profile header in 1–2 queries; listings via existing feed batch pattern |
@@ -34,18 +34,18 @@ Conventions: [conventions.md](./conventions.md) (thin clients, keyset pagination
 | Piece | Status |
 |-------|--------|
 | `user_profiles` + `location_tag`, `seller_headline` | ✅ in `000001_init.sql` |
-| `GET /api/v1/sellers/{idOrUsername}` | ✅ Shipped |
-| `GET /api/v1/users/me/profile`, `PATCH /api/v1/users/me/profile` | ✅ Shipped |
-| `GET /api/v1/users/{username}` (legacy trust-only) | ✅ Shipped |
-| `GET /api/v1/reviews/seller/{userId}` (keyset, `ProfileCursor`) | ✅ Shipped |
-| `POST /api/v1/users/{userId}/block` / `DELETE …/block` + policy A on profile view | ✅ Shipped |
+| `GET /api/sellers/{idOrUsername}` | ✅ Shipped |
+| `GET /api/users/me/profile`, `PATCH /api/users/me/profile` | ✅ Shipped |
+| `GET /api/users/{username}` (legacy trust-only) | ✅ Shipped |
+| `GET /api/reviews/seller/{userId}` (keyset, `ProfileCursor`) | ✅ Shipped |
+| `POST /api/users/{userId}/block` / `DELETE …/block` + policy A on profile view | ✅ Shipped |
 | Profile row on signup | ✅ Shipped (`features:auth` signup flow) |
 | `seller_activity_stats` table | ✅ Schema only — counts empty until feed |
-| `GET /api/v1/feed/by-author/{id}` on seller page | ⬜ Blocked on feed module (seller-C) |
+| `GET /api/feed/by-author/{id}` on seller page | ⬜ Blocked on feed module (seller-C) |
 | Avatar presigned upload | ⬜ seller-D / [media_module.md](./media_module.md) |
 | `completed_trade_count` | ⬜ Blocked on trade module |
 
-Legacy `GET /api/v1/users/{id}/profile` remains public for backward compatibility; new clients use `GET /api/v1/sellers/{idOrUsername}`. Auth: [auth_and_permissions.md](./auth_and_permissions.md).
+Legacy `GET /api/users/{id}/profile` remains public for backward compatibility; new clients use `GET /api/sellers/{idOrUsername}`. Auth: [auth_and_permissions.md](./auth_and_permissions.md).
 
 ---
 
@@ -54,20 +54,20 @@ Legacy `GET /api/v1/users/{id}/profile` remains public for backward compatibilit
 ```text
 Client
    │
-   ├─ GET /api/v1/sellers/{idOrUsername}       [public]
+   ├─ GET /api/sellers/{idOrUsername}       [public]
    │     └─ features:user → UserService
    │           ├─ Q1: user + profile + stats (single JOIN)
    │           ├─ optional Q2: seller_activity_counts (or JOIN subselect)
    │           ├─ optional Q3: recent ratings (LIMIT 5, separate query)
    │           └─ if viewer authenticated: block relationship flags
    │
-   ├─ GET /api/v1/feed/by-author/{id}          [public / auth]
+   ├─ GET /api/feed/by-author/{id}          [public / auth]
    │     └─ features:feed → FeedService (see feed_module.md)
    │
-   ├─ GET /api/v1/users/me/profile             [auth]
+   ├─ GET /api/users/me/profile             [auth]
    │     └─ UserService — same shape + private fields
    │
-   └─ PATCH /api/v1/users/me/profile           [auth]
+   └─ PATCH /api/users/me/profile           [auth]
          └─ UserService — validate + UPDATE user_profiles
 ```
 
@@ -79,7 +79,7 @@ Feature layout:
 | Service | `features/user/.../UserService.kt` | Business logic, transactions, block policy |
 | DI | `features/user/.../UserModule.kt` | Koin module wiring |
 
-**Page composition (client):** header from `GET /api/v1/sellers/{idOrUsername}` + infinite scroll from `GET /api/v1/feed/by-author/{id}`. Two REST calls, no combined mega-endpoint — keeps features focused and avoids N+1 across listings.
+**Page composition (client):** header from `GET /api/sellers/{idOrUsername}` + infinite scroll from `GET /api/feed/by-author/{id}`. Two REST calls, no combined mega-endpoint — keeps features focused and avoids N+1 across listings.
 
 ---
 
@@ -108,14 +108,14 @@ Extend DTOs in `core/openapi/src/main/kotlin/dto/` (or add `profile.kt` if the f
 
 | Method | Path | Request | Response | Notes |
 |--------|------|---------|----------|-------|
-| `GET` | `/api/v1/sellers/{idOrUsername}` | — | `SellerProfileResponse` | Lookup by snowflake id or username |
-| `GET` | `/api/v1/users/me/profile` | — | `MyProfileResponse` | Owner-only private fields |
-| `PATCH` | `/api/v1/users/me/profile` | `UpdateMyProfileRequest` | `MyProfileResponse` | Partial update; all fields optional |
-| `GET` | `/api/v1/reviews/seller/{userId}` | `ProfileCursor`, `limit` query | `ListSellerReviewsResponse` | Keyset pagination |
-| `POST` | `/api/v1/users/{userId}/block` | — | `BlockUserResponse` | Viewer = blocker |
-| `DELETE` | `/api/v1/users/{userId}/block` | — | `UnblockUserResponse` | Viewer = blocker |
-| `GET` | `/api/v1/users/{id}/profile` | — | `UserResponse` | **Legacy** — deprecate |
-| `PATCH` | `/api/v1/admin/users/{id}/trust` | `UpdateTrustRequest` | `UserResponse` | Admin only |
+| `GET` | `/api/sellers/{idOrUsername}` | — | `SellerProfileResponse` | Lookup by UUIDv7 id or username |
+| `GET` | `/api/users/me/profile` | — | `MyProfileResponse` | Owner-only private fields |
+| `PATCH` | `/api/users/me/profile` | `UpdateMyProfileRequest` | `MyProfileResponse` | Partial update; all fields optional |
+| `GET` | `/api/reviews/seller/{userId}` | `ProfileCursor`, `limit` query | `ListSellerReviewsResponse` | Keyset pagination |
+| `POST` | `/api/users/{userId}/block` | — | `BlockUserResponse` | Viewer = blocker |
+| `DELETE` | `/api/users/{userId}/block` | — | `UnblockUserResponse` | Viewer = blocker |
+| `GET` | `/api/users/{id}/profile` | — | `UserResponse` | **Legacy** — deprecate |
+| `PATCH` | `/api/admin/users/{id}/trust` | `UpdateTrustRequest` | `UserResponse` | Admin only |
 
 ### 2.2 DTO summaries
 
@@ -189,19 +189,19 @@ data class ListSellerReviewsResponse(
 
 | Route | Auth |
 |-------|------|
-| `GET /api/v1/sellers/{idOrUsername}` | Public; optional JWT for block flags |
-| `GET /api/v1/feed/by-author/{id}` | Public (feed feature) |
-| `GET /api/v1/reviews/seller/{userId}` | Public |
-| `GET /api/v1/users/me/profile` | Required |
-| `PATCH /api/v1/users/me/profile` | Required; only own row |
-| `POST` / `DELETE /api/v1/users/{userId}/block` | Required |
+| `GET /api/sellers/{idOrUsername}` | Public; optional JWT for block flags |
+| `GET /api/feed/by-author/{id}` | Public (feed feature) |
+| `GET /api/reviews/seller/{userId}` | Public |
+| `GET /api/users/me/profile` | Required |
+| `PATCH /api/users/me/profile` | Required; only own row |
+| `POST` / `DELETE /api/users/{userId}/block` | Required |
 
 Public routes are mounted **outside** the `authenticate("auth-jwt")` block in `UserRouting.kt`. Full matrix: [auth_and_permissions.md](./auth_and_permissions.md).
 
 ```kotlin
 // features/user/src/main/kotlin/.../UserRouting.kt
 fun Route.configureUserRouting(userService: UserService) {
-    route("/api/v1") {
+    route("/api") {
         // Public — optional JWT enriches viewer-specific fields
         get("/sellers/{idOrUsername}") {
             val viewerId = call.optionalUserId()
@@ -237,7 +237,7 @@ routing {
 
 ### Deprecation
 
-Keep legacy `GET /api/v1/users/{id}/profile` returning trust + username for backward compatibility; implement as a thin wrapper over `getSellerProfile` internals. New clients use `GET /api/v1/sellers/{idOrUsername}`.
+Keep legacy `GET /api/users/{id}/profile` returning trust + username for backward compatibility; implement as a thin wrapper over `getSellerProfile` internals. New clients use `GET /api/sellers/{idOrUsername}`.
 
 ---
 
@@ -375,7 +375,7 @@ VALUES (?, ?)
 ON CONFLICT (user_id) DO NOTHING;
 ```
 
-Create `user_profiles` row on first `PATCH /api/v1/users/me/profile` if missing (registration today may not insert profile for all paths — align with `features:auth` signup flow).
+Create `user_profiles` row on first `PATCH /api/users/me/profile` if missing (registration today may not insert profile for all paths — align with `features:auth` signup flow).
 
 ### 3.5 Blocks
 
@@ -408,7 +408,7 @@ WHERE blocker_id = ? AND blocked_id = ?;
 | Policy | Behavior |
 |--------|----------|
 | **A (recommended)** | Return `404 Not Found` if viewer blocked seller OR seller blocked viewer |
-| **B** | Return profile but `GET /api/v1/feed/by-author/{id}` empty + `viewerHasBlocked` flags |
+| **B** | Return profile but `GET /api/feed/by-author/{id}` empty + `viewerHasBlocked` flags |
 
 Use **A** for simpler safety; flags in DTO still useful when policy B is needed later.
 
@@ -521,13 +521,13 @@ private suspend fun resolveTrustScores(
 
 Seller listings tab = client calls:
 
-1. `GET /api/v1/sellers/{idOrUsername}` — header
-2. `GET /api/v1/feed/by-author/{id}?kind=offer` — keyset grid (server-side filter preferred)
+1. `GET /api/sellers/{idOrUsername}` — header
+2. `GET /api/feed/by-author/{id}?kind=offer` — keyset grid (server-side filter preferred)
 
 Extend feed query param when feed ships (Phase C):
 
 ```kotlin
-// GET /api/v1/feed/by-author/{id}?kind=offer|need|trip
+// GET /api/feed/by-author/{id}?kind=offer|need|trip
 ```
 
 Server-side filter preferred (thin client rule).
@@ -554,10 +554,10 @@ Profile editing includes `avatarUrl`. Clients should not send raw image bytes ov
 **Flow:**
 
 ```text
-1. GET /api/v1/users/me/profile → need new avatar
-2. POST /api/v1/media/avatar-upload → presigned PUT URL + object_key  (Phase D; features:media)
+1. GET /api/users/me/profile → need new avatar
+2. POST /api/media/avatar-upload → presigned PUT URL + object_key  (Phase D; features:media)
 3. Client PUT to MinIO
-4. PATCH /api/v1/users/me/profile { avatarUrl: public_or_signed_url_for_key }
+4. PATCH /api/users/me/profile { avatarUrl: public_or_signed_url_for_key }
 ```
 
 Add avatar upload route when implementing Phase D; until then accept HTTPS URLs from trusted CDNs in dev only.
@@ -568,7 +568,7 @@ Add avatar upload route when implementing Phase D; until then accept HTTPS URLs 
 
 | Risk | Mitigation |
 |------|------------|
-| Loading listings inside `getSellerProfile` | **Do not** — separate `GET /api/v1/feed/by-author/{id}` |
+| Loading listings inside `getSellerProfile` | **Do not** — separate `GET /api/feed/by-author/{id}` |
 | Per-review reviewer profile fetch | JOIN `reviewer` in `listSellerReviewsPage` |
 | Trust recalc on every feed card | JOIN `user_stats` only on feed queries |
 | `COUNT(*)` on `feed_items` every view | `seller_activity_stats` cache |
@@ -592,29 +592,29 @@ Add avatar upload route when implementing Phase D; until then accept HTTPS URLs 
 
 ### Phase seller-A — Expose profile data ✅
 
-- [x] `GET /api/v1/sellers/{idOrUsername}` by id and username
+- [x] `GET /api/sellers/{idOrUsername}` by id and username
 - [x] Return `user_profiles` fields + trust from `user_stats`
-- [x] `GET /api/v1/users/me/profile`, `PATCH /api/v1/users/me/profile`
+- [x] `GET /api/users/me/profile`, `PATCH /api/users/me/profile`
 - [x] Profile row on user registration (`features:auth`)
 - [x] Tests: read by username, update own profile
 
 ### Phase seller-B — Seller signals ✅
 
 - [x] `countUserRatings` + recent reviews on profile
-- [x] `GET /api/v1/reviews/seller/{userId}` with keyset pagination (`ProfileCursor`)
+- [x] `GET /api/reviews/seller/{userId}` with keyset pagination (`ProfileCursor`)
 - [x] `seller_headline`, `location_tag` columns
 - [x] Block / unblock routes + profile 404 when blocked (policy A)
 
 ### Phase seller-C — Listings integration (depends on feed-C)
 
-- [ ] `GET /api/v1/feed/by-author/{id}` on seller page
+- [ ] `GET /api/feed/by-author/{id}` on seller page
 - [ ] `kind` query param on author feed
 - [ ] Sync `seller_activity_stats` from feed writes via `SellerActivityWriter`
 - [ ] Tests: counts update when item created / fulfilled
 
 ### Phase seller-D — Media & polish
 
-- [ ] `POST /api/v1/media/avatar-upload` presigned URL ([media_module.md](./media_module.md))
+- [ ] `POST /api/media/avatar-upload` presigned URL ([media_module.md](./media_module.md))
 - [ ] Display name search (pg_trgm) if needed
 - [ ] `completed_trade_count` when trade module exists
 
@@ -635,11 +635,11 @@ db-seed
 
 ### Manual checks
 
-- `GET /api/v1/sellers/alice` → display_name, bio, trust
-- `GET /api/v1/users/me/profile` (auth) → includes timezone
-- `PATCH /api/v1/users/me/profile` → persists
-- `GET /api/v1/feed/by-author/{alice}` → only alice items, respects blocks
-- `POST /api/v1/users/{id}/block` → seller profile returns 404
+- `GET /api/sellers/alice` → display_name, bio, trust
+- `GET /api/users/me/profile` (auth) → includes timezone
+- `PATCH /api/users/me/profile` → persists
+- `GET /api/feed/by-author/{alice}` → only alice items, respects blocks
+- `POST /api/users/{id}/block` → seller profile returns 404
 
 ### Tests to add
 
@@ -684,7 +684,7 @@ db-seed
 
 | Question | MVP default |
 |----------|-------------|
-| Show email on `GET /api/v1/users/me/profile`? | Yes, from `user_identities`; never on public profile |
+| Show email on `GET /api/users/me/profile`? | Yes, from `user_identities`; never on public profile |
 | Hide zero-offer profiles? | No — show empty state in client |
 | Username change | Out of scope — username immutable after signup |
 | Report user | [moderation_module.md](./moderation_module.md) Wave 5 |
