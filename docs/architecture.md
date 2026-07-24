@@ -73,6 +73,8 @@ Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, 
 
 `application.yaml` lists `configure*` modules in boot order (HTTP → serialization → OpenAPI → Koin → database → JobRunr → security → routing).
 
+**Fail-fast:** auth routes require `SecurityConfig` in Koin — missing security module throws at route mount (no silent skip). Database / JobRunr may still soft-disable when no JDBC URL (intentional). `GET /jobs/ping` requires JWT.
+
 ### 2. `core/*` (infrastructure)
 
 | Package | Owns |
