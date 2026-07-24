@@ -1,7 +1,4 @@
-import {
-  createApiClient,
-  setDefaultApiClient,
-} from "@zula/api"
+import { createApiClient, setDefaultApiClient } from "@zula/api"
 import { refresh as apiRefresh } from "@zula/api/endpoints"
 
 /** Cookie-mode client for Vite `/api` proxy. Call once at app boot. */

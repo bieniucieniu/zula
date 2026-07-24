@@ -18,7 +18,7 @@ export type ApiClient = {
 function resolveBaseUrl(
   baseUrl: ApiClientOptions["baseUrl"],
   url: string,
-  options: RequestInit,
+  options: RequestInit
 ): string {
   if (typeof baseUrl === "function") {
     return baseUrl(url, options)
@@ -43,7 +43,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
   async function executeRequest<T>(
     url: string,
     requestOptions: RequestInit,
-    isRetry: boolean,
+    isRetry: boolean
   ): Promise<T> {
     const headers = new Headers(requestOptions.headers)
     if (!headers.has("Content-Type")) {
@@ -102,7 +102,7 @@ export function setDefaultApiClient(client: ApiClient) {
 export function getDefaultApiClient(): ApiClient {
   if (!defaultClient) {
     throw new Error(
-      "API client not configured; call setDefaultApiClient(createApiClient(...)) at app boot",
+      "API client not configured; call setDefaultApiClient(createApiClient(...)) at app boot"
     )
   }
   return defaultClient

@@ -31,12 +31,14 @@ import type {
   GetJobsPing202Two,
   GetJobsPing503One,
   GetJobsPing503Two,
+  GoogleOAuthCallbackParams,
   JwksResponse,
   LinkedProvidersResponse,
   OAuthProvidersResponse,
   ProblemDetails,
   RefreshRequest,
   SessionResponse,
+  StartGoogleOAuthParams,
 } from "./model"
 
 import { customInstance } from "../mutator"
@@ -189,144 +191,6 @@ export function useGetHealth<
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getGetHealthQueryOptions(options)
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>
-  }
-
-  return withQueryKey(query, queryOptions.queryKey)
-}
-
-export type getJobsPingResponse202ApplicationJson = {
-  data: GetJobsPing202One
-  status: 202
-}
-
-export type getJobsPingResponse202ApplicationProblemJson = {
-  data: GetJobsPing202Two
-  status: 202
-}
-
-export type getJobsPingResponse503ApplicationJson = {
-  data: GetJobsPing503One
-  status: 503
-}
-
-export type getJobsPingResponse503ApplicationProblemJson = {
-  data: GetJobsPing503Two
-  status: 503
-}
-
-export type getJobsPingResponseSuccess = (
-  | getJobsPingResponse202ApplicationJson
-  | getJobsPingResponse202ApplicationProblemJson
-) & {
-  headers: Headers
-}
-export type getJobsPingResponseError = (
-  | getJobsPingResponse503ApplicationJson
-  | getJobsPingResponse503ApplicationProblemJson
-) & {
-  headers: Headers
-}
-
-export const getGetJobsPingUrl = () => {
-  return `/jobs/ping`
-}
-
-export const getJobsPing = async (options?: RequestInit): Promise<getJobsPingResponseSuccess> => {
-  return customInstance<getJobsPingResponseSuccess>(getGetJobsPingUrl(), {
-    ...options,
-    method: "GET",
-  })
-}
-
-export const getGetJobsPingQueryKey = () => {
-  return [`/jobs/ping`] as const
-}
-
-export const getGetJobsPingQueryOptions = <
-  TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503One | GetJobsPing503Two,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
-  request?: SecondParameter<typeof customInstance>
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {}
-
-  const queryKey = queryOptions?.queryKey ?? getGetJobsPingQueryKey()
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobsPing>>> = ({ signal }) =>
-    getJobsPing({ signal, ...requestOptions })
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getJobsPing>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> }
-}
-
-export type GetJobsPingQueryResult = NonNullable<Awaited<ReturnType<typeof getJobsPing>>>
-export type GetJobsPingQueryError = GetJobsPing503One | GetJobsPing503Two
-
-export function useGetJobsPing<
-  TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503One | GetJobsPing503Two,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJobsPing>>,
-          TError,
-          Awaited<ReturnType<typeof getJobsPing>>
-        >,
-        "initialData"
-      >
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJobsPing<
-  TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503One | GetJobsPing503Two,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getJobsPing>>,
-          TError,
-          Awaited<ReturnType<typeof getJobsPing>>
-        >,
-        "initialData"
-      >
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-export function useGetJobsPing<
-  TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503One | GetJobsPing503Two,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-
-export function useGetJobsPing<
-  TData = Awaited<ReturnType<typeof getJobsPing>>,
-  TError = GetJobsPing503One | GetJobsPing503Two,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
-    request?: SecondParameter<typeof customInstance>
-  },
-  queryClient?: QueryClient
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetJobsPingQueryOptions(options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -569,6 +433,144 @@ export function useGetJwks<TData = Awaited<ReturnType<typeof getJwks>>, TError =
   return withQueryKey(query, queryOptions.queryKey)
 }
 
+export type getJobsPingResponse202ApplicationJson = {
+  data: GetJobsPing202One
+  status: 202
+}
+
+export type getJobsPingResponse202ApplicationProblemJson = {
+  data: GetJobsPing202Two
+  status: 202
+}
+
+export type getJobsPingResponse503ApplicationJson = {
+  data: GetJobsPing503One
+  status: 503
+}
+
+export type getJobsPingResponse503ApplicationProblemJson = {
+  data: GetJobsPing503Two
+  status: 503
+}
+
+export type getJobsPingResponseSuccess = (
+  | getJobsPingResponse202ApplicationJson
+  | getJobsPingResponse202ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getJobsPingResponseError = (
+  | getJobsPingResponse503ApplicationJson
+  | getJobsPingResponse503ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetJobsPingUrl = () => {
+  return `/jobs/ping`
+}
+
+export const getJobsPing = async (options?: RequestInit): Promise<getJobsPingResponseSuccess> => {
+  return customInstance<getJobsPingResponseSuccess>(getGetJobsPingUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetJobsPingQueryKey = () => {
+  return [`/jobs/ping`] as const
+}
+
+export const getGetJobsPingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503One | GetJobsPing503Two,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetJobsPingQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getJobsPing>>> = ({ signal }) =>
+    getJobsPing({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getJobsPing>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetJobsPingQueryResult = NonNullable<Awaited<ReturnType<typeof getJobsPing>>>
+export type GetJobsPingQueryError = GetJobsPing503One | GetJobsPing503Two
+
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503One | GetJobsPing503Two,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJobsPing>>,
+          TError,
+          Awaited<ReturnType<typeof getJobsPing>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503One | GetJobsPing503Two,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getJobsPing>>,
+          TError,
+          Awaited<ReturnType<typeof getJobsPing>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503One | GetJobsPing503Two,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetJobsPing<
+  TData = Awaited<ReturnType<typeof getJobsPing>>,
+  TError = GetJobsPing503One | GetJobsPing503Two,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getJobsPing>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetJobsPingQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
 export type listProvidersResponse200ApplicationJson = {
   data: OAuthProvidersResponse
   status: 200
@@ -701,6 +703,314 @@ export function useListProviders<
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListProvidersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type startGoogleOAuthResponse302 = {
+  data: void
+  status: 302
+}
+
+export type startGoogleOAuthResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type startGoogleOAuthResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+export type startGoogleOAuthResponseError = (
+  | startGoogleOAuthResponse302
+  | startGoogleOAuthResponse500ApplicationJson
+  | startGoogleOAuthResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export type startGoogleOAuthResponse = startGoogleOAuthResponseError
+
+export const getStartGoogleOAuthUrl = (params?: StartGoogleOAuthParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/auth/oauth/google/start?${stringifiedParams}`
+    : `/api/auth/oauth/google/start`
+}
+
+export const startGoogleOAuth = async (
+  params?: StartGoogleOAuthParams,
+  options?: RequestInit
+): Promise<startGoogleOAuthResponse> => {
+  return customInstance<startGoogleOAuthResponse>(getStartGoogleOAuthUrl(params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getStartGoogleOAuthQueryKey = (params?: StartGoogleOAuthParams) => {
+  return [`/api/auth/oauth/google/start`, ...(params ? [params] : [])] as const
+}
+
+export const getStartGoogleOAuthQueryOptions = <
+  TData = Awaited<ReturnType<typeof startGoogleOAuth>>,
+  TError = void | ProblemDetails,
+>(
+  params?: StartGoogleOAuthParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof startGoogleOAuth>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getStartGoogleOAuthQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof startGoogleOAuth>>> = ({ signal }) =>
+    startGoogleOAuth(params, { signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof startGoogleOAuth>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type StartGoogleOAuthQueryResult = NonNullable<Awaited<ReturnType<typeof startGoogleOAuth>>>
+export type StartGoogleOAuthQueryError = void | ProblemDetails
+
+export function useStartGoogleOAuth<
+  TData = Awaited<ReturnType<typeof startGoogleOAuth>>,
+  TError = void | ProblemDetails,
+>(
+  params: undefined | StartGoogleOAuthParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof startGoogleOAuth>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof startGoogleOAuth>>,
+          TError,
+          Awaited<ReturnType<typeof startGoogleOAuth>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStartGoogleOAuth<
+  TData = Awaited<ReturnType<typeof startGoogleOAuth>>,
+  TError = void | ProblemDetails,
+>(
+  params?: StartGoogleOAuthParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof startGoogleOAuth>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof startGoogleOAuth>>,
+          TError,
+          Awaited<ReturnType<typeof startGoogleOAuth>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useStartGoogleOAuth<
+  TData = Awaited<ReturnType<typeof startGoogleOAuth>>,
+  TError = void | ProblemDetails,
+>(
+  params?: StartGoogleOAuthParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof startGoogleOAuth>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useStartGoogleOAuth<
+  TData = Awaited<ReturnType<typeof startGoogleOAuth>>,
+  TError = void | ProblemDetails,
+>(
+  params?: StartGoogleOAuthParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof startGoogleOAuth>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getStartGoogleOAuthQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type googleOAuthCallbackResponse302 = {
+  data: void
+  status: 302
+}
+
+export type googleOAuthCallbackResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type googleOAuthCallbackResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+export type googleOAuthCallbackResponseError = (
+  | googleOAuthCallbackResponse302
+  | googleOAuthCallbackResponse500ApplicationJson
+  | googleOAuthCallbackResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export type googleOAuthCallbackResponse = googleOAuthCallbackResponseError
+
+export const getGoogleOAuthCallbackUrl = (params?: GoogleOAuthCallbackParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/auth/callback/google?${stringifiedParams}`
+    : `/api/auth/callback/google`
+}
+
+export const googleOAuthCallback = async (
+  params?: GoogleOAuthCallbackParams,
+  options?: RequestInit
+): Promise<googleOAuthCallbackResponse> => {
+  return customInstance<googleOAuthCallbackResponse>(getGoogleOAuthCallbackUrl(params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGoogleOAuthCallbackQueryKey = (params?: GoogleOAuthCallbackParams) => {
+  return [`/api/auth/callback/google`, ...(params ? [params] : [])] as const
+}
+
+export const getGoogleOAuthCallbackQueryOptions = <
+  TData = Awaited<ReturnType<typeof googleOAuthCallback>>,
+  TError = void | ProblemDetails,
+>(
+  params?: GoogleOAuthCallbackParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleOAuthCallback>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGoogleOAuthCallbackQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof googleOAuthCallback>>> = ({ signal }) =>
+    googleOAuthCallback(params, { signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof googleOAuthCallback>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GoogleOAuthCallbackQueryResult = NonNullable<
+  Awaited<ReturnType<typeof googleOAuthCallback>>
+>
+export type GoogleOAuthCallbackQueryError = void | ProblemDetails
+
+export function useGoogleOAuthCallback<
+  TData = Awaited<ReturnType<typeof googleOAuthCallback>>,
+  TError = void | ProblemDetails,
+>(
+  params: undefined | GoogleOAuthCallbackParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof googleOAuthCallback>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof googleOAuthCallback>>,
+          TError,
+          Awaited<ReturnType<typeof googleOAuthCallback>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGoogleOAuthCallback<
+  TData = Awaited<ReturnType<typeof googleOAuthCallback>>,
+  TError = void | ProblemDetails,
+>(
+  params?: GoogleOAuthCallbackParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof googleOAuthCallback>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof googleOAuthCallback>>,
+          TError,
+          Awaited<ReturnType<typeof googleOAuthCallback>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGoogleOAuthCallback<
+  TData = Awaited<ReturnType<typeof googleOAuthCallback>>,
+  TError = void | ProblemDetails,
+>(
+  params?: GoogleOAuthCallbackParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleOAuthCallback>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGoogleOAuthCallback<
+  TData = Awaited<ReturnType<typeof googleOAuthCallback>>,
+  TError = void | ProblemDetails,
+>(
+  params?: GoogleOAuthCallbackParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof googleOAuthCallback>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGoogleOAuthCallbackQueryOptions(params, options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>

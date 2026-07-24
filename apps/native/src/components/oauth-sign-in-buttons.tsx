@@ -49,7 +49,9 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
       disabled={disabled || oauth.pending}
       onPress={() => void oauth.signIn()}
     >
-      <Text>{oauth.pending ? "Signing in…" : `Continue with ${definition?.label ?? provider.id}`}</Text>
+      <Text>
+        {oauth.pending ? "Signing in…" : `Continue with ${definition?.label ?? provider.id}`}
+      </Text>
     </Button>
   )
 }

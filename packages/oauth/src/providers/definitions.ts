@@ -18,8 +18,6 @@ export const PROVIDER_DEFINITIONS: Record<string, OAuthProviderDefinition> = {
   },
 }
 
-export function getProviderDefinition(
-  providerId: string,
-): OAuthProviderDefinition | undefined {
+export function getProviderDefinition(providerId: string): OAuthProviderDefinition | undefined {
   return PROVIDER_DEFINITIONS[providerId]
 }

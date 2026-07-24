@@ -3,11 +3,7 @@ import { Platform } from "react-native"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import { getProviderDefinition } from "@zula/oauth"
 import { useOAuthSignIn } from "@zula/oauth/react"
-import {
-  createNativeDiscovery,
-  getNativeOAuthRedirectUri,
-  resolveNativeClientIds,
-} from "./config"
+import { createNativeDiscovery, getNativeOAuthRedirectUri, resolveNativeClientIds } from "./config"
 import { toOAuthSignInResult } from "./sign-in"
 
 type AuthSessionModule = typeof import("expo-auth-session")
