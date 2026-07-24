@@ -12,9 +12,7 @@ data class ProfileWrite(
     val sellerHeadline: String? = null,
 )
 
-/** Own-profile writes used by REST handlers. */
+/** Own-profile writes used by REST handlers. Null fields mean leave unchanged. */
 interface UserProfileWriter {
-    fun putMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite)
-
-    fun patchMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite)
+    fun updateMyProfile(actorId: Uuid, profileId: Uuid, write: ProfileWrite)
 }

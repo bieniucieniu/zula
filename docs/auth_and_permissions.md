@@ -69,7 +69,7 @@ WebSocket chat (planned) uses the same JWT at connect time.
 
 **Policy: strict hide** — authenticated viewer blocked either direction → `NotFound` on all public profile reads.
 
-Central helper: `enforcePublicTargetAccess` in `UserService`; feed/chat inject `BlockResolver` via Koin.
+Central helper: `enforcePublicTargetAccess` in `UserService` (when shipped); feed/chat will inject a `BlockResolver` contract via Koin once those features need it.
 
 | RPC | When blocked (authenticated viewer) |
 |-----|--------------------------------------|

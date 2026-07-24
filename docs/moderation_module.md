@@ -103,7 +103,7 @@ Reporters cannot target self. Admin routes require allowlisted Google ID via Kto
 ### Phase mod-C — Automation (later)
 
 - [ ] Auto-hide after N reports
-- [ ] Trust penalties via [trust_events.md](./trust_events.md) (`TrustLedgerWriter`)
+- [ ] Trust penalties via [trust_events.md](./trust_events.md) (`TrustLedgerWriter` contract when added)
 
 ---
 

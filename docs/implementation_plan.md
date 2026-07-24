@@ -2,6 +2,8 @@
 
 Master rollout plan for modules **not yet implemented** in the backend, plus **remaining phases** on partially shipped modules.
 
+Empty feature packages (`chat`/`feed`/… Module+Service+Publisher+Consumer+Routing stubs) may already exist as scaffolding. Cross-feature `core/contracts` ports are **deferred until a second caller ships** — see [architecture.md](./architecture.md#cross-feature-internal-api) and [cleanup_impl_plan.md](./cleanup_impl_plan.md).
+
 **Related:** [README.md](../README.md) · [docs index](./README.md) · [architecture](./architecture.md) · [conventions](./conventions.md) · per-module guides in `docs/*_module.md`
 
 ---

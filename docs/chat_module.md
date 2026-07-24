@@ -44,7 +44,7 @@ Feature layout:
 | Service | `ChatService.kt` | Rooms, messages, membership, block filtering |
 | Integration | `ChatWebSocket.kt` | Coroutine per connection; fan-out on `Dispatchers.IO` |
 
-Register in Koin (`chatModule`) and mount REST + WS routes from `Application.kt` via `configureChatRouting()`. Inject `BlockResolver` via Koin for delivery filtering.
+Register in Koin (`chatModule`) and mount REST + WS routes from `Application.kt` via `configureChatRouting()`. Add and inject `BlockResolver` via Koin for delivery filtering when chat ships.
 
 ---
 
@@ -74,7 +74,7 @@ WebSocket: subscribe to `room_id` after JWT handshake. [api_index.md](./api_inde
 
 ## Auth policy
 
-Participants only; respect `user_blocks` via `BlockResolver`. [auth_and_permissions.md](./auth_and_permissions.md)
+Participants only; respect `user_blocks` via a `BlockResolver` contract (add when shipping). [auth_and_permissions.md](./auth_and_permissions.md)
 
 ---
 

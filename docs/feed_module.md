@@ -543,7 +543,7 @@ class FeedService(
 }
 ```
 
-Register contract bindings in `app` (or `core/contracts`):
+Register contract bindings in `app` / `core/contracts` when feed ships (not present ahead of need):
 
 ```kotlin
 single<BlockResolver> { get<UserService>() }

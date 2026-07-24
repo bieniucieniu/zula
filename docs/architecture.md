@@ -25,8 +25,7 @@ zula/                              # root Gradle project (rootProject.name = "zu
         │   │   │   ├── database/  # SQLDelight .sq, HikariCP, migrations
         │   │   │   ├── security/  # OAuth2, JWT validation
         │   │   │   ├── openapi/   # API specs & Swagger UI
-        │   │   │   ├── jobrunr/   # JobRunr + Postgres job storage
-        │   │   │   └── contracts/ # Cross-feature Koin interfaces
+        │   │   │   └── jobrunr/   # JobRunr + Postgres job storage
         │   │   └── features/      # domain packages
         │   │       ├── auth/
         │   │       ├── user/
@@ -81,7 +80,7 @@ Production-ready modular Ktor server using **Koin, SQLDelight, OAuth2, OpenAPI, 
 | **`core/database`** | `.sq` schemas; SQLDelight-generated DAOs; HikariCP factory; safe migration runner at startup |
 | **`core/security`** | OAuth2 client configs, JWT issuer/validator, Ktor `Authentication` installs |
 | **`core/openapi`** | OpenAPI YAML, route metadata, Swagger UI at `/swagger` |
-| **`core/jobrunr`** | JobRunr fluent config; Postgres storage via Hikari; optional dashboard; `GET /jobs/ping` smoke |
+| **`core/jobrunr`** | JobRunr fluent config; Postgres storage via Hikari; optional dashboard; `GET /jobs/ping` smoke (authenticated) |
 
 ### 3. `features/*` (domain silos)
 
@@ -221,13 +220,11 @@ Current (flat `server/src/main/kotlin/`; target: `core/*` + `features/*` package
 
 - `core/database`, `core/security`, `core/jobrunr` (fluent boot; no Koin module required)
 - `features/auth`, `features/user` Koin modules
-- **Cross-feature contracts** — Koin interfaces in `core/contracts`
+- **Cross-feature contracts** — add Koin interfaces under `core/contracts/` **only when a second feature caller exists**. Empty stubs are not kept ahead of need.
 
 ```kotlin
-// Injected into feature services — do not import sibling feature packages directly
+// Example when feed/chat actually need blocks — not present until then
 single<BlockResolver> { get<UserService>() }
-single<TrustLedgerWriter> { get<UserService>() }
-single<SellerActivityWriter> { get<UserService>() }
 ```
 
 Planned additions per [implementation_plan.md](./implementation_plan.md): feed → media → …
@@ -236,13 +233,15 @@ Planned additions per [implementation_plan.md](./implementation_plan.md): feed �
 
 ## Cross-feature internal API
 
-Features **must not** import sibling `*Service.kt` classes directly. Inject Koin contract interfaces:
+Features **must not** import sibling `*Service.kt` classes directly. When a second caller appears, introduce a Koin contract interface in `core/contracts/` and bind the implementer.
 
-| Interface | Implementer | Callers (planned) | Purpose |
+| Interface (planned) | Implementer | Callers (planned) | Purpose |
 |-----------|-------------|-------------------|---------|
 | `BlockResolver` | `UserService` | FeedService, ChatService | `resolveViewerBlock` — filter lists / delivery |
 | `TrustLedgerWriter` | `UserService` | ValidationService, TradeService, ModerationService | `applyTrustEvent` — ledger + cache |
 | `SellerActivityWriter` | `UserService` | FeedService | `syncSellerActivityStats` after feed writes |
+
+These interfaces are **not in tree today**. Scaffolding feature packs may exist without them.
 
 Future interfaces (add when shipping):
 
@@ -261,20 +260,20 @@ Every cached/denormalized table needs an explicit write contract. Update this ta
 |------------|-----------------|--------|--------|------------------|
 | `user_stats.explicit_rating_avg` | `user_ratings` | UserService (`recordPeerRating`, lazy recalc) | Profile routes | Lazy 1h TTL on profile read |
 | `user_stats.implicit_trust_score` | `user_trust_ledger` | UserService (`applyTrustEvent`) | Profile routes | Immediate on write; lazy reconcile on read |
-| `seller_activity_stats` | `feed_items` *(planned)* | FeedService via `SellerActivityWriter` | `GET /sellers/{id}` | Write-through on feed create/status change |
+| `seller_activity_stats` | `feed_items` *(planned)* | FeedService via `SellerActivityWriter` *(add contract when feed ships)* | `GET /sellers/{id}` | Write-through on feed create/status change |
 | `feed_item_cards` *(feed-F, optional)* | `feed_items` + joins | FeedService worker | `GET /feed/for-you` | Async projection job |
 
 ---
 
 ## Block policy (central)
 
-All public profile reads use **strict hide** via `enforcePublicTargetAccess`:
+All public profile reads use **strict hide** via `enforcePublicTargetAccess` (when implemented on user routes):
 
 - seller profile, readme, portfolio, reviews, public activity endpoints
 - Authenticated viewer + block either direction → `404 Not Found`
 - Anonymous viewers → no block check (discovery); optional auth enriches flags on seller profile
 
-Feed and chat (when shipped) call `BlockResolver` — do not duplicate SQL.
+Feed and chat (when shipped) should inject a `BlockResolver` contract — do not duplicate SQL.
 
 ---
 

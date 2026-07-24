@@ -219,7 +219,7 @@ if (isStale) {
 
 ### 3. Trust scoring from other modules
 
-When the [trade](./trade_module.md) and [validation](./validation_module.md) modules complete a handoff, they call **`UserService` via the `TrustLedgerWriter` Koin contract** (not public REST) to:
+When the [trade](./trade_module.md) and [validation](./validation_module.md) modules complete a handoff, they call **`UserService` via a `TrustLedgerWriter` Koin contract** (add under `core/contracts` when those modules ship; not public REST) to:
 
 1. Insert `user_trust_ledger` with an `event_type` from [trust_events.md](./trust_events.md) (e.g. `TRADE_COMPLETED`).
 2. Bump `user_stats.implicit_trust_score` in the same transaction.
@@ -246,7 +246,8 @@ database.transaction {
 Register the cross-feature contract in Koin:
 
 ```kotlin
-single<TrustLedgerWriter> { get<UserService>() }
+// when validation/trade ship:
+// single<TrustLedgerWriter> { get<UserService>() }
 ```
 
 ---
