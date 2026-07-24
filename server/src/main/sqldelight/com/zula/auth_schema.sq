@@ -36,6 +36,7 @@ CREATE TABLE user_identities (
 CREATE TABLE user_sessions (
     id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT uuidv7(),
     user_id UUID AS Uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    identity_id UUID AS Uuid REFERENCES user_identities(id) ON DELETE SET NULL,
     auth_method TEXT NOT NULL,
     refresh_token_hash TEXT UNIQUE,
     device_info TEXT,
@@ -65,4 +66,5 @@ CREATE TABLE auth_challenges (
 
 CREATE INDEX user_identities_user_id ON user_identities(user_id);
 CREATE INDEX user_sessions_user_id ON user_sessions(user_id);
+CREATE INDEX user_sessions_identity_id ON user_sessions(identity_id);
 CREATE INDEX auth_challenges_target ON auth_challenges(channel, target);

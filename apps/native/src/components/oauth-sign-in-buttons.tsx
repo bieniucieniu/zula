@@ -1,12 +1,11 @@
-import { authenticateWithIdToken } from "@zula/api"
 import { useListProviders } from "@zula/api/endpoints"
 import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
 import { getProviderDefinition } from "@zula/oauth"
 import { View } from "react-native"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
+import { authenticateNativeCode } from "@/lib/api"
 import { useNativeOAuthSignIn } from "@/lib/oauth/use-native-oauth-sign-in"
-import { readStoredSession, writeStoredSession } from "@/lib/session-storage"
 
 type OAuthSignInButtonsProps = {
   disabled?: boolean
@@ -25,15 +24,15 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
   const oauth = useNativeOAuthSignIn({
     provider,
     onSuccess: async (result: OAuthSignInResult) => {
-      const stored = await readStoredSession()
-      const next = await authenticateWithIdToken({
+      if (!result.code || !result.redirectUri) {
+        throw new Error("OAuth response missing authorization code")
+      }
+      await authenticateNativeCode({
         provider: result.provider,
-        idToken: result.idToken,
-        providerRefreshToken: result.refreshToken,
-        sessionId: stored?.sessionId,
-        deviceInfo: "native",
+        code: result.code,
+        codeVerifier: result.codeVerifier,
+        redirectUri: result.redirectUri,
       })
-      await writeStoredSession(next)
       await onAuthenticated()
     },
     onError: (error) => {

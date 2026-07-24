@@ -41,6 +41,7 @@ fun Application.configureDatabase() {
 
 internal fun migrateSchema(driver: SqlDriver) {
     migrateLegacyUuidDefaults(driver)
+    migrateAuthSessionIdentityColumn(driver)
     ensureSchemaVersionTable(driver)
     val target = Database.Schema.version
     val current = readSchemaVersion(driver)
@@ -83,6 +84,20 @@ private fun migrateLegacyUuidDefaults(driver: SqlDriver) {
     driver.execute(
         identifier = null,
         sql = "DROP FUNCTION IF EXISTS generate_uuid_v7()",
+        parameters = 0,
+    )
+}
+
+private fun migrateAuthSessionIdentityColumn(driver: SqlDriver) {
+    if (!relationExists(driver, "user_sessions")) return
+    driver.execute(
+        identifier = null,
+        sql = "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS identity_id UUID REFERENCES user_identities(id) ON DELETE SET NULL",
+        parameters = 0,
+    )
+    driver.execute(
+        identifier = null,
+        sql = "CREATE INDEX IF NOT EXISTS user_sessions_identity_id ON user_sessions(identity_id)",
         parameters = 0,
     )
 }
@@ -167,6 +182,7 @@ fun createDatabase(driver: SqlDriver): Database =
         user_sessionsAdapter = User_sessions.Adapter(
             idAdapter = KotlinUuidAdapter,
             user_idAdapter = KotlinUuidAdapter,
+            identity_idAdapter = KotlinUuidAdapter,
             rotated_from_idAdapter = KotlinUuidAdapter,
         ),
         user_statsAdapter = User_stats.Adapter(

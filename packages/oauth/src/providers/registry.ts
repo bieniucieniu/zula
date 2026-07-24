@@ -6,7 +6,7 @@ const definitions = new Map<string, OAuthProviderDefinition>([
     {
       id: "google",
       label: "Google",
-      extraAuthParams: { response_mode: "fragment", prompt: "select_account" },
+      extraAuthParams: { access_type: "offline", prompt: "consent", include_granted_scopes: "true" },
     },
   ],
   [

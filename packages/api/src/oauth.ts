@@ -54,7 +54,27 @@ export async function authenticateWithIdToken(input: {
     provider: input.provider,
     idToken: input.idToken,
     providerRefreshToken: input.providerRefreshToken,
-    sessionId: input.sessionId,
+    deviceInfo: input.deviceInfo,
+    scopes: input.scopes,
+  }
+  const { data } = await authenticate(body)
+  return toStoredOAuthSession(data)
+}
+
+export async function authenticateWithCode(input: {
+  provider: string
+  code: string
+  codeVerifier?: string | null
+  redirectUri: string
+  sessionId?: string | null
+  deviceInfo?: string | null
+  scopes?: string | null
+}) {
+  const body: AuthenticateRequest = {
+    provider: input.provider,
+    code: input.code,
+    codeVerifier: input.codeVerifier,
+    redirectUri: input.redirectUri,
     deviceInfo: input.deviceInfo,
     scopes: input.scopes,
   }
@@ -72,7 +92,6 @@ export async function authenticateWithDevBypass(input: {
     provider: "dev",
     code: input.secret,
     deviceInfo: input.email,
-    sessionId: input.sessionId,
   }
   const { data } = await authenticate(body)
   return toStoredOAuthSession(data)

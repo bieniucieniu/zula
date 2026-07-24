@@ -30,6 +30,8 @@ data class AuthenticateRequest(
     val providerRefreshToken: String? = null,
     val scopes: String? = null,
     val code: String? = null,
+    val codeVerifier: String? = null,
+    val redirectUri: String? = null,
     val deviceInfo: String? = null,
 )
 
