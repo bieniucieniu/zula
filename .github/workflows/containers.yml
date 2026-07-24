@@ -34,7 +34,7 @@ jobs:
             file: docker/server/Dockerfile
             cache_scope: zula-server
           - name: web
-            image: zula/web
+            image: zula/web-app
             file: docker/web/Dockerfile
             cache_scope: zula-web
     steps:
