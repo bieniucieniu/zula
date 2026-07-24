@@ -32,10 +32,16 @@ const config = defineConfig({
     proxy: {
       "/api": {
         target: "http://127.0.0.1:8000",
-        changeOrigin: true,
-        // OAuth popup returns here; keep it on the SPA, do not proxy to Ktor.
-        bypass(req) {
-          if (req.url?.startsWith("/api/auth/callback")) return req.url
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq, req) => {
+            // Forward client's original host and protocol explicitly
+            const url = req.headers.host ?? "localhost:3000"
+            const [host, port] = url.split(":")
+
+            proxyReq.setHeader("X-Forwarded-Host", host)
+            proxyReq.setHeader("X-Forwarded-Proto", "http")
+            proxyReq.setHeader("X-Forwarded-Port", port || "3000")
+          })
         },
       },
     },

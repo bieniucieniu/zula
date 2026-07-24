@@ -11,7 +11,7 @@ fun ApplicationCall.publicBaseUrl(configuredFallback: String? = null): String {
         ?: request.header("Host")?.substringBefore(':')?.trim()
         ?: local.serverHost
 
-    if (host.isNullOrBlank() || host == "0.0.0.0") {
+    if (host.isBlank() || host == "0.0.0.0") {
         return configuredFallback?.trimEnd('/')
             ?: error("Cannot infer public URL from request; set security.appUrl / APP_URL")
     }

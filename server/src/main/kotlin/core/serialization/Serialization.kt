@@ -9,6 +9,7 @@ fun serializationModule(
     single {
         Json {
             isLenient = true
+            ignoreUnknownKeys = true
             prettyPrint = isDev
             allowComments = true
             allowTrailingComma = true

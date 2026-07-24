@@ -15,7 +15,7 @@ export function signInWithBackendGooglePopup(timeoutMs = 120_000): Promise<void>
     function cleanup() {
       window.clearTimeout(timeout)
       window.removeEventListener("message", onMessage)
-      if (!popup.closed) popup.close()
+      if (!popup?.closed) popup?.close()
     }
 
     const timeout = window.setTimeout(() => {
