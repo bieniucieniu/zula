@@ -82,7 +82,7 @@ private fun Application.installJwt(
                 }
             }
             validate { credential ->
-                val expectedIssuer = jwtIssuer(config.appUrl) ?: return@validate null
+                val expectedIssuer = normalizeIssuer(publicBaseUrl(config.appUrl))
                 val tokenIssuer = credential.payload.issuer?.let(::normalizeIssuer)
                 if (tokenIssuer != expectedIssuer) return@validate null
 
@@ -106,6 +106,6 @@ object AuthProviderNames {
     const val JWT = "auth-jwt"
 }
 
-/** Prefer configured APP_URL for iss; never trust Host/X-Forwarded-* for JWT trust. */
+/** Public issuer / base URL: same Forwarded/Host policy as [publicBaseUrl]. */
 fun jwtIssuer(configuredAppUrl: String?): String? =
     configuredAppUrl?.takeIf { it.isNotBlank() }?.let(::normalizeIssuer)

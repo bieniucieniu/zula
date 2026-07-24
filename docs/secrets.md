@@ -57,8 +57,10 @@ Legacy `JWT_SECRET` (HMAC) is replaced by asymmetric JWT keys in `core/security`
 |----------|---------|
 | `JWT_PRIVATE_KEY_PEM` | Signs session tokens (PKCS#8 PEM). Required on auth-serving pods. |
 | `JWT_PUBLIC_KEY_PEM` | Verifies tokens. Optional if private key is set (public is derived). Required alone for verify-only replicas. |
-| `JWT_AUTO_GENERATE_KEY` | `false` in cluster (default locally: `true`). Never rely on ephemeral keys in production. |
+| `JWT_AUTO_GENERATE_KEY` | Off by default in server config (`false`). Set `true` only for local/dev. Never rely on ephemeral keys in production. |
 | `JWT_AUDIENCE` | Expected `aud` claim (default `zula`). |
+| `AUTH_COOKIE_SECURE` | Cookie `Secure` flag (`security.cookies.secure`). Use `false` for local `http://` APP_URL. |
+| `PROVIDER_TOKEN_ENCRYPTION_KEY` | Required when `AUTH_REQUIRE_PROVIDER_REFRESH_ON_LOGIN=true` (boot fails if missing). |
 
 Kubernetes API access is **runtime only** — `KeysManager` in the running backend (`DefaultKeysManager` + `KubernetesJwtKeysStore`). No Gradle/CLI tasks talk to the cluster.
 
@@ -85,7 +87,7 @@ security:
     kubernetes:
       enabled: true
       secretName: zula-jwt-keys
-      autoPull: true      # load secret when env PEMs are absent
+      autoPull: true      # pull only when kubernetes.enabled && autoPull
       autoPush: false     # set true only for one-shot bootstrap jobs
 ```
 

@@ -11,6 +11,7 @@ const val OAUTH_MODE_COOKIE_NAME = "zula_oauth_mode"
 
 fun ApplicationCall.setOAuthStateCookies(state: String, nonce: String, mode: String) {
     val maxAge = 600
+    val secure = cookieSecure()
     for ((name, value) in listOf(
         OAUTH_STATE_COOKIE_NAME to state,
         OAUTH_NONCE_COOKIE_NAME to nonce,
@@ -22,7 +23,7 @@ fun ApplicationCall.setOAuthStateCookies(state: String, nonce: String, mode: Str
                 value = value,
                 maxAge = maxAge,
                 path = "/",
-                secure = true,
+                secure = secure,
                 httpOnly = true,
                 extensions = mapOf("SameSite" to "Lax"),
             ),
@@ -37,6 +38,7 @@ fun ApplicationCall.readOAuthNonceCookie(): String? = request.cookies[OAUTH_NONC
 fun ApplicationCall.readOAuthModeCookie(): String? = request.cookies[OAUTH_MODE_COOKIE_NAME]
 
 fun ApplicationCall.clearOAuthStateCookies() {
+    val secure = cookieSecure()
     for (name in listOf(OAUTH_STATE_COOKIE_NAME, OAUTH_NONCE_COOKIE_NAME, OAUTH_MODE_COOKIE_NAME)) {
         response.cookies.append(
             Cookie(
@@ -44,7 +46,7 @@ fun ApplicationCall.clearOAuthStateCookies() {
                 value = "",
                 maxAge = 0,
                 path = "/",
-                secure = true,
+                secure = secure,
                 httpOnly = true,
                 extensions = mapOf("SameSite" to "Lax"),
             ),

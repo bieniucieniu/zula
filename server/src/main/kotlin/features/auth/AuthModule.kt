@@ -19,7 +19,14 @@ val authModule = module {
     singleOf(::AuthRepository)
     single {
         val jwtConfig: SecurityConfig = get()
-        TokenEncryption(jwtConfig.jwt.providerTokenEncryptionKey)
+        val authSettings: AuthSettings = get()
+        val encryption = TokenEncryption(jwtConfig.jwt.providerTokenEncryptionKey)
+        if (authSettings.requireProviderRefreshOnLogin && !encryption.isConfigured) {
+            error(
+                "PROVIDER_TOKEN_ENCRYPTION_KEY is required when AUTH_REQUIRE_PROVIDER_REFRESH_ON_LOGIN=true",
+            )
+        }
+        encryption
     }
     single {
         val security: SecurityConfig = get()
