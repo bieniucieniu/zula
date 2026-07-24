@@ -22,13 +22,17 @@ WebSocket chat (planned) uses the same JWT at connect time.
 | RPC | Level | Notes |
 |-----|-------|-------|
 | `GetAuthProviders` | Public | Configured OAuth providers (Google, Apple) |
-| `Authenticate` | Public | Exchange provider `idToken` → access JWT (+ optional refresh token) |
+| `Authenticate` | Public | Exchange provider `idToken` or auth `code` (+ PKCE) → access JWT (+ optional refresh token) |
 | `Refresh` | Public | Rotate refresh token; issue new access JWT |
-| `GetSession` | Public / Auth | Optional Bearer JWT; else refresh cookie → session probe |
+| `GetSession` | Public / Auth | Optional Bearer JWT; else refresh cookie → session probe (may rotate cookies) |
 | `Logout` | Auth | Revoke session by `sid` and/or refresh token |
 | `ListLinkedProviders` | Auth | Own linked identities only |
+| `StartGoogleOAuth` | Public | Browser redirect/popup start (`/auth/oauth/google/start`) |
+| `GoogleOAuthCallback` | Public | Server `/auth/callback/google` — sets cookies; popup `postMessage` or redirect `/oauth/complete` |
 
 **Removed:** email OTP / magic-link login (`POST /auth/challenge` and `provider: email_otp`). Sign-in is OAuth-only (plus optional dev bypass when `AUTH_DEV_BYPASS_SECRET` is set).
+
+**Clients:** web uses backend Google popup → cookies; native uses PKCE/`authenticate` → bearer. See [clients.md](./clients.md).
 
 ---
 

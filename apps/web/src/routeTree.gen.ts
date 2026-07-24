@@ -5,7 +5,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as OauthCallbackRouteImport } from './routes/oauth/callback'
 import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
 
 const IndexRoute = IndexRouteImport.update({
@@ -18,11 +17,6 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OauthCallbackRoute = OauthCallbackRouteImport.update({
-  id: '/oauth/callback',
-  path: '/oauth/callback',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OauthCompleteRoute = OauthCompleteRouteImport.update({
   id: '/oauth/complete',
   path: '/oauth/complete',
@@ -32,34 +26,30 @@ const OauthCompleteRoute = OauthCompleteRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/oauth/callback': typeof OauthCallbackRoute
   '/oauth/complete': typeof OauthCompleteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/oauth/callback' | '/oauth/complete'
+  fullPaths: '/' | '/login' | '/oauth/complete'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/oauth/callback' | '/oauth/complete'
-  id: '__root__' | '/' | '/login' | '/oauth/callback' | '/oauth/complete'
+  to: '/' | '/login' | '/oauth/complete'
+  id: '__root__' | '/' | '/login' | '/oauth/complete'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
-  OauthCallbackRoute: typeof OauthCallbackRoute
   OauthCompleteRoute: typeof OauthCompleteRoute
 }
 
@@ -79,13 +69,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oauth/callback': {
-      id: '/oauth/callback'
-      path: '/oauth/callback'
-      fullPath: '/oauth/callback'
-      preLoaderRoute: typeof OauthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/oauth/complete': {
       id: '/oauth/complete'
       path: '/oauth/complete'
@@ -99,7 +82,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
-  OauthCallbackRoute: OauthCallbackRoute,
   OauthCompleteRoute: OauthCompleteRoute,
 }
 export const routeTree = rootRouteImport
