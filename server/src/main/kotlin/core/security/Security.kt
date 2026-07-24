@@ -5,8 +5,7 @@ import com.zula.core.security.jwt.JwtKeySet
 import com.zula.core.security.jwt.RsaSessionJwtIssuer
 import com.zula.core.security.jwt.SessionJwtIssuer
 import com.zula.core.security.jwt.keys.JwtKeySetVerifier
-import com.zula.core.security.jwt.keys.KeysManager
-import com.zula.core.security.jwt.keys.KeysManagers
+import com.zula.core.security.jwt.keys.loadJwtKeySet
 import com.zula.lib.id.Ids
 import io.ktor.client.*
 import io.ktor.http.*
@@ -15,6 +14,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
+import kotlinx.serialization.json.Json
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -37,13 +37,9 @@ fun securityModule(config: SecurityConfig): Module = module {
 
     single { config }
 
-    single<KeysManager> {
-        KeysManagers.create(config.jwt, log)
-    }
-
     single<JwtKeySet> {
-        val keysManager: KeysManager = get()
-        keysManager.resolveKeySet()
+        val json: Json = get()
+        loadJwtKeySet(config.jwt, json, log)
     }
 
     singleOf(::JwkSetProvider)

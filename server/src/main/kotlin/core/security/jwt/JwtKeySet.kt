@@ -18,6 +18,8 @@ data class JwtKeyEntry(
     val privatePem: String?,
     val active: Boolean,
 ) {
+    fun canSign(): Boolean = !privatePem.isNullOrBlank()
+
     fun verificationAlgorithm(): Algorithm =
         Algorithm.RSA256(publicPem.decodePublicKey(), null)
 
@@ -44,16 +46,7 @@ data class JwtKeySet(
 
     fun verifyKey(kid: String): JwtKeyEntry? = keys.find { it.kid == kid }
 
-    fun toLegacyJwtKeys(): JwtKeys? {
-        val active = getActiveSigningKey() ?: return null
-        return JwtKeys(
-            privateKeyPem = active.privatePem,
-            publicKeyPem = active.publicPem,
-        )
-    }
-
     companion object {
-
         fun fromJson(jsonString: String, json: Json): JwtKeySet {
             val entries: List<JwtKeyEntryJson> = json.decodeFromString(jsonString)
             return fromEntries(entries)
@@ -62,17 +55,43 @@ data class JwtKeySet(
         fun fromEntries(entries: List<JwtKeyEntryJson>): JwtKeySet =
             JwtKeySet(entries.map { it.toEntry() })
 
-        fun fromSingleKey(keys: JwtKeys, kid: String = "default", active: Boolean = true): JwtKeySet =
+        fun fromSinglePem(
+            publicPem: String,
+            privatePem: String? = null,
+            kid: String = "default",
+            active: Boolean = true,
+        ): JwtKeySet =
             JwtKeySet(
                 listOf(
                     JwtKeyEntry(
                         kid = kid,
-                        publicPem = keys.publicKeyPem,
-                        privatePem = keys.privateKeyPem,
+                        publicPem = publicPem.trim(),
+                        privatePem = privatePem?.trim(),
                         active = active,
                     ),
                 ),
             )
+
+        fun fromPrivatePem(privateKeyPem: String, kid: String = "default"): JwtKeySet =
+            fromSinglePem(
+                publicPem = publicPemFromPrivatePem(privateKeyPem),
+                privatePem = privateKeyPem.trim(),
+                kid = kid,
+            )
+
+        fun fromKeyPair(privateKeyPem: String, publicKeyPem: String, kid: String = "default"): JwtKeySet {
+            assertKeyPairMatches(privateKeyPem, publicKeyPem)
+            return fromSinglePem(
+                publicPem = publicKeyPem.trim(),
+                privatePem = privateKeyPem.trim(),
+                kid = kid,
+            )
+        }
+
+        fun generateRsa2048(kid: String = "default"): JwtKeySet {
+            val (privatePem, publicPem) = generateRsa2048Pems()
+            return fromSinglePem(publicPem = publicPem, privatePem = privatePem, kid = kid)
+        }
     }
 }
 
