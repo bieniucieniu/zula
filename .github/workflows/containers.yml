@@ -34,8 +34,7 @@ jobs:
             file: docker/server/Dockerfile
             cache_scope: zula-server
           - name: web
-            # Flat name: nested ghcr.io/.../zula/web returns 403 on push.
-            image: zula-web
+            image: zula/web
             file: docker/web/Dockerfile
             cache_scope: zula-web
     steps:
