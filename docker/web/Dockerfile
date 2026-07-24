@@ -16,8 +16,9 @@ FROM --platform=$BUILDPLATFORM ${BUN_IMAGE} AS build
 WORKDIR /workspace
 
 # --- 1. Install deps (invalidates when manifests / lockfile change) ---
+# Copy all workspace package.json files so bun.lock stays frozen (apps/* + packages/*).
 COPY package.json bun.lock ./
-COPY apps/web/package.json ./apps/web/
+COPY --parents apps/*/package.json ./
 COPY --parents packages/*/package.json ./
 RUN bun install --frozen-lockfile --filter zula --filter zula-web --filter '@zula/*'
 
