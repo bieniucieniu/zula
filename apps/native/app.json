@@ -7,17 +7,20 @@
     "icon": "./assets/images/icon.png",
     "scheme": "zula",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.zula.app"
+      "bundleIdentifier": "com.bieniucieniu.zula",
+      "deploymentTarget": "16.4"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.zula.app"
+      "package": "com.bieniucieniu.zula"
     },
     "web": {
       "bundler": "metro",
@@ -34,7 +37,9 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

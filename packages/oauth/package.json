@@ -14,12 +14,12 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@tanstack/react-query": "^5",
-    "react": ">=19",
-    "@types/react": ">=19"
+    "@tanstack/react-query": "catalog:",
+    "react": "catalog:",
+    "@types/react": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^6",
-    "vitest": "^4.1.10"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

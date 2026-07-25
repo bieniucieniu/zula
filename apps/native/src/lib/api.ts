@@ -24,7 +24,7 @@ export function configureApiClient() {
       if (!stored?.refreshToken) return false
 
       try {
-        const { data } = await apiRefresh({ data: { refreshToken: stored.refreshToken } })
+        const { data } = await apiRefresh({ refreshToken: stored.refreshToken })
         await writeStoredSession(toStoredOAuthSession(data))
         return true
       } catch {

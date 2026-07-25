@@ -75,7 +75,7 @@ export function useNativeOAuthSignIn({
   }, [])
 
   const signInExecutor = useCallback(
-    async (activeProvider: OAuthProviderInfo) => {
+    async ({ provider: activeProvider }: { provider: OAuthProviderInfo }) => {
       await ensureWebBrowserReady()
       if (!promptAsync || !request) {
         throw new Error("OAuth request not ready")

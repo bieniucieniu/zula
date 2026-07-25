@@ -1,13 +1,13 @@
-import { Icon } from "@/components/ui/icon"
-import { NativeOnlyAnimatedView } from "@/components/ui/native-only-animated-view"
-import { TextClassContext } from "@/components/ui/text"
-import { cn } from "@/lib/utils"
 import * as ContextMenuPrimitive from "@rn-primitives/context-menu"
 import { Check, ChevronDown, ChevronRight, ChevronUp } from "lucide-react-native"
 import * as React from "react"
 import { Platform, type StyleProp, StyleSheet, Text, View, type ViewStyle } from "react-native"
 import { FadeIn, ReduceMotion } from "react-native-reanimated"
 import { FullWindowOverlay as RNFullWindowOverlay } from "react-native-screens"
+import { Icon } from "@/components/ui/icon"
+import { NativeOnlyAnimatedView } from "@/components/ui/native-only-animated-view"
+import { TextClassContext } from "@/components/ui/text"
+import { cn } from "@/lib/utils"
 
 const ContextMenu = ContextMenuPrimitive.Root
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger
@@ -92,12 +92,9 @@ function ContextMenuContent({
       <FullWindowOverlay>
         <ContextMenuPrimitive.Overlay
           style={Platform.select({
-            web: overlayStyle ?? undefined,
+            web: StyleSheet.flatten(overlayStyle),
             native: overlayStyle
-              ? StyleSheet.flatten([
-                  StyleSheet.absoluteFill,
-                  overlayStyle as typeof StyleSheet.absoluteFill,
-                ])
+              ? StyleSheet.flatten([StyleSheet.absoluteFill, overlayStyle])
               : StyleSheet.absoluteFill,
           })}
           className={overlayClassName}

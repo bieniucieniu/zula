@@ -21,6 +21,11 @@ let
   '';
 in
 {
+  # System Xcode for Expo/iOS. Nix apple-sdk + clang-wrapper leak DEVELOPER_DIR,
+  # SDKROOT, and NIX_CFLAGS_COMPILE (libcxx) into xcodebuild → FP_NAN / uint8_t errors.
+  apple.sdk = null;
+  stdenv = if pkgs.stdenv.isDarwin then pkgs.stdenvNoCC else pkgs.stdenv;
+
   packages = [
     pkgs.git
     pkgs.secretspec
@@ -59,75 +64,92 @@ in
   # devenv --profile web up           → schema + Vite
   # devenv --profile native up        → schema + Expo
   # devenv --profile all up           → web + native
-  profiles = {
-    backend = {
-      module = {
-        processes.server = {
-          after = [ "devenv:processes:postgres" ];
-          exec = "${root}/gradlew :server:run";
-          ready = {
-            http.get = {
-              port = 8000;
-              path = "/health";
+  profiles =
+    let
+      expoSetup = ''
+        set -eu
+        if [ -z "''${EXPO_PUBLIC_API_URL:-}" ]; then
+          lan_ip="$(${root}/scripts/lan-ip.sh || true)"
+          host="''${lan_ip:-127.0.0.1}"
+          export EXPO_PUBLIC_API_URL="http://''${host}:8000/api"
+        fi
+        export EXPO_PUBLIC_DEV_AUTH_SECRET="''${EXPO_PUBLIC_DEV_AUTH_SECRET:-''${AUTH_DEV_BYPASS_SECRET:-${defaultDevAuthSecret}}}"
+        export EXPO_PUBLIC_DEV_AUTH_EMAIL="''${EXPO_PUBLIC_DEV_AUTH_EMAIL:-''${AUTH_DEV_BYPASS_EMAIL:-${defaultDevAuthEmail}}}"
+        echo "native: EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
+        echo "native: dev auth bypass enabled ($EXPO_PUBLIC_DEV_AUTH_EMAIL)"
+      '';
+    in
+    {
+      backend = {
+        module = {
+          processes.server = {
+            after = [ "devenv:processes:postgres" ];
+            exec = "${root}/gradlew :server:run";
+            ready = {
+              http.get = {
+                port = 8000;
+                path = "/health";
+              };
             };
           };
         };
       };
-    };
-    schema = {
-      extends = [ "backend" ];
-      module = {
-        processes.schema-sync = {
-          after = [ "devenv:processes:server" ];
-          exec = syncSchema;
+      schema = {
+        extends = [ "backend" ];
+        module = {
+          processes.schema-sync = {
+            after = [ "devenv:processes:server" ];
+            exec = syncSchema;
+          };
         };
       };
-    };
-    web = {
-      extends = [ "schema" ];
-      module = {
-        processes.web = {
-          after = [
-            "devenv:processes:schema-sync@completed"
-            "devenv:processes:server"
-          ];
-          exec = "cd apps/web && bun run dev --host";
+      web = {
+        extends = [ "schema" ];
+        module = {
+          processes.web = {
+            after = [
+              "devenv:processes:schema-sync@completed"
+              "devenv:processes:server"
+            ];
+            exec = "cd apps/web && bun run dev --host";
+          };
         };
       };
-    };
-    native = {
-      extends = [ "schema" ];
-      module = {
-        processes.native = {
-          after = [
-            "devenv:processes:schema-sync@completed"
-            "devenv:processes:server"
-          ];
-          # Expo inlines EXPO_PUBLIC_* at Metro start. Prefer explicit override;
-          # else use LAN IP so a physical device can reach the host API.
-          exec = ''
-            set -eu
-            if [ -z "''${EXPO_PUBLIC_API_URL:-}" ]; then
-              lan_ip="$(${root}/scripts/lan-ip.sh || true)"
-              host="''${lan_ip:-127.0.0.1}"
-              export EXPO_PUBLIC_API_URL="http://''${host}:8000/api"
-            fi
-            export EXPO_PUBLIC_DEV_AUTH_SECRET="''${EXPO_PUBLIC_DEV_AUTH_SECRET:-''${AUTH_DEV_BYPASS_SECRET:-${defaultDevAuthSecret}}}"
-            export EXPO_PUBLIC_DEV_AUTH_EMAIL="''${EXPO_PUBLIC_DEV_AUTH_EMAIL:-''${AUTH_DEV_BYPASS_EMAIL:-${defaultDevAuthEmail}}}"
-            echo "native: EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
-            echo "native: dev auth bypass enabled ($EXPO_PUBLIC_DEV_AUTH_EMAIL)"
-            cd ${root}/apps/native && bun run dev
-          '';
+      "native:ios" = {
+        extends = [ "schema" ];
+        module = {
+          processes.native = {
+            after = [
+              "devenv:processes:schema-sync@completed"
+              "devenv:processes:server"
+            ];
+            exec = expoSetup + ''
+              cd ${root}/apps/native && bun run ios
+            '';
+          };
         };
       };
+      "native:android" = {
+        extends = [ "schema" ];
+        module = {
+          processes.native = {
+            after = [
+              "devenv:processes:schema-sync@completed"
+              "devenv:processes:server"
+            ];
+            exec = expoSetup + ''
+              cd ${root}/apps/native && bun run android
+            '';
+          };
+        };
+      };
+      all = {
+        extends = [
+          "web"
+          "native"
+        ];
+      };
     };
-    all = {
-      extends = [
-        "web"
-        "native"
-      ];
-    };
-  };
 
   env = secrets // {
     FORCE_COLOR = "1";
@@ -158,6 +180,13 @@ in
   '';
 
   enterShell = ''
+    ${lib.optionalString pkgs.stdenv.isDarwin ''
+      # Belt-and-suspenders: never let Nix Darwin toolchain override Xcode for iOS builds.
+      unset DEVELOPER_DIR SDKROOT NIX_APPLE_SDK_VERSION
+      unset NIX_CFLAGS_COMPILE NIX_CFLAGS_COMPILE_FOR_TARGET
+      unset NIX_CXXSTDLIB_COMPILE NIX_LDFLAGS NIX_LDFLAGS_FOR_TARGET
+      unset CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
+    ''}
     echo "zula devenv"
     echo "  secrets: secretspec provider=${toString (config.secretspec.provider or "unset")} profile=${
       toString (config.secretspec.profile or "unset")
@@ -182,6 +211,9 @@ in
     else
       echo "  docker:  MISSING — needed for bun run deps:docker (Mac: Docker Desktop; Linux: docker + compose)"
     fi
+    ${lib.optionalString pkgs.stdenv.isDarwin ''
+      echo "  xcode:   $(xcode-select -p 2>/dev/null || echo MISSING)  # system Xcode (apple.sdk=null)"
+    ''}
   '';
 
   enterTest = ''
