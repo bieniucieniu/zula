@@ -24,3 +24,4 @@ devenv.local.yaml
 /.idea/inspectionProfiles
 /.DS_Store
 /.kotlin/sessions
+**/.DS_Store
