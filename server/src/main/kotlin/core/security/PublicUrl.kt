@@ -53,11 +53,15 @@ fun ApplicationCall.inferSchemeProto(json: Json = get()): String? {
             if (cf.scheme != null) return cf.scheme
         }
     }
-    return request.header("X-Forwarded-Proto")?.substringBefore(',')?.trim()
+    val url = request.header("X-Forwarded-Proto")?.substringBefore(',')?.trim()
+
+    return url
 }
 
-fun ApplicationCall.inferHost(): String? = request.header("X-Forwarded-Host")?.substringBefore(',')?.trim()
-    ?: request.header("Host")?.substringBefore(':')?.trim()
+fun ApplicationCall.inferHost(): String? {
+    val header = request.header("X-Forwarded-Host") ?: request.header("Host")
+    return header?.substringBefore(',')?.substringBefore(":")?.trim()
+}
 
 fun ApplicationCall.inferPort(): Int? =
     request.header("X-Forwarded-Port")?.substringBefore(',')?.trim()?.toIntOrNull()

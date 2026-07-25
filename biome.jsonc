@@ -13,8 +13,9 @@
       "!**/build",
       "!**/.gradle",
       "!**/.devenv",
-      // TanStack Router generated
-      "!**/routeTree.gen.ts"
+      // generated
+      "!**/routeTree.gen.ts",
+      "!**/uniwind-types.d.ts"
     ]
   },
   "formatter": {

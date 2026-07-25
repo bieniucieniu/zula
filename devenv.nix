@@ -130,6 +130,8 @@ in
   };
 
   env = secrets // {
+    FORCE_COLOR = "1";
+    CLICOLOR_FORCE = "1";
     AUTH_DEV_BYPASS_SECRET = devAuthSecret;
     AUTH_DEV_BYPASS_EMAIL = devAuthEmail;
     EXPO_PUBLIC_DEV_AUTH_SECRET = secrets.EXPO_PUBLIC_DEV_AUTH_SECRET or devAuthSecret;
