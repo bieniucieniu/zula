@@ -24,30 +24,22 @@ const config = defineConfig({
     devtools(),
     tailwindcss(),
     tanstackStart(),
-    nitro({ preset: "bun" }),
+    nitro(),
     react(),
     babel({
       presets: [reactCompilerPreset()],
     }),
   ],
-  server: {
-    proxy: {
-      "/api": {
-        target: "http://127.0.0.1:8000",
-        configure: (proxy) => {
-          proxy.on("proxyReq", (proxyReq, req) => {
-            // Forward client's original host and protocol explicitly
-            const url = req.headers.host ?? "localhost:3000"
-            const [host, port] = url.split(":")
-
-            proxyReq.setHeader("X-Forwarded-Host", host)
-            proxyReq.setHeader("X-Forwarded-Proto", "http")
-            proxyReq.setHeader("X-Forwarded-Port", port || "3000")
-          })
-        },
+  nitro: {
+    preset: "bun",
+    devProxy: {
+      "/api/**": {
+        target: "http://localhost:8000",
+        xfwd: true,
       },
     },
   },
+
   test: {
     projects: [
       {
