@@ -2,7 +2,10 @@
   "name": "zula",
   "private": true,
   "workspaces": {
-    "packages": ["packages/*", "apps/*"],
+    "packages": [
+      "packages/*",
+      "apps/*"
+    ],
     "catalog": {
       "react": "19.2.3",
       "react-dom": "19.2.3",
@@ -46,6 +49,8 @@
     "gen:api": "orval --config packages/api/orval.config.ts",
     "web": "bun run --filter zula-web dev",
     "native": "bun run --filter zula-native dev",
+    "ios": "bun run --filter zula-native ios",
+    "android": "bun run --filter zula-native android",
     "deps:docker": "docker compose up",
     "deps:docker:down": "docker compose down",
     "deps:docker:reset": "docker compose down -v"

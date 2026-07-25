@@ -180,13 +180,6 @@ in
   '';
 
   enterShell = ''
-    ${lib.optionalString pkgs.stdenv.isDarwin ''
-      # Belt-and-suspenders: never let Nix Darwin toolchain override Xcode for iOS builds.
-      unset DEVELOPER_DIR SDKROOT NIX_APPLE_SDK_VERSION
-      unset NIX_CFLAGS_COMPILE NIX_CFLAGS_COMPILE_FOR_TARGET
-      unset NIX_CXXSTDLIB_COMPILE NIX_LDFLAGS NIX_LDFLAGS_FOR_TARGET
-      unset CPATH C_INCLUDE_PATH CPLUS_INCLUDE_PATH OBJC_INCLUDE_PATH
-    ''}
     echo "zula devenv"
     echo "  secrets: secretspec provider=${toString (config.secretspec.provider or "unset")} profile=${
       toString (config.secretspec.profile or "unset")

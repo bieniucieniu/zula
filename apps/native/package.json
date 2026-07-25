@@ -6,7 +6,6 @@
     "dev": "expo start -c",
     "android": "expo run:android --device",
     "ios": "expo run:ios --device",
-    "web": "expo start -c --web",
     "clean": "rm -rf .expo node_modules",
     "storybook": "cross-env STORYBOOK_ENABLED=true expo start -c",
     "storybook:ios": "cross-env STORYBOOK_ENABLED=true expo start -c --ios",

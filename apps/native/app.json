@@ -7,9 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "zula",
     "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bieniucieniu.zula",
