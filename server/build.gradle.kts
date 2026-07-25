@@ -64,6 +64,7 @@ dependencies {
     implementation(ktorLibs.server.sse)
     implementation(ktorLibs.server.statusPages)
     implementation(ktorLibs.server.swagger)
+    implementation(ktorLibs.server.callLogging)
     implementation(libs.jobrunr)
     implementation(libs.jobrunr.kotlin)
     implementation(libs.koin.ktor)

@@ -68,3 +68,5 @@ ktor:
       - com.zula.core.security.SecurityKt.configureSecurity
       - com.zula.app.RoutingKt.configureRouting
 
+logging:
+  level: ${LOG_LEVEL:trace}
