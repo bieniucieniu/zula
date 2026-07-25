@@ -2,22 +2,20 @@ package com.zula.core.security
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
+import kotlinx.serialization.json.Json
+import org.koin.ktor.ext.get
 
 fun ApplicationCall.publicBaseUrl(configuredFallback: String? = null): String {
     val local = request.local
-    val scheme = request.header("X-Forwarded-Proto")?.substringBefore(',')?.trim()
-        ?: local.scheme
-    val host = request.header("X-Forwarded-Host")?.substringBefore(',')?.trim()
-        ?: request.header("Host")?.substringBefore(':')?.trim()
-        ?: local.serverHost
+    val scheme = inferSchemeProto() ?: local.scheme
+    val host = inferHost() ?: local.serverHost
 
     if (host.isBlank() || host == "0.0.0.0") {
         return configuredFallback?.trimEnd('/')
             ?: error("Cannot infer public URL from request; set security.appUrl / APP_URL")
     }
 
-    val port = request.header("X-Forwarded-Port")?.substringBefore(',')?.trim()?.toIntOrNull()
-        ?: local.serverPort
+    val port = inferPort() ?: local.serverPort
     val defaultPort = when (scheme) {
         "https" -> 443
         "http" -> 80
@@ -39,5 +37,29 @@ fun ApplicationCall.oauthCallbackUrl(path: String, configuredFallback: String? =
         "$base/$rootPath/$callbackPath"
     }
 }
+
+
+//Cf-Visitor: {"scheme":"https"}
+data class CloudflareVisitor(
+    val scheme: String?
+)
+
+const val CLOUDFLARE_VISITOR_HEADER = "Cf-Visitor"
+
+fun ApplicationCall.inferSchemeProto(json: Json = get()): String? {
+    request.header(CLOUDFLARE_VISITOR_HEADER)?.let {
+        runCatching {
+            val cf: CloudflareVisitor = json.decodeFromString(it)
+            if (cf.scheme != null) return cf.scheme
+        }
+    }
+    return request.header("X-Forwarded-Proto")?.substringBefore(',')?.trim()
+}
+
+fun ApplicationCall.inferHost(): String? = request.header("X-Forwarded-Host")?.substringBefore(',')?.trim()
+    ?: request.header("Host")?.substringBefore(':')?.trim()
+
+fun ApplicationCall.inferPort(): Int? =
+    request.header("X-Forwarded-Port")?.substringBefore(',')?.trim()?.toIntOrNull()
 
 fun normalizeIssuer(value: String): String = value.trimEnd('/')

@@ -69,4 +69,4 @@ ktor:
       - com.zula.app.RoutingKt.configureRouting
 
 logging:
-  level: ${LOG_LEVEL:trace}
+  level: ${LOG_LEVEL:info}
