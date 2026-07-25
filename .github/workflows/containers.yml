@@ -18,9 +18,58 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      server: ${{ steps.gates.outputs.server }}
+      web: ${{ steps.gates.outputs.web }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect path changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        if: github.event_name != 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
+        with:
+          filters: |
+            server:
+              - 'server/**'
+              - 'gradle/**'
+              - 'gradlew'
+              - 'gradlew.bat'
+              - 'gradle.properties'
+              - 'settings.gradle.kts'
+              - 'build.gradle.kts'
+              - 'docker/server/**'
+              - '.github/workflows/containers.yml'
+            web:
+              - 'apps/web/**'
+              - 'apps/*/package.json'
+              - 'packages/**'
+              - 'package.json'
+              - 'bun.lock'
+              - 'docker/web/**'
+              - '.github/workflows/containers.yml'
+
+      - name: Set build gates
+        id: gates
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "server=true" >> "$GITHUB_OUTPUT"
+            echo "web=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "server=${{ steps.filter.outputs.server }}" >> "$GITHUB_OUTPUT"
+            echo "web=${{ steps.filter.outputs.web }}" >> "$GITHUB_OUTPUT"
+          fi
+
   # Build inside Dockerfiles, publish multi-arch images.
   # Platforms: linux/amd64 (x64) + linux/arm64 (Apple Silicon, Raspberry Pi 4 / ARMv8).
   image:
+    needs: changes
+    if: |
+      (matrix.name == 'server' && needs.changes.outputs.server == 'true') ||
+      (matrix.name == 'web' && needs.changes.outputs.web == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: read
