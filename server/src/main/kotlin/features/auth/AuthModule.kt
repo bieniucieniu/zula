@@ -12,27 +12,27 @@ import com.zula.features.auth.provider.GoogleOAuthClient
 import io.ktor.client.*
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val authModule = module {
     singleOf(::AuthRepository)
-    single {
+    single<TokenEncryption?> {
         val jwtConfig: SecurityConfig = get()
         val authSettings: AuthSettings = get()
-        val encryption = TokenEncryption(jwtConfig.jwt.providerTokenEncryptionKey)
-        if (authSettings.requireProviderRefreshOnLogin && !encryption.isConfigured) {
+        val encryption = TokenEncryption.from(jwtConfig.jwt.providerTokenEncryptionKey)
+        if (authSettings.requireProviderRefreshOnLogin && encryption == null) {
             error(
                 "PROVIDER_TOKEN_ENCRYPTION_KEY is required when AUTH_REQUIRE_PROVIDER_REFRESH_ON_LOGIN=true",
             )
         }
         encryption
     }
-    single {
+    single<GoogleOAuthClient?> {
         val security: SecurityConfig = get()
+        val google = security.oauth.google ?: return@single null
         val http: HttpClient = get()
         val json: Json = get()
-        GoogleOAuthClient(security.oauth.google, http, json)
+        GoogleOAuthClient(google, http, json)
     }
     singleOf(::ProviderTokenService)
 
@@ -42,13 +42,13 @@ val authModule = module {
         val json: Json = get()
 
         AuthProviders {
-            if (security.oauth.google.isIdTokenConfigured || security.oauth.google.isConfigured) {
-                put("google", GoogleAuthProvider(security.oauth.google, http, json))
+            security.oauth.google?.let { google ->
+                put("google", GoogleAuthProvider(google, http, json))
             }
 
             val authSettings: AuthSettings = get()
-            if (security.oauth.apple.isIdTokenConfigured && authSettings.appleCodeFlowEnabled) {
-                put("apple", AppleAuthProvider(security.oauth.apple, http, json))
+            security.oauth.apple?.takeIf { authSettings.appleCodeFlowEnabled }?.let { apple ->
+                put("apple", AppleAuthProvider(apple, http, json))
             }
 
             val devAuth = security.devAuth

@@ -30,7 +30,7 @@ class AuthService(
     val securityConfig: SecurityConfig,
     val authSettings: AuthSettings,
     val providerTokenService: ProviderTokenService,
-    val googleOAuthClient: GoogleOAuthClient,
+    val googleOAuthClient: GoogleOAuthClient?,
     val json: Json,
 ) {
     private val secureRandom = SecureRandom()
@@ -38,12 +38,15 @@ class AuthService(
     fun googleCallbackRedirectUri(call: ApplicationCall): String =
         call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, securityConfig.appUrl)
 
+    private fun requireGoogleOAuthClient(): GoogleOAuthClient =
+        googleOAuthClient ?: badRequest("Google OAuth code flow is not configured")
+
     fun startGoogleOAuth(call: ApplicationCall, mode: String): String {
-        googleOAuthClient.requireConfigured()
+        val client = requireGoogleOAuthClient()
         val state = randomOAuthState()
         val nonce = randomOAuthState()
         call.setOAuthStateCookies(state, nonce, mode)
-        return googleOAuthClient.buildAuthorizeUrl(
+        return client.buildAuthorizeUrl(
             redirectUri = googleCallbackRedirectUri(call),
             state = state,
             nonce = nonce,
@@ -57,7 +60,7 @@ class AuthService(
         val expectedNonce = call.readOAuthNonceCookie() ?: unauthorized("Invalid OAuth nonce")
         call.clearOAuthStateCookies()
 
-        val tokenResponse = googleOAuthClient.exchangeCode(
+        val tokenResponse = requireGoogleOAuthClient().exchangeCode(
             code = code,
             redirectUri = googleCallbackRedirectUri(call),
         )
@@ -159,10 +162,9 @@ class AuthService(
         if (request.provider != "google") {
             badRequest("Authorization code flow is only supported for Google")
         }
-        googleOAuthClient.requireConfigured()
         val redirectUri = request.redirectUri?.takeIf { it.isNotBlank() }
             ?: badRequest("redirectUri required for authorization code flow")
-        val tokenResponse = googleOAuthClient.exchangeCode(
+        val tokenResponse = requireGoogleOAuthClient().exchangeCode(
             code = request.code!!,
             redirectUri = redirectUri,
             codeVerifier = request.codeVerifier,

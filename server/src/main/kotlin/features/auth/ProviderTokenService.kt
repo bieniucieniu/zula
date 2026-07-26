@@ -21,7 +21,7 @@ import kotlin.uuid.Uuid
 
 class ProviderTokenService(
     val repository: AuthRepository,
-    val encryption: TokenEncryption,
+    val encryption: TokenEncryption?,
     val securityConfig: SecurityConfig,
     val authSettings: AuthSettings,
     val httpClient: HttpClient,
@@ -29,10 +29,8 @@ class ProviderTokenService(
 ) {
     fun storeProviderRefresh(identityId: Uuid, refreshToken: String?) {
         if (refreshToken.isNullOrBlank()) return
-        if (!encryption.isConfigured) {
-            return
-        }
-        val enc = encryption.encrypt(refreshToken)
+        val encrypter = encryption ?: return
+        val enc = encrypter.encrypt(refreshToken)
         repository.updateIdentityProviderRefresh(
             id = identityId,
             refreshEnc = enc,
@@ -81,31 +79,39 @@ class ProviderTokenService(
     }
 
     private suspend fun resolveAccessToken(identity: User_identities, forceRefresh: Boolean = false): String {
+        val encrypter = encryption ?: badRequest("Provider token encryption is not configured")
         val now = Instant.now().epochSecond
         val cachedEnc = identity.provider_access_token_enc
         val expiresAt = identity.provider_token_expires_at
         if (!forceRefresh && cachedEnc != null && expiresAt != null && expiresAt > now + 60) {
-            return encryption.decrypt(cachedEnc)
+            return encrypter.decrypt(cachedEnc)
         }
 
         val refreshEnc = identity.provider_refresh_token_enc
             ?: badRequest("No provider refresh token stored")
-        val refresh = encryption.decrypt(refreshEnc)
+        val refresh = encrypter.decrypt(refreshEnc)
 
         return when (identity.provider) {
-            "google" -> refreshGoogleAccess(identity, refresh, now)
+            "google" -> refreshGoogleAccess(identity, refresh, now, encrypter)
             else -> badRequest("Provider token refresh not supported for ${identity.provider}")
         }
     }
 
-    private suspend fun refreshGoogleAccess(identity: User_identities, refresh: String, now: Long): String {
+    private suspend fun refreshGoogleAccess(
+        identity: User_identities,
+        refresh: String,
+        now: Long,
+        encryption: TokenEncryption,
+    ): String {
+        val google = securityConfig.oauth.google
+            ?: badRequest("Google OAuth is not configured")
         val body: String = httpClient.submitForm(
             url = "https://oauth2.googleapis.com/token",
             formParameters = Parameters.build {
                 append("grant_type", "refresh_token")
                 append("refresh_token", refresh)
-                append("client_id", securityConfig.oauth.google.clientId.orEmpty())
-                append("client_secret", securityConfig.oauth.google.clientSecret.orEmpty())
+                append("client_id", google.clientId)
+                append("client_secret", google.clientSecret)
             },
         ).bodyAsText()
 

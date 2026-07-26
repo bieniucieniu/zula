@@ -102,75 +102,70 @@ data class JwtKubernetesConfig(
 }
 
 data class OAuthConfig(
-    val google: GoogleOAuthConfig = GoogleOAuthConfig(),
-    val apple: AppleOAuthConfig = AppleOAuthConfig(),
+    val google: GoogleOAuthConfig? = null,
+    val apple: AppleOAuthConfig? = null,
 )
 
 data class GoogleOAuthConfig(
-    val clientId: String? = null,
-    val clientSecret: String? = null,
+    val clientId: String,
+    val clientSecret: String,
     val additionalClientIds: List<String> = emptyList(),
 ) {
     val idTokenAudiences: List<String>
         get() = buildList {
-            clientId?.takeIf { it.isNotBlank() }?.let(::add)
+            add(clientId)
             additionalClientIds.filter { it.isNotBlank() }.forEach(::add)
         }.distinct()
 
-    val isIdTokenConfigured: Boolean
-        get() = idTokenAudiences.isNotEmpty()
-
-    val isConfigured: Boolean
-        get() = !clientId.isNullOrBlank() && !clientSecret.isNullOrBlank()
-
     companion object {
-
-        fun from(config: ApplicationConfig?) = GoogleOAuthConfig(
-            clientId = config?.stringOrNull("clientId")?.trim(),
-            clientSecret = config?.stringOrNull("clientSecret")?.trim(),
-            additionalClientIds = config?.stringOrNull("additionalClientIds")
-                ?.split(',')
-                ?.map { it.trim() }
-                ?.filter { it.isNotEmpty() }
-                ?: emptyList(),
-        )
+        fun from(config: ApplicationConfig?): GoogleOAuthConfig? {
+            config ?: return null
+            val clientId = config.stringOrNull("clientId")?.trim() ?: return null
+            val clientSecret = config.stringOrNull("clientSecret")?.trim() ?: return null
+            return GoogleOAuthConfig(
+                clientId = clientId,
+                clientSecret = clientSecret,
+                additionalClientIds = config.stringOrNull("additionalClientIds")
+                    ?.split(',')
+                    ?.map { it.trim() }
+                    ?.filter { it.isNotEmpty() }
+                    ?: emptyList(),
+            )
+        }
     }
 }
 
 data class AppleOAuthConfig(
-    val clientId: String? = null,
-    val teamId: String? = null,
-    val keyId: String? = null,
-    val privateKeyPem: String? = null,
+    val clientId: String,
+    val teamId: String,
+    val keyId: String,
+    val privateKeyPem: String,
     val additionalClientIds: List<String> = emptyList(),
 ) {
     val idTokenAudiences: List<String>
         get() = buildList {
-            clientId?.takeIf { it.isNotBlank() }?.let(::add)
+            add(clientId)
             additionalClientIds.filter { it.isNotBlank() }.forEach(::add)
         }.distinct()
 
-    val isIdTokenConfigured: Boolean
-        get() = idTokenAudiences.isNotEmpty()
-
-    val isConfigured: Boolean
-        get() = !clientId.isNullOrBlank() &&
-                !teamId.isNullOrBlank() &&
-                !keyId.isNullOrBlank() &&
-                !privateKeyPem.isNullOrBlank()
-
     companion object {
-
-        fun from(config: ApplicationConfig?) = AppleOAuthConfig(
-            clientId = config?.stringOrNull("clientId"),
-            teamId = config?.stringOrNull("teamId"),
-            keyId = config?.stringOrNull("keyId"),
-            privateKeyPem = config?.stringOrNull("privateKeyPem"),
-            additionalClientIds = config?.stringOrNull("additionalClientIds")
-                ?.split(',')
-                ?.map { it.trim() }
-                ?.filter { it.isNotEmpty() }
-                ?: emptyList(),
-        )
+        fun from(config: ApplicationConfig?): AppleOAuthConfig? {
+            config ?: return null
+            val clientId = config.stringOrNull("clientId") ?: return null
+            val teamId = config.stringOrNull("teamId") ?: return null
+            val keyId = config.stringOrNull("keyId") ?: return null
+            val privateKeyPem = config.stringOrNull("privateKeyPem") ?: return null
+            return AppleOAuthConfig(
+                clientId = clientId,
+                teamId = teamId,
+                keyId = keyId,
+                privateKeyPem = privateKeyPem,
+                additionalClientIds = config.stringOrNull("additionalClientIds")
+                    ?.split(',')
+                    ?.map { it.trim() }
+                    ?.filter { it.isNotEmpty() }
+                    ?: emptyList(),
+            )
+        }
     }
 }

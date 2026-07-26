@@ -12,8 +12,7 @@ import java.util.Date
 
 object AppleClientSecret {
     fun generate(config: AppleOAuthConfig): String {
-        require(config.isConfigured) { "Apple OAuth is not fully configured" }
-        val privateKey = config.privateKeyPem!!.decodeEcPrivateKey()
+        val privateKey = config.privateKeyPem.decodeEcPrivateKey()
         val algorithm = Algorithm.ECDSA256(null, privateKey)
         val now = Instant.now()
         return JWT.create()

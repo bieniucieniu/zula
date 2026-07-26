@@ -1,6 +1,5 @@
 package com.zula.features.auth.provider
 
-import com.zula.core.http.badRequest
 import com.zula.core.security.GoogleOAuthConfig
 import io.ktor.client.*
 import io.ktor.client.request.forms.*
@@ -15,22 +14,15 @@ class GoogleOAuthClient(
     private val httpClient: HttpClient,
     private val json: Json,
 ) {
-    fun requireConfigured() {
-        if (!config.isConfigured) {
-            badRequest("Google OAuth code flow is not configured")
-        }
-    }
-
     fun buildAuthorizeUrl(
         redirectUri: String,
         state: String,
         nonce: String,
         promptConsent: Boolean,
     ): String {
-        requireConfigured()
         val url = "https://accounts.google.com/o/oauth2/v2/auth"
         val params = Parameters.build {
-            append("client_id", config.clientId.orEmpty())
+            append("client_id", config.clientId)
             append("redirect_uri", redirectUri)
             append("response_type", "code")
             append("scope", "openid email profile")
@@ -52,14 +44,13 @@ class GoogleOAuthClient(
         redirectUri: String,
         codeVerifier: String? = null,
     ): GoogleAuthorizationCodeResponse {
-        requireConfigured()
         val body = httpClient.submitForm(
             url = "https://oauth2.googleapis.com/token",
             formParameters = Parameters.build {
                 append("grant_type", "authorization_code")
                 append("code", code)
-                append("client_id", config.clientId.orEmpty())
-                append("client_secret", config.clientSecret.orEmpty())
+                append("client_id", config.clientId)
+                append("client_secret", config.clientSecret)
                 append("redirect_uri", redirectUri)
                 if (!codeVerifier.isNullOrBlank()) {
                     append("code_verifier", codeVerifier)

@@ -27,16 +27,13 @@ class GoogleAuthProvider(
         json = json
     )
 
-    override fun info(): OAuthProviderInfo? {
-        if (!config.isIdTokenConfigured) return null
-        return OAuthProviderInfo(
-            id = id,
-            clientId = config.clientId.orEmpty(),
-            authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-            tokenUrl = "https://accounts.google.com/o/oauth2/token",
-            scopes = listOf("openid", "email", "profile"),
-        )
-    }
+    override fun info(): OAuthProviderInfo = OAuthProviderInfo(
+        id = id,
+        clientId = config.clientId,
+        authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
+        tokenUrl = "https://accounts.google.com/o/oauth2/token",
+        scopes = listOf("openid", "email", "profile"),
+    )
 
     override suspend fun verify(credential: AuthCredential): Identity {
         val token = credential as? AuthCredential.OAuthIdToken

@@ -24,16 +24,13 @@ class AppleAuthProvider(
         json = json
     )
 
-    override fun info(): OAuthProviderInfo? {
-        if (!config.isIdTokenConfigured) return null
-        return OAuthProviderInfo(
-            id = id,
-            clientId = config.clientId.orEmpty(),
-            authorizeUrl = "https://appleid.apple.com/auth/authorize",
-            tokenUrl = "https://appleid.apple.com/auth/token",
-            scopes = listOf("name", "email"),
-        )
-    }
+    override fun info(): OAuthProviderInfo = OAuthProviderInfo(
+        id = id,
+        clientId = config.clientId,
+        authorizeUrl = "https://appleid.apple.com/auth/authorize",
+        tokenUrl = "https://appleid.apple.com/auth/token",
+        scopes = listOf("name", "email"),
+    )
 
     override suspend fun verify(credential: AuthCredential): Identity {
         val idToken = (credential as? AuthCredential.OAuthIdToken)?.idToken

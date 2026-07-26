@@ -18,22 +18,22 @@ data class OAuthProviderInfo(
 )
 
 fun OAuthConfig.configuredProviders(authSettings: AuthSettings = AuthSettings()): List<OAuthProviderInfo> = buildList {
-    if (google.isConfigured || google.isIdTokenConfigured) {
+    google?.let { google ->
         add(
             OAuthProviderInfo(
                 id = "google",
-                clientId = google.clientId.orEmpty(),
+                clientId = google.clientId,
                 authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
                 tokenUrl = "https://oauth2.googleapis.com/token",
                 scopes = listOf("openid", "email", "profile"),
             ),
         )
     }
-    if (apple.isIdTokenConfigured && authSettings.appleCodeFlowEnabled) {
+    apple?.takeIf { authSettings.appleCodeFlowEnabled }?.let { apple ->
         add(
             OAuthProviderInfo(
                 id = "apple",
-                clientId = apple.clientId.orEmpty(),
+                clientId = apple.clientId,
                 authorizeUrl = "https://appleid.apple.com/auth/authorize",
                 tokenUrl = "https://appleid.apple.com/auth/token",
                 scopes = listOf("name", "email"),
