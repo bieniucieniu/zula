@@ -17,7 +17,7 @@ export default function LoginScreen() {
 
   if (!ready || session) {
     return (
-      <View className="flex-1 items-center justify-center p-6">
+      <View className="bg-background flex-1 items-center justify-center p-6">
         <Text className="text-sm text-muted-foreground">Loading…</Text>
       </View>
     )
@@ -26,7 +26,7 @@ export default function LoginScreen() {
   return (
     <>
       <Stack.Screen options={{ title: "Sign in", headerShown: false }} />
-      <View className="flex-1 items-center justify-center p-6">
+      <View className="bg-background flex-1 items-center justify-center p-6">
         <View className="w-full max-w-sm">
           <LoginForm />
         </View>

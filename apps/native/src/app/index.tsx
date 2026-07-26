@@ -21,7 +21,7 @@ export default function Screen() {
 
   if (!ready || !session) {
     return (
-      <View className="flex-1 items-center justify-center p-6">
+      <View className="bg-background flex-1 items-center justify-center p-6">
         <Text className="text-sm text-muted-foreground">Loading…</Text>
       </View>
     )
@@ -44,7 +44,7 @@ export default function Screen() {
   return (
     <>
       <Stack.Screen options={{ title: "Zula" }} />
-      <View className="flex-1 items-center justify-center gap-4 p-6">
+      <View className="bg-background flex-1 items-center justify-center gap-4 p-6">
         <View className="max-w-sm flex-col items-center gap-2">
           <Text className="text-lg font-medium">Signed in</Text>
           <Text className="text-center text-sm text-muted-foreground">{session.email}</Text>
