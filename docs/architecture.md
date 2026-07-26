@@ -90,9 +90,11 @@ Each feature is three layers:
 
 | Layer | File pattern | Responsibility |
 |-------|--------------|----------------|
-| **Routing** | `*Routing.kt` | HTTP paths via Ktor DSL; request parsing; OpenAPI route docs |
-| **Service** | `*Service.kt` | Pure business logic; transaction wrappers; coordinates DB + jobs |
+| **Routing** | `*Routing.kt` | HTTP paths via Ktor DSL; request parsing; cookies/headers; OpenAPI route docs; **owns `ApplicationCall`** |
+| **Service** | `*Service.kt` | Business logic; transaction wrappers; coordinates DB + jobs; **no `ApplicationCall`** — take plain args / small context DTOs |
 | **Integration** | `*Consumer.kt` / `*Publisher.kt` | JobRunr handlers / `BackgroundJob.enqueue` publishers |
+
+Rule detail: [conventions.md — Keep ApplicationCall out of services](./conventions.md#keep-applicationcall-out-of-services).
 
 Example (`server/src/main/kotlin/features/feed/`):
 

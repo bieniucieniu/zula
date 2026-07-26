@@ -6,15 +6,12 @@ import com.zula.core.http.conflict
 import com.zula.core.http.unauthorized
 import com.zula.core.security.SecurityConfig
 import com.zula.core.security.jwt.SessionJwtIssuer
-import com.zula.core.security.oauthCallbackUrl
 import com.zula.features.auth.crypto.RefreshTokenGenerator
 import com.zula.features.auth.domain.*
 import com.zula.features.auth.persistence.AuthRepository
 import com.zula.features.auth.provider.AuthProviders
 import com.zula.features.auth.provider.GoogleOAuthClient
-import com.zula.core.security.oauth.OAuthPaths
 import com.zula.lib.id.Ids
-import io.ktor.server.application.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.postgresql.util.PSQLException
@@ -22,6 +19,17 @@ import java.security.SecureRandom
 import java.time.Instant
 import java.util.Base64
 import kotlin.uuid.Uuid
+
+data class AuthSessionContext(
+    val issuer: String,
+    val clientIp: String?,
+)
+
+data class GoogleOAuthStart(
+    val authorizeUrl: String,
+    val state: String,
+    val nonce: String,
+)
 
 class AuthService(
     val repository: AuthRepository,
@@ -35,41 +43,46 @@ class AuthService(
 ) {
     private val secureRandom = SecureRandom()
 
-    fun googleCallbackRedirectUri(call: ApplicationCall): String =
-        call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, securityConfig.appUrl)
-
     private fun requireGoogleOAuthClient(): GoogleOAuthClient =
         googleOAuthClient ?: badRequest("Google OAuth code flow is not configured")
 
-    fun startGoogleOAuth(call: ApplicationCall, mode: String): String {
+    fun startGoogleOAuth(mode: String, redirectUri: String): GoogleOAuthStart {
         val client = requireGoogleOAuthClient()
         val state = randomOAuthState()
         val nonce = randomOAuthState()
-        call.setOAuthStateCookies(state, nonce, mode)
-        return client.buildAuthorizeUrl(
-            redirectUri = googleCallbackRedirectUri(call),
+        val authorizeUrl = client.buildAuthorizeUrl(
+            redirectUri = redirectUri,
             state = state,
             nonce = nonce,
             promptConsent = true,
         )
+        return GoogleOAuthStart(
+            authorizeUrl = authorizeUrl,
+            state = state,
+            nonce = nonce,
+        )
     }
 
-    suspend fun completeGoogleOAuthCallback(call: ApplicationCall, code: String, state: String): AuthTokensResponse {
-        val expectedState = call.readOAuthStateCookie() ?: unauthorized("Invalid OAuth state")
+    suspend fun completeGoogleOAuthCallback(
+        code: String,
+        state: String,
+        expectedState: String,
+        expectedNonce: String,
+        redirectUri: String,
+        session: AuthSessionContext,
+    ): AuthTokensResponse {
         if (state != expectedState) unauthorized("Invalid OAuth state")
-        val expectedNonce = call.readOAuthNonceCookie() ?: unauthorized("Invalid OAuth nonce")
-        call.clearOAuthStateCookies()
 
         val tokenResponse = requireGoogleOAuthClient().exchangeCode(
             code = code,
-            redirectUri = googleCallbackRedirectUri(call),
+            redirectUri = redirectUri,
         )
         if (tokenResponse.error != null || tokenResponse.idToken.isNullOrBlank()) {
             badRequest(tokenResponse.errorDescription ?: tokenResponse.error ?: "Google token exchange failed")
         }
 
         return authenticateOAuthTokens(
-            call = call,
+            session = session,
             provider = "google",
             idToken = tokenResponse.idToken!!,
             providerRefreshToken = tokenResponse.refreshToken,
@@ -123,12 +136,12 @@ class AuthService(
         return existingIdentity.id
     }
 
-    suspend fun authenticate(call: ApplicationCall, request: AuthenticateRequest): AuthTokensResponse {
+    suspend fun authenticate(request: AuthenticateRequest, session: AuthSessionContext): AuthTokensResponse {
         return when {
-            request.provider == AuthMethods.DEV && request.code != null -> authenticateDev(call, request)
-            request.code != null -> authenticateAuthorizationCode(call, request)
+            request.provider == AuthMethods.DEV && request.code != null -> authenticateDev(request, session)
+            request.code != null -> authenticateAuthorizationCode(request, session)
             request.idToken != null -> authenticateOAuthTokens(
-                call = call,
+                session = session,
                 provider = request.provider,
                 idToken = request.idToken,
                 providerRefreshToken = request.providerRefreshToken,
@@ -140,14 +153,17 @@ class AuthService(
         }
     }
 
-    private suspend fun authenticateDev(call: ApplicationCall, request: AuthenticateRequest): AuthTokensResponse {
+    private suspend fun authenticateDev(
+        request: AuthenticateRequest,
+        session: AuthSessionContext,
+    ): AuthTokensResponse {
         val provider = providers[request.provider] ?: badRequest("Unknown auth provider: ${request.provider}")
         val identity = provider.verify(AuthCredential.DevBypass(request.code!!, email = null))
         val existingUser = repository.findUserByIdentity(identity.provider, identity.providerUserId)
         val userId = existingUser?.id ?: createUserWithUniqueUsername(identity)
         val identityId = ensureIdentity(userId, identity, CredentialsStatus.MISSING, scopes = null)
         return establishSession(
-            call = call,
+            session = session,
             userId = userId,
             identityId = identityId,
             amr = AuthMethods.DEV,
@@ -156,8 +172,8 @@ class AuthService(
     }
 
     private suspend fun authenticateAuthorizationCode(
-        call: ApplicationCall,
         request: AuthenticateRequest,
+        session: AuthSessionContext,
     ): AuthTokensResponse {
         if (request.provider != "google") {
             badRequest("Authorization code flow is only supported for Google")
@@ -173,7 +189,7 @@ class AuthService(
             badRequest(tokenResponse.errorDescription ?: tokenResponse.error ?: "Google token exchange failed")
         }
         return authenticateOAuthTokens(
-            call = call,
+            session = session,
             provider = request.provider,
             idToken = tokenResponse.idToken!!,
             providerRefreshToken = tokenResponse.refreshToken,
@@ -183,7 +199,7 @@ class AuthService(
     }
 
     private suspend fun authenticateOAuthTokens(
-        call: ApplicationCall,
+        session: AuthSessionContext,
         provider: String,
         idToken: String,
         providerRefreshToken: String?,
@@ -216,7 +232,7 @@ class AuthService(
         persistProviderRefresh(identityRow, providerRefreshToken)
 
         return establishSession(
-            call = call,
+            session = session,
             userId = userId,
             identityId = identityId,
             amr = AuthMethods.amrFor(provider),
@@ -237,7 +253,7 @@ class AuthService(
         }
     }
 
-    suspend fun refresh(call: ApplicationCall, refreshToken: String): AuthTokensResponse {
+    suspend fun refresh(refreshToken: String, session: AuthSessionContext): AuthTokensResponse {
         val hash = RefreshTokenGenerator.hash(refreshToken)
         val newRefresh = RefreshTokenGenerator.generate()
         val newHash = RefreshTokenGenerator.hash(newRefresh)
@@ -259,7 +275,7 @@ class AuthService(
             ?: unauthorized("User not found")
         val email = resolveEmail(oldSession.user_id, oldSession.identity_id)
         val accessToken = jwtIssuer.issue(
-            call = call,
+            issuer = session.issuer,
             subject = oldSession.user_id.toString(),
             claims = buildMap {
                 put("sid", nextId.toString())
@@ -317,7 +333,7 @@ class AuthService(
     }
 
     private suspend fun establishSession(
-        call: ApplicationCall,
+        session: AuthSessionContext,
         userId: Uuid,
         identityId: Uuid?,
         amr: String,
@@ -334,7 +350,7 @@ class AuthService(
             authMethod = amr,
             refreshHash = refreshHash,
             deviceInfo = deviceInfo,
-            ipAddress = call.request.local.remoteHost,
+            ipAddress = session.clientIp,
             expiresAt = refreshExpires,
             rotatedFromId = null,
         )
@@ -342,7 +358,7 @@ class AuthService(
         val user = repository.getUserById(userId) ?: unauthorized("User not found")
         val email = resolveEmail(userId, identityId)
         val accessToken = jwtIssuer.issue(
-            call = call,
+            issuer = session.issuer,
             subject = userId.toString(),
             claims = buildMap {
                 put("sid", sessionId.toString())

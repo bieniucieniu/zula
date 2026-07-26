@@ -5,11 +5,15 @@ import com.zula.core.http.badRequest
 import com.zula.core.http.unauthorized
 import com.zula.core.security.AuthProviderNames
 import com.zula.core.security.SecurityConfig
+import com.zula.core.security.oauth.OAuthPaths
+import com.zula.core.security.oauthCallbackUrl
+import com.zula.core.security.publicBaseUrl
 import com.zula.features.auth.domain.AuthenticateRequest
 import com.zula.features.auth.domain.RefreshRequest
 import com.zula.features.auth.domain.SessionResponse
 import com.zula.lib.id.Ids
 import io.ktor.http.*
+import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
@@ -27,6 +31,11 @@ fun Route.configureAuthRouting() {
     val authService: AuthService by inject()
     val jwtConfig = config.jwt
 
+    fun ApplicationCall.authSessionContext(): AuthSessionContext = AuthSessionContext(
+        issuer = publicBaseUrl(config.appUrl),
+        clientIp = request.local.remoteHost,
+    )
+
     cacheOutput(1.hours) {
         get("/auth/providers") {
             call.respond(OAuthProvidersResponse(config.oauth.configuredProviders(authSettings)))
@@ -38,8 +47,10 @@ fun Route.configureAuthRouting() {
 
     get("/auth/oauth/google/start") {
         val mode = call.request.queryParameters["mode"] ?: "redirect"
-        val authorizeUrl = authService.startGoogleOAuth(call, mode)
-        call.respondRedirect(authorizeUrl)
+        val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
+        val start = authService.startGoogleOAuth(mode, redirectUri)
+        call.setOAuthStateCookies(start.state, start.nonce, mode)
+        call.respondRedirect(start.authorizeUrl)
     }.describe {
         operationId = "startGoogleOAuth"
         tag("auth")
@@ -60,10 +71,20 @@ fun Route.configureAuthRouting() {
             return@get
         }
 
-        val tokens = authService.completeGoogleOAuthCallback(call, code, state)
+        val expectedState = call.readOAuthStateCookie() ?: unauthorized("Invalid OAuth state")
+        val expectedNonce = call.readOAuthNonceCookie() ?: unauthorized("Invalid OAuth nonce")
+        call.clearOAuthStateCookies()
+        val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
+        val tokens = authService.completeGoogleOAuthCallback(
+            code = code,
+            state = state,
+            expectedState = expectedState,
+            expectedNonce = expectedNonce,
+            redirectUri = redirectUri,
+            session = call.authSessionContext(),
+        )
         call.setAccessCookies(tokens)
         val mode = call.readOAuthModeCookie()
-        call.clearOAuthStateCookies()
         if (mode == "popup") {
             call.respondOAuthPopupResult(success = true)
         } else {
@@ -76,7 +97,7 @@ fun Route.configureAuthRouting() {
 
     post("/auth/authenticate") {
         val request: AuthenticateRequest = call.receive()
-        val tokens = authService.authenticate(call, request)
+        val tokens = authService.authenticate(request, call.authSessionContext())
 
         call.setAccessCookies(tokens)
 
@@ -92,7 +113,7 @@ fun Route.configureAuthRouting() {
         }.getOrNull()
         val refreshToken = refreshBody?.refreshToken ?: call.readRefreshCookie()
         ?: badRequest("refreshToken required")
-        val tokens = authService.refresh(call, refreshToken)
+        val tokens = authService.refresh(refreshToken, call.authSessionContext())
         call.setAccessCookies(tokens)
 
         call.respond(tokens)
@@ -120,7 +141,7 @@ fun Route.configureAuthRouting() {
             }
 
             val refreshToken = call.readRefreshCookie() ?: unauthorized("Not authenticated")
-            val tokens = authService.refresh(call, refreshToken)
+            val tokens = authService.refresh(refreshToken, call.authSessionContext())
             call.setAccessCookies(tokens)
             call.respond(
                 SessionResponse(

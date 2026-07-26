@@ -51,7 +51,7 @@ fun securityModule(config: SecurityConfig): Module = module {
 
     single<SessionJwtIssuer> {
         val keySet: JwtKeySet = get()
-        RsaSessionJwtIssuer(keySet, config.jwt, config.appUrl)
+        RsaSessionJwtIssuer(keySet, config.jwt)
     }
 
     single {

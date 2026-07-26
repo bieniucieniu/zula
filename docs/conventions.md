@@ -22,6 +22,39 @@ Follow [architecture.md](./architecture.md#ktor-project-layout):
 
 ---
 
+## Keep `ApplicationCall` out of services
+
+Routing owns HTTP. Services take plain data.
+
+| Layer | Owns | Must not |
+|-------|------|----------|
+| **`*Routing.kt`** | Parse body/query, cookies, headers, `ApplicationCall` side effects (set/clear cookies, redirects, respond), derive request-scoped values (`publicBaseUrl`, client IP, callback URLs) | Business rules, DB writes |
+| **`*Service.kt`** | Domain logic, persistence, token/session issuance with already-resolved args (e.g. `issuer: String`, `clientIp`) | Take `ApplicationCall` / touch cookies / read `call.request` |
+
+**Do:**
+
+```kotlin
+// Routing
+val session = AuthSessionContext(
+    issuer = call.publicBaseUrl(config.appUrl),
+    clientIp = call.request.local.remoteHost,
+)
+val tokens = authService.authenticate(request, session)
+call.setAccessCookies(tokens)
+call.respond(tokens)
+```
+
+**Don't:**
+
+```kotlin
+// Service — avoid
+fun authenticate(call: ApplicationCall, request: AuthenticateRequest): AuthTokensResponse
+```
+
+If a service needs several request-derived values, pass a small data class (e.g. `AuthSessionContext`) instead of the call. Cookie set/read/clear stays in routing (see `features/auth`).
+
+---
+
 ## Pagination
 
 **User-facing lists** (feeds, reviews, portfolio, activity, chat history) use **keyset (cursor) pagination**:
