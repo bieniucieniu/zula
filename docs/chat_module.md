@@ -6,7 +6,7 @@
 
 **Depends on:** [trade_module.md](./trade_module.md), [user_module.md](./user_module.md) (blocks) · **Unblocks:** [moderation](./moderation_module.md) content reports, [groups](./groups_module.md) group chat
 
-**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 3.2 (`chat-A`, `chat-B`); group rooms Wave 4b · **Product:** [product_vision.md](./product_vision.md)
+**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 3.2 (`chat-A`); group rooms Wave 3.3 (`groups-C`, **MVP**) · **Product:** [product_vision.md](./product_vision.md)
 
 **Related:** [architecture.md](./architecture.md) · [clients.md](./clients.md) · [conventions.md](./conventions.md)
 

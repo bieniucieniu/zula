@@ -33,7 +33,7 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 | Profile & portfolio | 🔶 partial (A–B) | [profile_portfolio_module.md](./profile_portfolio_module.md) | `features:user` |
 | Feed | ⬜ | [feed_module.md](./feed_module.md) | `features:feed` (planned) |
 | Traits | ⬜ | [traits_module.md](./traits_module.md) | (SQL only → feed) |
-| Groups | ⬜ | [groups_module.md](./groups_module.md) | `features:groups` (planned) |
+| Groups | ⬜ | [groups_module.md](./groups_module.md) | `features:groups` — **MVP** Wave 1 |
 | Media | ⬜ | [media_module.md](./media_module.md) | `features:media` (planned) |
 | Geolocation | ⬜ | [geolocation_module.md](./geolocation_module.md) | `features:geolocation` (planned) |
 | Trade | ⬜ | [trade_module.md](./trade_module.md) | `features:trade` (planned) |

@@ -6,7 +6,7 @@
 
 **Depends on:** [user_module.md](./user_module.md), [feed_module.md](./feed_module.md) · **Unblocks:** group-scoped chat, group feed filters · **Product:** [product_vision.md](./product_vision.md)
 
-**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 4b
+**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 1 (`groups-A`/`groups-B` — **MVP**); Wave 3 (`groups-C` group chat)
 
 **Related:** [architecture.md](./architecture.md) · [schema.md](./schema.md#groups-module-planned) · [chat_module.md](./chat_module.md) · [conventions.md](./conventions.md)
 
@@ -68,7 +68,7 @@ Canonical index: [schema.md](./schema.md#groups-module-planned).
 
 **Chat linkage:** `chat_rooms.group_id` nullable (alongside `trade_id`) — [chat_module.md](./chat_module.md).
 
-**Next migration:** `000009_groups.sql` (after moderation numbering in plan; renumber on merge if needed).
+**Next migration:** `000003_groups.sql` (Wave 1 MVP — right after feed).
 
 ---
 
@@ -106,7 +106,7 @@ Full matrix: [auth_and_permissions.md](./auth_and_permissions.md)
 
 ### Phase groups-A — Schema & CRUD
 
-- [ ] `000009_groups.sql` + SQLDelight
+- [ ] `000003_groups.sql` + SQLDelight
 - [ ] Create / get / patch group; join / leave
 - [ ] Tests: slug unique, private hide, owner role
 
