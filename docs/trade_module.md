@@ -1,12 +1,12 @@
-# Guide: Trade Module (Barter Coordination)
+# Guide: Trade Module (Deal Coordination)
 
-**Trade templates** for direct swaps and cash meetups. No in-app payments — coordination and state only.
+**Trade templates** for **barter/swap** and **cash meetups**. Platform coordinates state and handoff — **no in-app card payments** in the current plan.
 
 **Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:trade`
 
 **Depends on:** [feed_module.md](./feed_module.md), [user_module.md](./user_module.md) · **Unblocks:** [validation](./validation_module.md), [chat](./chat_module.md), [profile_portfolio](./profile_portfolio_module.md) portfolio-E
 
-**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 3 (`trade-A` … `trade-D`)
+**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 3 (`trade-A` … `trade-D`) · **Product:** [product_vision.md](./product_vision.md)
 
 **Related:** [architecture.md](./architecture.md) · [schema.md](./schema.md#trade-module-planned--wave-3) · [trust_events.md](./trust_events.md)
 
@@ -17,10 +17,11 @@
 | Goal | Detail |
 |------|--------|
 | **Trade entity** | Initiator + counterparty, linked feed item(s), lifecycle |
-| **Templates** | `swap`, `meetup_cash` |
+| **Templates** | `swap` (barter), `meetup_cash` (cash meetup coordination) |
 | **State machine** | Backend-owned transitions |
 | **Trust hook** | Completion → validation → ledger |
 | **Public disclosure** | Opt-in summaries for profiles |
+| **Safety** | Protect both parties’ time/reputation; payments stay off-platform unless product adds escrow later |
 
 ---
 

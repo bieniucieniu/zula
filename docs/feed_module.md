@@ -1,12 +1,12 @@
 # Guide: Building the Feed Module From Zero
 
-Listings for needs, offers, and trip availabilities — trait filters and personalized ranking via embeddings.
+Listings for **needs**, **offers** (services and product **batches**), and **trip** availabilities — trait filters and personalized ranking via embeddings.
 
 **Status:** Doc complete · **Backend:** ⬜ not started · **Feature:** `features:feed`
 
-**Depends on:** [user_module.md](./user_module.md), [traits_module.md](./traits_module.md) · **Unblocks:** [seller_profile](./seller_profile_module.md) seller-C, [profile_portfolio](./profile_portfolio_module.md) portfolio-C/D
+**Depends on:** [user_module.md](./user_module.md), [traits_module.md](./traits_module.md) · **Unblocks:** [seller_profile](./seller_profile_module.md) seller-C, [profile_portfolio](./profile_portfolio_module.md) portfolio-C/D, [groups](./groups_module.md) group feed
 
-**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 1
+**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 1 · **Product:** [product_vision.md](./product_vision.md)
 
 **Related:** [architecture.md](./architecture.md) · [schema.md](./schema.md#feed-module-planned--wave-1) · [conventions.md](./conventions.md) · [api_index.md](./api_index.md)
 
@@ -20,8 +20,10 @@ Conventions: thin clients, backend-owned business rules, SQLDelight, REST via Kt
 |------|--------|
 | **Primary feed** | `GET /api/feed/for-you` — personalized, hybrid-ranked page |
 | **Fallback feed** | `GET /api/feed` — chronological when viewer has no interest profile (cold start) |
-| **Filtered feeds** | By trait (`GET /api/feed/by-trait/{traitId}`) and by author (`GET /api/feed/by-author/{authorId}`) |
+| **Filtered feeds** | By trait, by author, later by **group** |
 | **Writes** | `POST /api/feed/items`, `GET /api/feed/items/{id}` |
+| **Kinds** | `offer` (services / batches), `need` (buyer demand), `trip` (travel/availability) |
+| **Product rule** | Not a casual single-item classifieds board — see [product_vision.md](./product_vision.md) |
 | **No N+1** | Fixed ~4–5 SQL round-trips per page regardless of `limit` |
 | **Controllable ranking** | Hard SQL filters first; vectors re-rank inside a bounded candidate set |
 
