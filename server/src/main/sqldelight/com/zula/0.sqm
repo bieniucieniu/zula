@@ -1,4 +1,5 @@
 import kotlin.uuid.Uuid;
+
 CREATE TABLE users (
     id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT uuidv7(),
     username TEXT NOT NULL UNIQUE

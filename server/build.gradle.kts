@@ -32,6 +32,7 @@ sqldelight {
     databases {
         register("Database") {
             packageName.set("com.zula")
+            deriveSchemaFromMigrations.set(true)
             // Export .sqm -> valid SQL for Flyway etc. Run manually:
             // ./gradlew :server:generateMainDatabaseMigrations
             migrationOutputDirectory = layout.buildDirectory.dir("resources/db/migrations")
