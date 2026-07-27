@@ -9,13 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
+import { Route as SellersIdOrUsernameRouteImport } from './routes/sellers/$idOrUsername'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -23,40 +25,58 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OauthCompleteRoute = OauthCompleteRouteImport.update({
   id: '/oauth/complete',
   path: '/oauth/complete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellersIdOrUsernameRoute = SellersIdOrUsernameRouteImport.update({
+  id: '/sellers/$idOrUsername',
+  path: '/sellers/$idOrUsername',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/oauth/complete': typeof OauthCompleteRoute
+  '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/oauth/complete': typeof OauthCompleteRoute
+  '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/oauth/complete': typeof OauthCompleteRoute
+  '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/oauth/complete'
+  fullPaths: '/' | '/login' | '/profile' | '/oauth/complete' | '/sellers/$idOrUsername'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/oauth/complete'
-  id: '__root__' | '/' | '/login' | '/oauth/complete'
+  to: '/' | '/login' | '/profile' | '/oauth/complete' | '/sellers/$idOrUsername'
+  id: '__root__' | '/' | '/login' | '/profile' | '/oauth/complete' | '/sellers/$idOrUsername'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
   OauthCompleteRoute: typeof OauthCompleteRoute
+  SellersIdOrUsernameRoute: typeof SellersIdOrUsernameRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -75,11 +95,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/oauth/complete': {
       id: '/oauth/complete'
       path: '/oauth/complete'
       fullPath: '/oauth/complete'
       preLoaderRoute: typeof OauthCompleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sellers/$idOrUsername': {
+      id: '/sellers/$idOrUsername'
+      path: '/sellers/$idOrUsername'
+      fullPath: '/sellers/$idOrUsername'
+      preLoaderRoute: typeof SellersIdOrUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,7 +122,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
   OauthCompleteRoute: OauthCompleteRoute,
+  SellersIdOrUsernameRoute: SellersIdOrUsernameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
