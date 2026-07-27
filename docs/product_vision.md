@@ -105,4 +105,4 @@ AI is a **quiet assistant**, not an agent that owns the relationship.
 | Multi-party chat | [chat_module.md](./chat_module.md) |
 | Reports / hide | [moderation_module.md](./moderation_module.md) |
 
-Rollout order: [implementation_plan.md](./implementation_plan.md).
+Rollout order: [implementation_plan.md](./implementation_plan.md). **MVP includes groups** (membership + group feed in Wave 1; group chat in Wave 3) — not a post-launch add-on.

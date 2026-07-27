@@ -17,14 +17,14 @@ Empty feature packages (`chat`/`feed`/… Module+Service+Publisher+Consumer+Rout
 | [user](./user_module.md) | Full | ✅ MVP | Auth, trust, blocks, profiles |
 | [seller_profile](./seller_profile_module.md) | Full | ✅ A–B | Listings tab blocked on feed |
 | [profile_portfolio](./profile_portfolio_module.md) | Full | ✅ A–B | Activity/feed body blocked on feed |
-| [feed](./feed_module.md) | Full | ⬜ | **Critical path** — offers / needs / trips |
+| [feed](./feed_module.md) | Full | ⬜ | **MVP critical** — offers / needs / trips |
 | [traits](./traits_module.md) | Plan | ⬜ | Can ship inside feed Phase A |
-| [groups](./groups_module.md) | Plan | ⬜ | Communities after feed + chat MVP |
+| [groups](./groups_module.md) | Plan | ⬜ | **MVP critical** — communities + group feed (Wave 1) |
 | [media](./media_module.md) | Plan | ⬜ | MinIO in local dev only |
 | [geolocation](./geolocation_module.md) | Plan | ⬜ | `location_tag` column exists |
 | [trade](./trade_module.md) | Plan | ⬜ | Templates: `swap`, `meetup_cash` |
 | [validation](./validation_module.md) | Plan | ⬜ | Trust ledger exists |
-| [chat](./chat_module.md) | Plan | ⬜ | Trade rooms first; group rooms later |
+| [chat](./chat_module.md) | Plan | ⬜ | Trade rooms + group rooms (MVP Wave 3) |
 | [moderation](./moderation_module.md) | Plan | ⬜ | `BlockUser` only |
 
 ---
@@ -83,18 +83,20 @@ flowchart TB
 
 Execute in order. Within a wave, items marked **∥** can run in parallel.
 
-### Wave 1 — Marketplace core (blocks MVP demo)
+### Wave 1 — Marketplace core + communities (**MVP**)
 
-**Goal:** Users can post, browse, and filter needs/offers/trips.
+**Goal:** Users post/browse offers/needs/trips **and** join FB-style communities with group-scoped feed. Groups are **not** post-MVP polish — they are part of the product spine ([product_vision.md](./product_vision.md)).
 
 | Step | Module | Deliverable | Doc |
 |------|--------|-------------|-----|
 | 1.1 | **traits** | `traits` table, seed tree, SQLDelight, no standalone route yet | [traits_module.md](./traits_module.md) |
 | 1.2 | **feed** Phase A–C | Schema, `FeedService`, `CreateFeedItem`, `ListForYouFeed`, blocks filter | [feed_module.md](./feed_module.md) |
 | 1.3 | **feed** Phase D | `ListFeedByAuthor`, `ListFeedByTrait` | feed |
-| 1.4 | **seller_profile** Phase C | Wire seller listings tab; sync `seller_activity_stats` | [seller_profile_module.md](./seller_profile_module.md) |
+| 1.4 | **groups** Phase A | `groups` / `group_members`, create/join/leave | [groups_module.md](./groups_module.md) |
+| 1.5 | **groups** Phase B + **feed** | `feed_items.group_id`, `GET /feed/by-group/{id}`, member-only create | groups, feed |
+| 1.6 | **seller_profile** Phase C | Wire seller listings tab; sync `seller_activity_stats` | [seller_profile_module.md](./seller_profile_module.md) |
 
-**Exit criteria:** Seller page = profile header + author feed; seed data browsable via REST.
+**Exit criteria:** Seller page = profile header + author feed; public group with members + group feed posts via REST.
 
 ---
 
@@ -114,23 +116,24 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 
 ---
 
-### Wave 3 — Barter lifecycle
+### Wave 3 — Barter lifecycle + group chat (**MVP**)
 
-**Goal:** Two parties coordinate a swap/meetup and close it with trust impact.
+**Goal:** Two parties coordinate a swap/meetup and close it with trust impact; communities get multi-party chat.
 
 | Step | Module | Deliverable | Doc |
 |------|--------|-------------|-----|
 | 3.1 | **trade** Phase A–B | `trades` schema, state machine, templates (swap / meetup) | [trade_module.md](./trade_module.md) |
 | 3.2 | **chat** Phase A | Trade-scoped room, message persistence, WS gateway | [chat_module.md](./chat_module.md) |
-| 3.3 | **trade** Phase C | Link feed item → trade; cancel/expire rules | trade |
-| 3.4 | **validation** Phase A–B | PIN/QR generation, handoff verify, trust delta | [validation_module.md](./validation_module.md) |
-| 3.5 | **user** | `RecordPeerRating` caller from validation; optional `SubmitRating` RPC | user_module |
+| 3.3 | **groups** Phase C + **chat** | Group-scoped multi-party rooms (`chat_rooms.group_id`) | [groups_module.md](./groups_module.md), chat |
+| 3.4 | **trade** Phase C | Link feed item → trade; cancel/expire rules | trade |
+| 3.5 | **validation** Phase A–B | PIN/QR generation, handoff verify, trust delta | [validation_module.md](./validation_module.md) |
+| 3.6 | **user** | `RecordPeerRating` caller from validation; optional `SubmitRating` RPC | user_module |
 
-**Exit criteria:** Alice offers → Bob starts trade → chat → meetup PIN → trust + rating unlock.
+**Exit criteria:** Alice offers → Bob starts trade → chat → meetup PIN → trust + rating unlock; group room with 2+ members messaging.
 
 ---
 
-### Wave 4 — Profile depth & public history
+### Wave 4 — Profile depth & public history *(post-MVP polish)*
 
 | Step | Module | Deliverable | Doc |
 |------|--------|-------------|-----|
@@ -138,20 +141,6 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 | 4.2 | **trade** Phase D | `trade_public_disclosures`, opt-in summaries | trade |
 | 4.3 | **profile_portfolio** Phase E | Case-study portfolio items linked to trades | profile_portfolio |
 | 4.4 | **seller_profile** | `completed_trade_count` on activity stats | seller_profile |
-
----
-
-### Wave 4b — Communities (groups)
-
-**Goal:** FB-style import/resell/craft communities with membership and group feed.
-
-| Step | Module | Deliverable | Doc |
-|------|--------|-------------|-----|
-| 4b.1 | **groups** Phase A | `groups` / `group_members`, create/join/leave | [groups_module.md](./groups_module.md) |
-| 4b.2 | **groups** Phase B + **feed** | `feed_items.group_id`, `GET /feed/by-group/{id}` | groups, feed |
-| 4b.3 | **groups** Phase C + **chat** | Group-scoped multi-party rooms | groups, chat |
-
-**Exit criteria:** Public group with members; group feed posts; group chat room.
 
 ---
 
@@ -173,14 +162,14 @@ Shipped DDL: SQLDelight **`0.sqm`** (users, profiles, stats, blocks, ratings, se
 
 | File | Wave | Module(s) |
 |------|------|-----------|
-| `000002_feed.sql` | 1 | traits + feed |
-| `000003_media.sql` | 2 | media (or merge into feed if tables already stubbed) |
-| `000004_geolocation.sql` | 2 | geolocation |
-| `000005_trades.sql` | 3 | trade |
-| `000006_chat.sql` | 3 | chat |
-| `000007_validation.sql` | 3 | validation |
-| `000008_moderation.sql` | 5 | moderation |
-| `000009_groups.sql` | 4b | groups (+ feed/chat FK columns if not earlier) |
+| `000002_feed.sql` | 1 | traits + feed (nullable `group_id` OK before groups table if deferred FK) |
+| `000003_groups.sql` | 1 | groups + `group_members`; FK `feed_items.group_id` |
+| `000004_media.sql` | 2 | media (or merge into feed if tables already stubbed) |
+| `000005_geolocation.sql` | 2 | geolocation |
+| `000006_trades.sql` | 3 | trade |
+| `000007_chat.sql` | 3 | chat (+ `chat_rooms.group_id` for groups-C) |
+| `000008_validation.sql` | 3 | validation |
+| `000009_moderation.sql` | 5 | moderation |
 
 Canonical table index: [schema.md](./schema.md). Renumber before merge if plans change.
 
@@ -206,11 +195,10 @@ Quick checklist:
 
 | Wave | Web | Android | iOS |
 |------|-----|---------|-----|
-| 1 | Feed + seller listings | Feed tab | Feed tab |
+| 1 | Feed + groups + seller listings | Feed + groups | Feed + groups |
 | 2 | Media upload + location tag | Same | Same |
-| 3 | Trade + chat + QR | Same | Same |
+| 3 | Trade + chat + group rooms + QR | Same | Same |
 | 4 | Activity + case studies | Profile tabs | Profile tabs |
-| 4b | Groups | Same | Same |
 | 5 | Report flow | Same | Same |
 
 ---
@@ -231,11 +219,10 @@ Optimize for user-visible outcomes:
 
 | Wave | Vertical slice | Primary phase IDs |
 |------|----------------|-------------------|
-| 1 | Seller page with listings | `feed-A`…`feed-D`, `traits-A`, `seller-C` |
+| 1 | Seller listings **+ community group feed** | `feed-A`…`feed-D`, `traits-A`, `groups-A`, `groups-B`, `seller-C` |
 | 2 | Photo offer + location tag | `media-A`, `geo-A`, `portfolio-C` |
-| 3 | Complete deal (swap/meetup) | `trade-A`…`trade-C`, `chat-A`, `validation-A` |
+| 3 | Complete deal (swap/meetup) **+ group chat** | `trade-A`…`trade-C`, `chat-A`, `groups-C`, `validation-A` |
 | 4 | Public history | `portfolio-D`, `trade-D` |
-| 4b | Community group | `groups-A`…`groups-C` |
 | 5 | Safety | `mod-A`, `mod-B` |
 
 ### 2. Use Koin contract interfaces for cross-feature calls
@@ -253,12 +240,16 @@ A phase is **done** only when:
 
 ### 4. Deferred / polish phases (explicitly out of MVP path)
 
+**MVP path = Waves 1–3** (feed + **groups A–B** + media/geo + trade/chat/**groups-C** + validation). Wave 4–5 and rows below are polish.
+
 | Phase | Module | Note |
 |-------|--------|------|
 | feed-F | feed | `feed_item_cards` — only if metrics justify |
 | portfolio-G | profile | Full-text search on documents |
 | chat-C | chat | Typing indicators |
 | media-D | media | AI tag metadata display |
+| groups-D | groups | Owner remove/report hooks — with moderation Wave 5 |
+| groups discovery | groups | `GET /api/groups` search — link/slug enough for MVP |
 
 ### 5. Wave 1 integration test
 
@@ -276,7 +267,7 @@ Golden path test (skipped until feed ships): `app/src/test/kotlin/.../Wave1Selle
 | Profile & portfolio | [profile_portfolio_module.md](./profile_portfolio_module.md) | [schema.md](./schema.md) |
 | Feed | [feed_module.md](./feed_module.md) | [architecture.md](./architecture.md) |
 | Traits | [traits_module.md](./traits_module.md) | owned by feed migration |
-| Groups | [groups_module.md](./groups_module.md) | communities |
+| Groups | [groups_module.md](./groups_module.md) | **MVP** communities |
 | Media | [media_module.md](./media_module.md) | |
 | Geolocation | [geolocation_module.md](./geolocation_module.md) | |
 | Trade | [trade_module.md](./trade_module.md) | swap + meetup templates |

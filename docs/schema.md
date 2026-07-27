@@ -159,13 +159,13 @@ On delete/replace, owning feature calls `releaseKey`. On create/link, calls `com
 |-------|---------|
 | `feed_item_media` | Per-item media rows: `object_key`, `sort_order`, optional `embedding` |
 
-Defined in feed migration (`000002_feed.sql`). See [feed_module.md](./feed_module.md). Optional later: `feed_items.group_id` → [groups](#groups-module-planned).
+Defined in feed migration (`000002_feed.sql`). See [feed_module.md](./feed_module.md). Wave 1: `feed_items.group_id` → [groups](#groups-module-planned).
 
 ---
 
-## Groups module *(planned — Wave 4b)*
+## Groups module *(planned — Wave 1 MVP)*
 
-*Doc: [groups_module.md](./groups_module.md)* · migration: `000009_groups.sql`
+*Doc: [groups_module.md](./groups_module.md)* · migration: `000003_groups.sql`
 
 | Table | Purpose |
 |-------|---------|
