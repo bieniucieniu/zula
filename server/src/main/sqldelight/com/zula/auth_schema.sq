@@ -53,6 +53,33 @@ CREATE TABLE user_stats (
     last_calculated_at BIGINT NOT NULL
 );
 
+CREATE TABLE user_blocks (
+    blocker_id UUID AS Uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blocked_id UUID AS Uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (blocker_id, blocked_id)
+);
+
+CREATE TABLE user_ratings (
+    id UUID AS Uuid NOT NULL PRIMARY KEY DEFAULT uuidv7(),
+    reviewer_id UUID AS Uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    reviewee_id UUID AS Uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    rating BIGINT NOT NULL,
+    comment TEXT,
+    UNIQUE (reviewer_id, reviewee_id)
+);
+
+CREATE TABLE seller_activity_stats (
+    user_id UUID AS Uuid NOT NULL PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    active_offer_count BIGINT NOT NULL DEFAULT 0,
+    active_need_count BIGINT NOT NULL DEFAULT 0,
+    active_trip_count BIGINT NOT NULL DEFAULT 0,
+    fulfilled_item_count BIGINT NOT NULL DEFAULT 0,
+    completed_trade_count BIGINT NOT NULL DEFAULT 0,
+    updated_at BIGINT NOT NULL
+);
+
 CREATE INDEX user_identities_user_id ON user_identities(user_id);
 CREATE INDEX user_sessions_user_id ON user_sessions(user_id);
 CREATE INDEX user_sessions_identity_id ON user_sessions(identity_id);
+CREATE INDEX user_blocks_blocked_id ON user_blocks(blocked_id);
+CREATE INDEX user_ratings_reviewee_id ON user_ratings(reviewee_id, id);

@@ -6,6 +6,9 @@ import org.koin.dsl.binds
 import org.koin.dsl.module
 
 val userModule = module {
+    single {
+        UserAdminConfig.fromEnv(System.getenv("ADMIN_GOOGLE_ID"))
+    }
     singleOf(::UserRepository)
     singleOf(::UserService) binds arrayOf(UserProfileWriter::class)
 }

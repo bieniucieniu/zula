@@ -64,6 +64,8 @@ internal fun migrateSchema(driver: SqlDriver) {
             writeSchemaVersion(driver, target)
         }
     }
+    // Additive tables for DBs created before user social schema (Schema.migrate may be empty).
+    ensureUserSocialTables(driver)
 }
 
 private fun migrateLegacyUuidDefaults(driver: SqlDriver) {
@@ -106,6 +108,60 @@ private fun dropAuthChallengesTable(driver: SqlDriver) {
     driver.execute(
         identifier = null,
         sql = "DROP TABLE IF EXISTS auth_challenges",
+        parameters = 0,
+    )
+}
+
+private fun ensureUserSocialTables(driver: SqlDriver) {
+    if (!relationExists(driver, "users")) return
+    driver.execute(
+        identifier = null,
+        sql = """
+            CREATE TABLE IF NOT EXISTS user_blocks (
+                blocker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                blocked_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                PRIMARY KEY (blocker_id, blocked_id)
+            )
+        """.trimIndent(),
+        parameters = 0,
+    )
+    driver.execute(
+        identifier = null,
+        sql = "CREATE INDEX IF NOT EXISTS user_blocks_blocked_id ON user_blocks(blocked_id)",
+        parameters = 0,
+    )
+    driver.execute(
+        identifier = null,
+        sql = """
+            CREATE TABLE IF NOT EXISTS user_ratings (
+                id UUID NOT NULL PRIMARY KEY DEFAULT uuidv7(),
+                reviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                reviewee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                rating BIGINT NOT NULL,
+                comment TEXT,
+                UNIQUE (reviewer_id, reviewee_id)
+            )
+        """.trimIndent(),
+        parameters = 0,
+    )
+    driver.execute(
+        identifier = null,
+        sql = "CREATE INDEX IF NOT EXISTS user_ratings_reviewee_id ON user_ratings(reviewee_id, id)",
+        parameters = 0,
+    )
+    driver.execute(
+        identifier = null,
+        sql = """
+            CREATE TABLE IF NOT EXISTS seller_activity_stats (
+                user_id UUID NOT NULL PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+                active_offer_count BIGINT NOT NULL DEFAULT 0,
+                active_need_count BIGINT NOT NULL DEFAULT 0,
+                active_trip_count BIGINT NOT NULL DEFAULT 0,
+                fulfilled_item_count BIGINT NOT NULL DEFAULT 0,
+                completed_trade_count BIGINT NOT NULL DEFAULT 0,
+                updated_at BIGINT NOT NULL
+            )
+        """.trimIndent(),
         parameters = 0,
     )
 }
@@ -195,6 +251,18 @@ fun createDatabase(driver: SqlDriver): Database =
         ),
         usersAdapter = Users.Adapter(
             idAdapter = KotlinUuidAdapter
+        ),
+        user_blocksAdapter = User_blocks.Adapter(
+            blocker_idAdapter = KotlinUuidAdapter,
+            blocked_idAdapter = KotlinUuidAdapter,
+        ),
+        user_ratingsAdapter = User_ratings.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            reviewer_idAdapter = KotlinUuidAdapter,
+            reviewee_idAdapter = KotlinUuidAdapter,
+        ),
+        seller_activity_statsAdapter = Seller_activity_stats.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
         ),
     )
 
