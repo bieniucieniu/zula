@@ -99,9 +99,10 @@ See [profile_portfolio_module.md](./profile_portfolio_module.md) for length limi
 
 ## Database & migrations
 
-- SQLDelight `.sq` files live in `server/src/main/sqldelight/com/zula/`.
-- Schema is applied at startup via SQLDelight `Schema.create` + `ensureUuidV7Defaults` (disable auto-migrate via env `AUTO_MIGRATE=false`).
-- Never run destructive SQL outside versioned migration files when those are introduced.
+- SQLDelight files live in `server/src/main/sqldelight/com/zula/`.
+- **DDL** in versioned `.sqm` migrations (`0.sqm` = init). **Queries** in `.sq` (`deriveSchemaFromMigrations = true`).
+- Startup applies `Schema.create` / `Schema.migrate` and stamps `zula_schema_version` (that version table is created in Kotlin, not in `.sqm`). Disable via `AUTO_MIGRATE=false`.
+- Never run destructive SQL outside versioned migration files.
 
 Canonical table list: [schema.md](./schema.md).
 

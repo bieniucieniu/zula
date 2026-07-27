@@ -1,10 +1,11 @@
 # Zula database schema
 
-**Canonical DDL** lives in SQLDelight schema files under `server/src/main/sqldelight/com/zula/` (e.g. `auth_schema.sq`, `user.sq`). This document is the index by module — update it when adding tables or migrations.
+**Canonical DDL** lives in SQLDelight migrations under `server/src/main/sqldelight/com/zula/` (init: `0.sqm`). Query files (`.sq`) hold statements only — `deriveSchemaFromMigrations = true`. This document is the index by module — update it when adding tables or migrations.
 
-**Shipped schema:** `auth_schema.sq` (users, profiles, identities, sessions, stats, blocks, ratings, seller_activity_stats)  
+**Shipped schema:** `0.sqm` (users, profiles, identities, sessions, stats, blocks, ratings, seller_activity_stats)  
+**Version bookkeeping:** `zula_schema_version` created in Kotlin (`Database.kt`), not in `.sqm`.  
 **Removed:** `auth_challenges` (email OTP leftover) — dropped on migrate if present.  
-**Next planned:** feed/traits tables in a new `.sq` file (see [implementation_plan.md](./implementation_plan.md))
+**Next planned:** feed/traits as `1.sqm` / `000002_feed` (see [implementation_plan.md](./implementation_plan.md))
 
 **PostgreSQL:** 18+ required (`uuidv7()` is built-in). The server checks `server_version_num >= 180000` at startup.
 

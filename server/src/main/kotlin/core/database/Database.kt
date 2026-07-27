@@ -1,6 +1,5 @@
 package com.zula.core.database
 
-import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.jdbc.asJdbcDriver
 import com.zaxxer.hikari.HikariDataSource
@@ -39,9 +38,11 @@ fun Application.configureDatabase() {
     }
 }
 
+/**
+ * Applies SQLDelight `.sqm` migrations. Table DDL lives in `0.sqm` (init).
+ * Only [zula_schema_version] is created here — not via `.sqm`.
+ */
 internal fun migrateSchema(driver: SqlDriver) {
-    migrateLegacyUuidDefaults(driver)
-    migrateAuthSessionIdentityColumn(driver)
     dropAuthChallengesTable(driver)
     ensureSchemaVersionTable(driver)
     val target = Database.Schema.version
@@ -49,8 +50,7 @@ internal fun migrateSchema(driver: SqlDriver) {
 
     when {
         current < 0 -> {
-            // .sq CREATE TABLE lives in Schema.create; migrate() is empty without .sqm files.
-            // If create succeeded but version stamp failed, tables remain while current stays 0.
+            // Fresh DB: Schema.create runs init migration(s) derived from .sqm files.
             Database.Schema.create(driver)
             writeSchemaVersion(driver, target)
         }
@@ -64,104 +64,12 @@ internal fun migrateSchema(driver: SqlDriver) {
             writeSchemaVersion(driver, target)
         }
     }
-    // Additive tables for DBs created before user social schema (Schema.migrate may be empty).
-    ensureUserSocialTables(driver)
-}
-
-private fun migrateLegacyUuidDefaults(driver: SqlDriver) {
-    val uuidPrimaryKeyTables = listOf(
-        "users",
-        "user_identities",
-        "user_sessions",
-    )
-
-    for (table in uuidPrimaryKeyTables) {
-        driver.execute(
-            identifier = null,
-            sql = "ALTER TABLE IF EXISTS $table ALTER COLUMN id SET DEFAULT uuidv7()",
-            parameters = 0,
-        )
-    }
-
-    driver.execute(
-        identifier = null,
-        sql = "DROP FUNCTION IF EXISTS generate_uuid_v7()",
-        parameters = 0,
-    )
-}
-
-private fun migrateAuthSessionIdentityColumn(driver: SqlDriver) {
-    if (!relationExists(driver, "user_sessions")) return
-    driver.execute(
-        identifier = null,
-        sql = "ALTER TABLE user_sessions ADD COLUMN IF NOT EXISTS identity_id UUID REFERENCES user_identities(id) ON DELETE SET NULL",
-        parameters = 0,
-    )
-    driver.execute(
-        identifier = null,
-        sql = "CREATE INDEX IF NOT EXISTS user_sessions_identity_id ON user_sessions(identity_id)",
-        parameters = 0,
-    )
 }
 
 private fun dropAuthChallengesTable(driver: SqlDriver) {
     driver.execute(
         identifier = null,
         sql = "DROP TABLE IF EXISTS auth_challenges",
-        parameters = 0,
-    )
-}
-
-private fun ensureUserSocialTables(driver: SqlDriver) {
-    if (!relationExists(driver, "users")) return
-    driver.execute(
-        identifier = null,
-        sql = """
-            CREATE TABLE IF NOT EXISTS user_blocks (
-                blocker_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                blocked_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                PRIMARY KEY (blocker_id, blocked_id)
-            )
-        """.trimIndent(),
-        parameters = 0,
-    )
-    driver.execute(
-        identifier = null,
-        sql = "CREATE INDEX IF NOT EXISTS user_blocks_blocked_id ON user_blocks(blocked_id)",
-        parameters = 0,
-    )
-    driver.execute(
-        identifier = null,
-        sql = """
-            CREATE TABLE IF NOT EXISTS user_ratings (
-                id UUID NOT NULL PRIMARY KEY DEFAULT uuidv7(),
-                reviewer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                reviewee_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-                rating BIGINT NOT NULL,
-                comment TEXT,
-                UNIQUE (reviewer_id, reviewee_id)
-            )
-        """.trimIndent(),
-        parameters = 0,
-    )
-    driver.execute(
-        identifier = null,
-        sql = "CREATE INDEX IF NOT EXISTS user_ratings_reviewee_id ON user_ratings(reviewee_id, id)",
-        parameters = 0,
-    )
-    driver.execute(
-        identifier = null,
-        sql = """
-            CREATE TABLE IF NOT EXISTS seller_activity_stats (
-                user_id UUID NOT NULL PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-                active_offer_count BIGINT NOT NULL DEFAULT 0,
-                active_need_count BIGINT NOT NULL DEFAULT 0,
-                active_trip_count BIGINT NOT NULL DEFAULT 0,
-                fulfilled_item_count BIGINT NOT NULL DEFAULT 0,
-                completed_trade_count BIGINT NOT NULL DEFAULT 0,
-                updated_at BIGINT NOT NULL
-            )
-        """.trimIndent(),
         parameters = 0,
     )
 }
@@ -178,28 +86,6 @@ private fun ensureSchemaVersionTable(driver: SqlDriver) {
         0,
     )
 }
-
-private fun relationExists(driver: SqlDriver, name: String): Boolean =
-    driver.executeQuery(
-        null,
-        // language=PostgreSQL
-        """
-        SELECT EXISTS (
-            SELECT 1
-            FROM pg_catalog.pg_class c
-            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-            WHERE n.nspname = current_schema()
-              AND c.relname = ?
-              AND c.relkind = 'r'
-        )
-        """.trimIndent(),
-        { cursor ->
-            QueryResult.Value(cursor.next().value && cursor.getBoolean(0) == true)
-        },
-        1,
-    ) {
-        bindString(0, name)
-    }.value
 
 private fun readSchemaVersion(driver: SqlDriver): Long {
     return driver.executeQuery(
