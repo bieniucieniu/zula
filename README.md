@@ -1,13 +1,18 @@
 # zula
 
-Monorepo: Ktor API server + React SPA.
+Monorepo: Ktor API + React web + Expo native.
+
+**Product:** social marketplace for small services, craft batches, and import/resell communities — see [docs/product_vision.md](./docs/product_vision.md).
 
 ## Structure
 
 ```text
 zula/
 ├── apps/web/     # Vite + React frontend
+├── apps/native/  # Expo
+├── packages/     # @zula/api, @zula/oauth
 ├── server/       # Ktor backend
+├── docs/         # Module guides + product vision
 └── gradle/       # Shared Gradle version catalog
 ```
 
@@ -21,14 +26,18 @@ zula/
 | `./gradlew :server:build` | Build the server JAR            |
 | `./gradlew :server:test`  | Run server tests                |
 
-API routes are under `/api`. OAuth login/callback stay at `/login` and `/callback`.
+API routes are under `/api`.
 
 ```bash
 cd apps/web && bun run dev
 cd apps/native && bun run dev
 ```
 
-Vite dev server runs on port 5173 and proxies `/api`, `/login`, and `/callback` to the Ktor server.
+Vite proxies `/api` to the Ktor server.
+
+## Docs
+
+Start at [docs/README.md](./docs/README.md) → [product vision](./docs/product_vision.md) → [implementation plan](./docs/implementation_plan.md).
 
 ## Links
 
