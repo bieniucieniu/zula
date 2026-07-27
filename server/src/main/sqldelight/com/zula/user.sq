@@ -109,14 +109,169 @@ SELECT * FROM users WHERE username = ? LIMIT 1;
 getUserProfile:
 SELECT * FROM user_profiles WHERE user_id = ? LIMIT 1;
 
+ensureUserProfile:
+INSERT INTO user_profiles (user_id, display_name, updated_at)
+VALUES (?, ?, ?)
+ON CONFLICT(user_id) DO NOTHING;
+
 updateUserProfile:
 UPDATE user_profiles SET
-    display_name = ?,
-    avatar_url = ?,
-    bio = ?,
-    timezone = ?,
-    preferred_language = ?,
-    location_tag = ?,
-    seller_headline = ?,
-    updated_at = ?
+    display_name = COALESCE(:display_name, display_name),
+    avatar_url = COALESCE(:avatar_url, avatar_url),
+    bio = COALESCE(:bio, bio),
+    timezone = COALESCE(:timezone, timezone),
+    preferred_language = COALESCE(:preferred_language, preferred_language),
+    location_tag = COALESCE(:location_tag, location_tag),
+    seller_headline = COALESCE(:seller_headline, seller_headline),
+    updated_at = :updated_at
+WHERE user_id = :user_id;
+
+getSellerProfileById:
+SELECT
+    u.id,
+    u.username,
+    up.display_name,
+    up.avatar_url,
+    up.bio,
+    up.seller_headline,
+    up.location_tag,
+    up.timezone,
+    up.preferred_language,
+    CAST(COALESCE(us.explicit_rating_avg, 5.0) AS REAL) AS explicit_rating_avg,
+    COALESCE(us.implicit_trust_score, 100) AS implicit_trust_score,
+    us.last_calculated_at
+FROM users u
+LEFT JOIN user_profiles up ON up.user_id = u.id
+LEFT JOIN user_stats us ON us.user_id = u.id
+WHERE u.id = ?
+LIMIT 1;
+
+getSellerProfileByUsername:
+SELECT
+    u.id,
+    u.username,
+    up.display_name,
+    up.avatar_url,
+    up.bio,
+    up.seller_headline,
+    up.location_tag,
+    up.timezone,
+    up.preferred_language,
+    CAST(COALESCE(us.explicit_rating_avg, 5.0) AS REAL) AS explicit_rating_avg,
+    COALESCE(us.implicit_trust_score, 100) AS implicit_trust_score,
+    us.last_calculated_at
+FROM users u
+LEFT JOIN user_profiles up ON up.user_id = u.id
+LEFT JOIN user_stats us ON us.user_id = u.id
+WHERE u.username = ?
+LIMIT 1;
+
+getUserStats:
+SELECT * FROM user_stats WHERE user_id = ? LIMIT 1;
+
+upsertUserStatsValues:
+INSERT INTO user_stats (user_id, explicit_rating_avg, implicit_trust_score, last_calculated_at)
+VALUES (?, ?, ?, ?)
+ON CONFLICT(user_id) DO UPDATE SET
+    explicit_rating_avg = excluded.explicit_rating_avg,
+    implicit_trust_score = excluded.implicit_trust_score,
+    last_calculated_at = excluded.last_calculated_at;
+
+updateImplicitTrustScore:
+UPDATE user_stats
+SET implicit_trust_score = ?, last_calculated_at = ?
 WHERE user_id = ?;
+
+calculateUserRatingAvg:
+SELECT CAST(COALESCE(AVG(rating), 5.0) AS REAL) AS avg_rating
+FROM user_ratings
+WHERE reviewee_id = ?;
+
+countUserRatings:
+SELECT count(*) AS rating_count
+FROM user_ratings
+WHERE reviewee_id = ?;
+
+listRecentSellerReviews:
+SELECT
+    ur.id,
+    ur.rating,
+    ur.comment,
+    reviewer.username AS reviewer_username
+FROM user_ratings ur
+JOIN users reviewer ON reviewer.id = ur.reviewer_id
+WHERE ur.reviewee_id = ?
+ORDER BY ur.id DESC
+LIMIT ?;
+
+listSellerReviewsFirstPage:
+SELECT
+    ur.id,
+    ur.rating,
+    ur.comment,
+    reviewer.username AS reviewer_username
+FROM user_ratings ur
+JOIN users reviewer ON reviewer.id = ur.reviewer_id
+WHERE ur.reviewee_id = ?
+ORDER BY ur.id DESC
+LIMIT ?;
+
+listSellerReviewsPage:
+SELECT
+    ur.id,
+    ur.rating,
+    ur.comment,
+    reviewer.username AS reviewer_username
+FROM user_ratings ur
+JOIN users reviewer ON reviewer.id = ur.reviewer_id
+WHERE ur.reviewee_id = ?
+  AND ur.id < ?
+ORDER BY ur.id DESC
+LIMIT ?;
+
+getSellerActivityStats:
+SELECT * FROM seller_activity_stats WHERE user_id = ? LIMIT 1;
+
+isBlockedEitherDirection:
+SELECT EXISTS (
+    SELECT 1 FROM user_blocks
+    WHERE (blocker_id = ? AND blocked_id = ?)
+       OR (blocker_id = ? AND blocked_id = ?)
+) AS blocked;
+
+hasViewerBlockedSeller:
+SELECT EXISTS (
+    SELECT 1 FROM user_blocks
+    WHERE blocker_id = ? AND blocked_id = ?
+) AS blocked;
+
+hasSellerBlockedViewer:
+SELECT EXISTS (
+    SELECT 1 FROM user_blocks
+    WHERE blocker_id = ? AND blocked_id = ?
+) AS blocked;
+
+blockUser:
+INSERT INTO user_blocks (blocker_id, blocked_id)
+VALUES (?, ?)
+ON CONFLICT DO NOTHING;
+
+unblockUser:
+DELETE FROM user_blocks
+WHERE blocker_id = ? AND blocked_id = ?;
+
+primaryEmailForUser:
+SELECT email FROM user_identities
+WHERE user_id = ? AND email IS NOT NULL
+ORDER BY id
+LIMIT 1;
+
+findGoogleProviderUserId:
+SELECT provider_user_id FROM user_identities
+WHERE user_id = ? AND provider = 'google'
+LIMIT 1;
+
+insertUserRating:
+INSERT INTO user_ratings (reviewer_id, reviewee_id, rating, comment)
+VALUES (?, ?, ?, ?)
+RETURNING id;
