@@ -1,4 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import {
+  useBlockUser,
+  useGetMyProfile,
+  useGetSellerProfile,
+  useUnblockUser,
+} from "@zula/api/endpoints"
 import { useState } from "react"
 import {
   ProfileShell,
@@ -9,12 +15,6 @@ import {
 } from "@/components/profile/seller-profile-view"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
-import {
-  useBlockUser,
-  useMyProfile,
-  useSellerProfile,
-  useUnblockUser,
-} from "@/lib/profile-api"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/sellers/$idOrUsername")({
@@ -28,10 +28,14 @@ function SellerPage() {
   const { idOrUsername } = Route.useParams()
   const { session, ready } = useAuth()
   const navigate = useNavigate()
-  const sellerQuery = useSellerProfile(idOrUsername)
-  const myProfileQuery = useMyProfile(ready && !!session)
-  const blockUser = useBlockUser(idOrUsername)
-  const unblockUser = useUnblockUser(idOrUsername)
+  const sellerQuery = useGetSellerProfile(idOrUsername)
+  const myProfileQuery = useGetMyProfile({
+    query: {
+      enabled: ready && !!session,
+    },
+  })
+  const blockUser = useBlockUser()
+  const unblockUser = useUnblockUser()
   const [actionError, setActionError] = useState<string | null>(null)
 
   if (sellerQuery.isLoading) {
@@ -66,9 +70,9 @@ function SellerPage() {
     }
     try {
       if (viewerHasBlocked) {
-        await unblockUser.mutateAsync(profile.userId)
+        await unblockUser.mutateAsync({ userId: profile.userId })
       } else {
-        await blockUser.mutateAsync(profile.userId)
+        await blockUser.mutateAsync({ userId: profile.userId })
       }
     } catch (err) {
       const detail =

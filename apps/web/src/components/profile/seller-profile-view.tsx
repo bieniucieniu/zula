@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router"
-import type { SellerProfileResponse } from "@/lib/profile-api"
+import type { SellerProfileResponse } from "@zula/api"
 import { cn } from "@/lib/utils"
 
 function initials(profile: SellerProfileResponse) {
@@ -33,7 +33,7 @@ export function ProfileAvatar({
     <div
       className={cn(
         "flex size-20 items-center justify-center bg-muted font-heading text-lg font-medium text-muted-foreground",
-        className,
+        className
       )}
       aria-hidden
     >
@@ -122,22 +122,14 @@ export function RecentReviews({ profile }: { profile: SellerProfileResponse }) {
             <span className="font-medium">@{review.reviewerUsername}</span>
             <span className="tabular-nums text-muted-foreground">{review.rating}/5</span>
           </div>
-          {review.comment ? (
-            <p className="text-sm text-foreground/80">{review.comment}</p>
-          ) : null}
+          {review.comment ? <p className="text-sm text-foreground/80">{review.comment}</p> : null}
         </li>
       ))}
     </ul>
   )
 }
 
-export function ProfileShell({
-  children,
-  title,
-}: {
-  children: React.ReactNode
-  title?: string
-}) {
+export function ProfileShell({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
     <div className="min-h-svh bg-background">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-10">

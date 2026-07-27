@@ -23,6 +23,7 @@ import type {
 import type {
   AuthTokensResponse,
   AuthenticateRequest,
+  BlockUserResponse,
   GetHealth200One,
   GetHealth200Two,
   GetHealth503One,
@@ -34,11 +35,19 @@ import type {
   GoogleOAuthCallbackParams,
   JwksResponse,
   LinkedProvidersResponse,
+  ListSellerReviewsParams,
+  ListSellerReviewsResponse,
+  MyProfileResponse,
   OAuthProvidersResponse,
   ProblemDetails,
   RefreshRequest,
+  SellerProfileResponse,
   SessionResponse,
   StartGoogleOAuthParams,
+  UnblockUserResponse,
+  UpdateMyProfileRequest,
+  UpdateTrustRequest,
+  UserResponse,
 } from "./model"
 
 import { customInstance } from "../mutator"
@@ -1406,7 +1415,7 @@ export type logoutResponseError = (
 }
 
 export const getLogoutUrl = () => {
-  return `/api/auth/logout`
+  return `/api/auth/auth/logout`
 }
 
 export const logout = async (
@@ -1616,6 +1625,1203 @@ export function useListLinkedProviders<
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getListLinkedProvidersQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getSellerProfileResponse200ApplicationJson = {
+  data: SellerProfileResponse
+  status: 200
+}
+
+export type getSellerProfileResponse200ApplicationProblemJson = {
+  data: SellerProfileResponse
+  status: 200
+}
+
+export type getSellerProfileResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getSellerProfileResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getSellerProfileResponseSuccess = (
+  | getSellerProfileResponse200ApplicationJson
+  | getSellerProfileResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getSellerProfileResponseError = (
+  | getSellerProfileResponse500ApplicationJson
+  | getSellerProfileResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetSellerProfileUrl = (idOrUsername: string) => {
+  return `/api/sellers/${idOrUsername}`
+}
+
+export const getSellerProfile = async (
+  idOrUsername: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getSellerProfileResponseSuccess> => {
+  return customInstance<getSellerProfileResponseSuccess>(getGetSellerProfileUrl(idOrUsername), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetSellerProfileQueryKey = (idOrUsername: string) => {
+  return [`/api/sellers/${idOrUsername}`] as const
+}
+
+export const getGetSellerProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSellerProfile>>,
+  TError = ProblemDetails,
+>(
+  idOrUsername: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetSellerProfileQueryKey(idOrUsername)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSellerProfile>>> = ({ signal }) =>
+    getSellerProfile(idOrUsername, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: idOrUsername !== null && idOrUsername !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetSellerProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getSellerProfile>>>
+export type GetSellerProfileQueryError = ProblemDetails
+
+export function useGetSellerProfile<
+  TData = Awaited<ReturnType<typeof getSellerProfile>>,
+  TError = ProblemDetails,
+>(
+  idOrUsername: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSellerProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getSellerProfile>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSellerProfile<
+  TData = Awaited<ReturnType<typeof getSellerProfile>>,
+  TError = ProblemDetails,
+>(
+  idOrUsername: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSellerProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getSellerProfile>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetSellerProfile<
+  TData = Awaited<ReturnType<typeof getSellerProfile>>,
+  TError = ProblemDetails,
+>(
+  idOrUsername: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetSellerProfile<
+  TData = Awaited<ReturnType<typeof getSellerProfile>>,
+  TError = ProblemDetails,
+>(
+  idOrUsername: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSellerProfileQueryOptions(idOrUsername, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type listSellerReviewsResponse200ApplicationJson = {
+  data: ListSellerReviewsResponse
+  status: 200
+}
+
+export type listSellerReviewsResponse200ApplicationProblemJson = {
+  data: ListSellerReviewsResponse
+  status: 200
+}
+
+export type listSellerReviewsResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listSellerReviewsResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listSellerReviewsResponseSuccess = (
+  | listSellerReviewsResponse200ApplicationJson
+  | listSellerReviewsResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listSellerReviewsResponseError = (
+  | listSellerReviewsResponse500ApplicationJson
+  | listSellerReviewsResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListSellerReviewsUrl = (userId: string, params?: ListSellerReviewsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/reviews/seller/${userId}?${stringifiedParams}`
+    : `/api/reviews/seller/${userId}`
+}
+
+export const listSellerReviews = async (
+  userId: string,
+  params?: ListSellerReviewsParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listSellerReviewsResponseSuccess> => {
+  return customInstance<listSellerReviewsResponseSuccess>(getListSellerReviewsUrl(userId, params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListSellerReviewsQueryKey = (userId: string, params?: ListSellerReviewsParams) => {
+  return [`/api/reviews/seller/${userId}`, ...(params ? [params] : [])] as const
+}
+
+export const getListSellerReviewsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSellerReviews>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params?: ListSellerReviewsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSellerReviews>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListSellerReviewsQueryKey(userId, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listSellerReviews>>> = ({ signal }) =>
+    listSellerReviews(userId, params, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: userId !== null && userId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listSellerReviews>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListSellerReviewsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSellerReviews>>
+>
+export type ListSellerReviewsQueryError = ProblemDetails
+
+export function useListSellerReviews<
+  TData = Awaited<ReturnType<typeof listSellerReviews>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params: undefined | ListSellerReviewsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSellerReviews>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSellerReviews>>,
+          TError,
+          Awaited<ReturnType<typeof listSellerReviews>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSellerReviews<
+  TData = Awaited<ReturnType<typeof listSellerReviews>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params?: ListSellerReviewsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSellerReviews>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listSellerReviews>>,
+          TError,
+          Awaited<ReturnType<typeof listSellerReviews>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListSellerReviews<
+  TData = Awaited<ReturnType<typeof listSellerReviews>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params?: ListSellerReviewsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSellerReviews>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListSellerReviews<
+  TData = Awaited<ReturnType<typeof listSellerReviews>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params?: ListSellerReviewsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listSellerReviews>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListSellerReviewsQueryOptions(userId, params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getUserProfileResponse200ApplicationJson = {
+  data: UserResponse
+  status: 200
+}
+
+export type getUserProfileResponse200ApplicationProblemJson = {
+  data: UserResponse
+  status: 200
+}
+
+export type getUserProfileResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getUserProfileResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getUserProfileResponseSuccess = (
+  | getUserProfileResponse200ApplicationJson
+  | getUserProfileResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getUserProfileResponseError = (
+  | getUserProfileResponse500ApplicationJson
+  | getUserProfileResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetUserProfileUrl = (id: string) => {
+  return `/api/users/${id}/profile`
+}
+
+export const getUserProfile = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getUserProfileResponseSuccess> => {
+  return customInstance<getUserProfileResponseSuccess>(getGetUserProfileUrl(id), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetUserProfileQueryKey = (id: string) => {
+  return [`/api/users/${id}/profile`] as const
+}
+
+export const getGetUserProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUserProfile>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetUserProfileQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserProfile>>> = ({ signal }) =>
+    getUserProfile(id, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetUserProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getUserProfile>>>
+export type GetUserProfileQueryError = ProblemDetails
+
+export function useGetUserProfile<
+  TData = Awaited<ReturnType<typeof getUserProfile>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getUserProfile>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserProfile<
+  TData = Awaited<ReturnType<typeof getUserProfile>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getUserProfile>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserProfile<
+  TData = Awaited<ReturnType<typeof getUserProfile>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetUserProfile<
+  TData = Awaited<ReturnType<typeof getUserProfile>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserProfile>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetUserProfileQueryOptions(id, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getMyProfileResponse200ApplicationJson = {
+  data: MyProfileResponse
+  status: 200
+}
+
+export type getMyProfileResponse200ApplicationProblemJson = {
+  data: MyProfileResponse
+  status: 200
+}
+
+export type getMyProfileResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getMyProfileResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getMyProfileResponseSuccess = (
+  | getMyProfileResponse200ApplicationJson
+  | getMyProfileResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getMyProfileResponseError = (
+  | getMyProfileResponse500ApplicationJson
+  | getMyProfileResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetMyProfileUrl = () => {
+  return `/api/users/me/profile`
+}
+
+export const getMyProfile = async (
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getMyProfileResponseSuccess> => {
+  return customInstance<getMyProfileResponseSuccess>(getGetMyProfileUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetMyProfileQueryKey = () => {
+  return [`/api/users/me/profile`] as const
+}
+
+export const getGetMyProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyProfile>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyProfileQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyProfile>>> = ({ signal }) =>
+    getMyProfile({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyProfile>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMyProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getMyProfile>>>
+export type GetMyProfileQueryError = ProblemDetails
+
+export function useGetMyProfile<
+  TData = Awaited<ReturnType<typeof getMyProfile>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getMyProfile>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyProfile<
+  TData = Awaited<ReturnType<typeof getMyProfile>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMyProfile>>,
+          TError,
+          Awaited<ReturnType<typeof getMyProfile>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMyProfile<
+  TData = Awaited<ReturnType<typeof getMyProfile>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetMyProfile<
+  TData = Awaited<ReturnType<typeof getMyProfile>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMyProfile>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMyProfileQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type updateMyProfileResponse200ApplicationJson = {
+  data: MyProfileResponse
+  status: 200
+}
+
+export type updateMyProfileResponse200ApplicationProblemJson = {
+  data: MyProfileResponse
+  status: 200
+}
+
+export type updateMyProfileResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type updateMyProfileResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type updateMyProfileResponseSuccess = (
+  | updateMyProfileResponse200ApplicationJson
+  | updateMyProfileResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type updateMyProfileResponseError = (
+  | updateMyProfileResponse500ApplicationJson
+  | updateMyProfileResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUpdateMyProfileUrl = () => {
+  return `/api/users/me/profile`
+}
+
+export const updateMyProfile = async (
+  updateMyProfileRequest?: UpdateMyProfileRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<updateMyProfileResponseSuccess> => {
+  return customInstance<updateMyProfileResponseSuccess>(getUpdateMyProfileUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateMyProfileRequest),
+  })
+}
+
+export const getUpdateMyProfileMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyProfile>>,
+    TError,
+    { data?: BodyType<UpdateMyProfileRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMyProfile>>,
+  TError,
+  { data?: BodyType<UpdateMyProfileRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateMyProfile"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMyProfile>>,
+    { data?: BodyType<UpdateMyProfileRequest> }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return updateMyProfile(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateMyProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateMyProfile>>>
+export type UpdateMyProfileMutationBody = BodyType<UpdateMyProfileRequest> | undefined
+export type UpdateMyProfileMutationError = ProblemDetails
+
+export const useUpdateMyProfile = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateMyProfile>>,
+      TError,
+      { data?: BodyType<UpdateMyProfileRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateMyProfile>>,
+  TError,
+  { data?: BodyType<UpdateMyProfileRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateMyProfileMutationOptions(options), queryClient)
+}
+
+export type blockUserResponse200ApplicationJson = {
+  data: BlockUserResponse
+  status: 200
+}
+
+export type blockUserResponse200ApplicationProblemJson = {
+  data: BlockUserResponse
+  status: 200
+}
+
+export type blockUserResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type blockUserResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type blockUserResponseSuccess = (
+  | blockUserResponse200ApplicationJson
+  | blockUserResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type blockUserResponseError = (
+  | blockUserResponse500ApplicationJson
+  | blockUserResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getBlockUserUrl = (userId: string) => {
+  return `/api/users/${userId}/block`
+}
+
+export const blockUser = async (
+  userId: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<blockUserResponseSuccess> => {
+  return customInstance<blockUserResponseSuccess>(getBlockUserUrl(userId), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getBlockUserMutationOptions = <TError = ProblemDetails, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof blockUser>>,
+    TError,
+    { userId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof blockUser>>,
+  TError,
+  { userId: string },
+  TContext
+> => {
+  const mutationKey = ["blockUser"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof blockUser>>, { userId: string }> = (
+    props
+  ) => {
+    const { userId } = props ?? {}
+
+    return blockUser(userId, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type BlockUserMutationResult = NonNullable<Awaited<ReturnType<typeof blockUser>>>
+
+export type BlockUserMutationError = ProblemDetails
+
+export const useBlockUser = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof blockUser>>,
+      TError,
+      { userId: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof blockUser>>,
+  TError,
+  { userId: string },
+  TContext
+> => {
+  return useMutation(getBlockUserMutationOptions(options), queryClient)
+}
+
+export type unblockUserResponse200ApplicationJson = {
+  data: UnblockUserResponse
+  status: 200
+}
+
+export type unblockUserResponse200ApplicationProblemJson = {
+  data: UnblockUserResponse
+  status: 200
+}
+
+export type unblockUserResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type unblockUserResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type unblockUserResponseSuccess = (
+  | unblockUserResponse200ApplicationJson
+  | unblockUserResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type unblockUserResponseError = (
+  | unblockUserResponse500ApplicationJson
+  | unblockUserResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUnblockUserUrl = (userId: string) => {
+  return `/api/users/${userId}/block`
+}
+
+export const unblockUser = async (
+  userId: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<unblockUserResponseSuccess> => {
+  return customInstance<unblockUserResponseSuccess>(getUnblockUserUrl(userId), {
+    ...options,
+    method: "DELETE",
+  })
+}
+
+export const getUnblockUserMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unblockUser>>,
+    TError,
+    { userId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unblockUser>>,
+  TError,
+  { userId: string },
+  TContext
+> => {
+  const mutationKey = ["unblockUser"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unblockUser>>,
+    { userId: string }
+  > = (props) => {
+    const { userId } = props ?? {}
+
+    return unblockUser(userId, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UnblockUserMutationResult = NonNullable<Awaited<ReturnType<typeof unblockUser>>>
+
+export type UnblockUserMutationError = ProblemDetails
+
+export const useUnblockUser = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unblockUser>>,
+      TError,
+      { userId: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof unblockUser>>,
+  TError,
+  { userId: string },
+  TContext
+> => {
+  return useMutation(getUnblockUserMutationOptions(options), queryClient)
+}
+
+export type updateImplicitTrustResponse200ApplicationJson = {
+  data: UserResponse
+  status: 200
+}
+
+export type updateImplicitTrustResponse200ApplicationProblemJson = {
+  data: UserResponse
+  status: 200
+}
+
+export type updateImplicitTrustResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type updateImplicitTrustResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type updateImplicitTrustResponseSuccess = (
+  | updateImplicitTrustResponse200ApplicationJson
+  | updateImplicitTrustResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type updateImplicitTrustResponseError = (
+  | updateImplicitTrustResponse500ApplicationJson
+  | updateImplicitTrustResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUpdateImplicitTrustUrl = (id: string) => {
+  return `/api/admin/users/${id}/trust`
+}
+
+export const updateImplicitTrust = async (
+  id: string,
+  updateTrustRequest?: UpdateTrustRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<updateImplicitTrustResponseSuccess> => {
+  return customInstance<updateImplicitTrustResponseSuccess>(getUpdateImplicitTrustUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateTrustRequest),
+  })
+}
+
+export const getUpdateImplicitTrustMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateImplicitTrust>>,
+    TError,
+    { id: string; data?: BodyType<UpdateTrustRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateImplicitTrust>>,
+  TError,
+  { id: string; data?: BodyType<UpdateTrustRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateImplicitTrust"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateImplicitTrust>>,
+    { id: string; data?: BodyType<UpdateTrustRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return updateImplicitTrust(id, data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateImplicitTrustMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateImplicitTrust>>
+>
+export type UpdateImplicitTrustMutationBody = BodyType<UpdateTrustRequest> | undefined
+export type UpdateImplicitTrustMutationError = ProblemDetails
+
+export const useUpdateImplicitTrust = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateImplicitTrust>>,
+      TError,
+      { id: string; data?: BodyType<UpdateTrustRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateImplicitTrust>>,
+  TError,
+  { id: string; data?: BodyType<UpdateTrustRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateImplicitTrustMutationOptions(options), queryClient)
+}
+
+export type getUserByUsernameResponse200ApplicationJson = {
+  data: UserResponse
+  status: 200
+}
+
+export type getUserByUsernameResponse200ApplicationProblemJson = {
+  data: UserResponse
+  status: 200
+}
+
+export type getUserByUsernameResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getUserByUsernameResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getUserByUsernameResponseSuccess = (
+  | getUserByUsernameResponse200ApplicationJson
+  | getUserByUsernameResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getUserByUsernameResponseError = (
+  | getUserByUsernameResponse500ApplicationJson
+  | getUserByUsernameResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetUserByUsernameUrl = (username: string) => {
+  return `/api/users/${username}`
+}
+
+export const getUserByUsername = async (
+  username: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getUserByUsernameResponseSuccess> => {
+  return customInstance<getUserByUsernameResponseSuccess>(getGetUserByUsernameUrl(username), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetUserByUsernameQueryKey = (username: string) => {
+  return [`/api/users/${username}`] as const
+}
+
+export const getGetUserByUsernameQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUserByUsername>>,
+  TError = ProblemDetails,
+>(
+  username: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserByUsername>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetUserByUsernameQueryKey(username)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserByUsername>>> = ({ signal }) =>
+    getUserByUsername(username, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: username !== null && username !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getUserByUsername>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetUserByUsernameQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUserByUsername>>
+>
+export type GetUserByUsernameQueryError = ProblemDetails
+
+export function useGetUserByUsername<
+  TData = Awaited<ReturnType<typeof getUserByUsername>>,
+  TError = ProblemDetails,
+>(
+  username: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserByUsername>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserByUsername>>,
+          TError,
+          Awaited<ReturnType<typeof getUserByUsername>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserByUsername<
+  TData = Awaited<ReturnType<typeof getUserByUsername>>,
+  TError = ProblemDetails,
+>(
+  username: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserByUsername>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getUserByUsername>>,
+          TError,
+          Awaited<ReturnType<typeof getUserByUsername>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetUserByUsername<
+  TData = Awaited<ReturnType<typeof getUserByUsername>>,
+  TError = ProblemDetails,
+>(
+  username: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserByUsername>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetUserByUsername<
+  TData = Awaited<ReturnType<typeof getUserByUsername>>,
+  TError = ProblemDetails,
+>(
+  username: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUserByUsername>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetUserByUsernameQueryOptions(username, options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>
