@@ -132,6 +132,7 @@ flowchart TB
         auth[auth]
         user[user]
         feed[feed — planned]
+        groups[groups — planned]
         trade[trade — planned]
         chat[chat — planned]
         media[media — planned]
@@ -162,12 +163,13 @@ flowchart TB
 |---------|------|------------------|
 | **auth** | OAuth callbacks, JWT sessions, provider registry | Profile fields, trust math |
 | **user** | Identity reads, profiles, blocks, portfolio, documents, peer ratings (internal), admin trust bump | Feed items, trades, chat rooms |
-| **feed** *(planned)* | `feed_items`, traits linkage, for-you ranking, author/trait lists | Profile readme, trade state |
+| **feed** *(planned)* | `feed_items`, traits linkage, for-you ranking, author/trait/group lists | Profile readme, trade state |
+| **groups** *(planned)* | `groups`, membership, group visibility | Feed ranking SQL, chat fan-out |
 | **media** *(planned)* | Presigned uploads, object key validation, async embeddings | Avatar/profile field updates (user validates URL) |
 | **geolocation** *(planned)* | Fingerprint ingest, resolver → `location_tag` | Continuous GPS storage |
-| **trade** *(planned)* | Trade lifecycle, templates, feed item lock | Validation codes, chat delivery |
+| **trade** *(planned)* | Trade lifecycle, **swap / meetup** templates, feed item lock | Validation codes, chat delivery |
 | **validation** *(planned)* | PIN/QR sessions, handoff verify | Trade state (coordinates with trade) |
-| **chat** *(planned)* | Rooms, messages, WS fan-out | Trade acceptance rules |
+| **chat** *(planned)* | Rooms (trade + later group), messages, WS fan-out | Trade acceptance rules |
 | **moderation** *(planned)* | Reports, admin actions, content hide | User-initiated block (user feature) |
 
 ---
@@ -176,17 +178,19 @@ flowchart TB
 
 | User-facing area | Module doc | Primary feature |
 |------------------|------------|-----------------|
+| Product framing | [product_vision.md](./product_vision.md) | — |
 | Sign in, sessions | [user_module.md](./user_module.md) | `features/auth` |
 | Trust & ratings | user + [trust_events.md](./trust_events.md) | `features/user` |
 | Public profile header | [seller_profile_module.md](./seller_profile_module.md) | `features/user` |
 | README, portfolio, pins | [profile_portfolio_module.md](./profile_portfolio_module.md) | `features/user` |
 | Marketplace feed | [feed_module.md](./feed_module.md) | `features/feed` |
 | Categories | [traits_module.md](./traits_module.md) | `features/feed` (SQL + filters) |
+| Communities | [groups_module.md](./groups_module.md) | `features/groups` |
 | Uploads & AI tags | [media_module.md](./media_module.md) | `features/media` |
-| Travel tags | [geolocation_module.md](./geolocation_module.md) | `features/geolocation` |
-| Barter | [trade_module.md](./trade_module.md) | `features/trade` |
+| Coarse location | [geolocation_module.md](./geolocation_module.md) | `features/geolocation` |
+| Deals + barter/swap templates | [trade_module.md](./trade_module.md) | `features/trade` |
 | Meetup verify | [validation_module.md](./validation_module.md) | `features/validation` |
-| Trade chat | [chat_module.md](./chat_module.md) | `features/chat` |
+| Multi-party chat | [chat_module.md](./chat_module.md) | `features/chat` |
 | Reports & admin | [moderation_module.md](./moderation_module.md) | `features/moderation` |
 
 ---
