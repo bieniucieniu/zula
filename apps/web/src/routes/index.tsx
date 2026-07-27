@@ -1,8 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { useLogout } from "@zula/api/endpoints"
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
+import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/")({ component: App })
 
@@ -44,9 +45,14 @@ function App() {
       <div className="flex max-w-sm flex-col items-center gap-2 text-center">
         <h1 className="font-heading text-lg font-medium">Signed in</h1>
         <p className="text-sm text-muted-foreground">{session.email}</p>
-        <Button variant="outline" disabled={pending} onClick={() => void onLogout()}>
-          {pending ? "Logging out…" : "Logout"}
-        </Button>
+        <div className="flex gap-2 pt-2">
+          <Link to="/profile" className={cn(buttonVariants({ variant: "outline" }))}>
+            Profile
+          </Link>
+          <Button variant="outline" disabled={pending} onClick={() => void onLogout()}>
+            {pending ? "Logging out…" : "Logout"}
+          </Button>
+        </div>
       </div>
     </div>
   )
