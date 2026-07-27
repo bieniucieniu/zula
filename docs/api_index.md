@@ -129,6 +129,20 @@ WebSocket: room subscription (same JWT). Doc: [chat_module.md](./chat_module.md)
 
 ---
 
+## GroupService 🔜
+
+| RPC | Auth |
+|-----|------|
+| `CreateGroup` | Auth |
+| `GetGroup` | Public / member |
+| `UpdateGroup` | Owner/admin |
+| `JoinGroup` / `LeaveGroup` | Auth |
+| `ListGroupMembers` | Member |
+
+Group feed: `ListFeedByGroup` on FeedService. Doc: [groups_module.md](./groups_module.md)
+
+---
+
 ## ModerationService 🔜
 
 | RPC | Auth |

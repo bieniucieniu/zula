@@ -1,12 +1,12 @@
 # Guide: Chat Module (Stateful Group Chats)
 
-**Real-time multi-person rooms** tied to trades (MVP), coordinated via **Ktor WebSockets** (coroutine fan-out).
+**Real-time multi-person rooms** (2+ participants). MVP: tied to **trades**. Later: **group**-scoped rooms for communities.
 
 **Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:chat`
 
-**Depends on:** [trade_module.md](./trade_module.md), [user_module.md](./user_module.md) (blocks) · **Unblocks:** [moderation](./moderation_module.md) content reports
+**Depends on:** [trade_module.md](./trade_module.md), [user_module.md](./user_module.md) (blocks) · **Unblocks:** [moderation](./moderation_module.md) content reports, [groups](./groups_module.md) group chat
 
-**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 3.2 (`chat-A`, `chat-B`)
+**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 3.2 (`chat-A`, `chat-B`); group rooms Wave 4b · **Product:** [product_vision.md](./product_vision.md)
 
 **Related:** [architecture.md](./architecture.md) · [clients.md](./clients.md) · [conventions.md](./conventions.md)
 
@@ -16,7 +16,9 @@
 
 | Goal | Detail |
 |------|--------|
-| **Trade rooms** | One room per active trade |
+| **Trade rooms** | One room per active trade (MVP) |
+| **Group rooms** | One room per community group (groups-C) |
+| **Multi-party** | 2+ participants; negotiation and complex orders |
 | **Persistence** | Postgres messages; WS for delivery |
 | **Block aware** | No delivery across blocks |
 | **Thin clients** | Ordering, membership, validation on server |

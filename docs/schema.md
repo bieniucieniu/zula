@@ -159,7 +159,20 @@ On delete/replace, owning feature calls `releaseKey`. On create/link, calls `com
 |-------|---------|
 | `feed_item_media` | Per-item media rows: `object_key`, `sort_order`, optional `embedding` |
 
-Defined in feed migration (`000002_feed.sql`). See [feed_module.md](./feed_module.md).
+Defined in feed migration (`000002_feed.sql`). See [feed_module.md](./feed_module.md). Optional later: `feed_items.group_id` → [groups](#groups-module-planned).
+
+---
+
+## Groups module *(planned — Wave 4b)*
+
+*Doc: [groups_module.md](./groups_module.md)* · migration: `000009_groups.sql`
+
+| Table | Purpose |
+|-------|---------|
+| `groups` | Community: slug, title, visibility, owner |
+| `group_members` | Membership + role (`owner` / `admin` / `member`) |
+
+Feed/chat FKs: nullable `feed_items.group_id`, `chat_rooms.group_id`.
 
 ---
 
@@ -204,7 +217,7 @@ Writes to `user_profiles.location_tag`; optional `feed_items.origin_location_tag
 
 | Table | Purpose |
 |-------|---------|
-| `chat_rooms` | One per trade (MVP) |
+| `chat_rooms` | One per trade (MVP); later also group-scoped |
 | `chat_participants` | Membership |
 | `chat_messages` | Persisted messages |
 

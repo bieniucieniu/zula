@@ -2,7 +2,7 @@
 
 Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md).
 
-**New developer path:** [architecture.md](./architecture.md) (Ktor layout) → [implementation_plan.md](./implementation_plan.md) → the module you are building.
+**New developer path:** [product_vision.md](./product_vision.md) → [architecture.md](./architecture.md) → [implementation_plan.md](./implementation_plan.md) → the module you are building.
 
 ---
 
@@ -10,6 +10,7 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 
 | Doc | Purpose |
 |-----|---------|
+| [product_vision.md](./product_vision.md) | Product framing: audience, offers/needs, groups, trade/geo/AI |
 | [architecture.md](./architecture.md) | Ktor `app` / `core` / `features` layout, boundaries, ownership |
 | [schema.md](./schema.md) | Canonical database tables by module |
 | [api_index.md](./api_index.md) | REST routes (see also `/swagger`) |
@@ -32,6 +33,7 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 | Profile & portfolio | 🔶 partial (A–B) | [profile_portfolio_module.md](./profile_portfolio_module.md) | `features:user` |
 | Feed | ⬜ | [feed_module.md](./feed_module.md) | `features:feed` (planned) |
 | Traits | ⬜ | [traits_module.md](./traits_module.md) | (SQL only → feed) |
+| Groups | ⬜ | [groups_module.md](./groups_module.md) | `features:groups` (planned) |
 | Media | ⬜ | [media_module.md](./media_module.md) | `features:media` (planned) |
 | Geolocation | ⬜ | [geolocation_module.md](./geolocation_module.md) | `features:geolocation` (planned) |
 | Trade | ⬜ | [trade_module.md](./trade_module.md) | `features:trade` (planned) |
@@ -45,12 +47,14 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 
 ## Feature → doc map
 
-| README feature | Owning doc(s) |
-|----------------|---------------|
+| README / product idea | Owning doc(s) |
+|-----------------------|---------------|
+| Product vision & audience | [product_vision.md](./product_vision.md) |
 | Thin-client, heavy-backend | [conventions.md](./conventions.md) |
-| Social feed | [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md) |
+| Social feed (offers / needs / trips) | [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md) |
+| Communities (FB-group analog) | [groups_module.md](./groups_module.md) |
 | Stateful group chats | [chat_module.md](./chat_module.md) |
-| Barter coordination | [trade_module.md](./trade_module.md) |
+| Deal coordination + barter/swap templates | [trade_module.md](./trade_module.md) |
 | Dual trust system | [user_module.md](./user_module.md), [trust_events.md](./trust_events.md), [validation_module.md](./validation_module.md) |
 | Network geolocation | [geolocation_module.md](./geolocation_module.md) |
 | AI media tagging | [media_module.md](./media_module.md), feed Phase E |

@@ -4,6 +4,8 @@ Master rollout plan for modules **not yet implemented** in the backend, plus **r
 
 Empty feature packages (`chat`/`feed`/… Module+Service+Publisher+Consumer+Routing stubs) may already exist as scaffolding. Cross-feature `core/contracts` ports are **deferred until a second caller ships** — see [architecture.md](./architecture.md#cross-feature-internal-api) and [cleanup_impl_plan.md](./cleanup_impl_plan.md).
 
+**Product framing:** [product_vision.md](./product_vision.md)
+
 **Related:** [README.md](../README.md) · [docs index](./README.md) · [architecture](./architecture.md) · [conventions](./conventions.md) · per-module guides in `docs/*_module.md`
 
 ---
@@ -15,13 +17,14 @@ Empty feature packages (`chat`/`feed`/… Module+Service+Publisher+Consumer+Rout
 | [user](./user_module.md) | Full | ✅ MVP | Auth, trust, blocks, profiles |
 | [seller_profile](./seller_profile_module.md) | Full | ✅ A–B | Listings tab blocked on feed |
 | [profile_portfolio](./profile_portfolio_module.md) | Full | ✅ A–B | Activity/feed body blocked on feed |
-| [feed](./feed_module.md) | Full | ⬜ | **Critical path** |
+| [feed](./feed_module.md) | Full | ⬜ | **Critical path** — offers / needs / trips |
 | [traits](./traits_module.md) | Plan | ⬜ | Can ship inside feed Phase A |
+| [groups](./groups_module.md) | Plan | ⬜ | Communities after feed + chat MVP |
 | [media](./media_module.md) | Plan | ⬜ | MinIO in local dev only |
 | [geolocation](./geolocation_module.md) | Plan | ⬜ | `location_tag` column exists |
-| [trade](./trade_module.md) | Plan | ⬜ | — |
+| [trade](./trade_module.md) | Plan | ⬜ | Templates: `swap`, `meetup_cash` |
 | [validation](./validation_module.md) | Plan | ⬜ | Trust ledger exists |
-| [chat](./chat_module.md) | Plan | ⬜ | — |
+| [chat](./chat_module.md) | Plan | ⬜ | Trade rooms first; group rooms later |
 | [moderation](./moderation_module.md) | Plan | ⬜ | `BlockUser` only |
 
 ---
@@ -38,6 +41,7 @@ flowchart TB
     media[media ⬜]
     geo[geolocation ⬜]
     feed[feed ⬜]
+    groups[groups ⬜]
 
     trade[trade ⬜]
     validation[validation ⬜]
@@ -50,6 +54,7 @@ flowchart TB
     user --> trade
     user --> chat
     user --> mod
+    user --> groups
 
     traits --> feed
     media --> feed
@@ -57,16 +62,19 @@ flowchart TB
 
     feed --> seller
     feed --> portfolio
+    feed --> groups
 
     trade --> validation
     trade --> portfolio
     trade --> chat
     trade --> seller
 
+    groups --> chat
     validation --> user
     chat --> mod
     feed --> mod
     trade --> mod
+    groups --> mod
 ```
 
 ---
@@ -133,12 +141,26 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 
 ---
 
+### Wave 4b — Communities (groups)
+
+**Goal:** FB-style import/resell/craft communities with membership and group feed.
+
+| Step | Module | Deliverable | Doc |
+|------|--------|-------------|-----|
+| 4b.1 | **groups** Phase A | `groups` / `group_members`, create/join/leave | [groups_module.md](./groups_module.md) |
+| 4b.2 | **groups** Phase B + **feed** | `feed_items.group_id`, `GET /feed/by-group/{id}` | groups, feed |
+| 4b.3 | **groups** Phase C + **chat** | Group-scoped multi-party rooms | groups, chat |
+
+**Exit criteria:** Public group with members; group feed posts; group chat room.
+
+---
+
 ### Wave 5 — Safety & scale
 
 | Step | Module | Deliverable | Doc |
 |------|--------|-------------|-----|
 | 5.1 | **moderation** Phase A | `ReportUser`, report queue, auto-hide pending review | [moderation_module.md](./moderation_module.md) |
-| 5.2 | **moderation** Phase B | Admin review RPCs, enforce on feed/chat/trade | moderation |
+| 5.2 | **moderation** Phase B | Admin review RPCs, enforce on feed/chat/trade/groups | moderation |
 | 5.3 | **feed** Phase F | `feed_item_cards` projection (if metrics justify) | feed |
 | 5.4 | **profile_portfolio** Phase G | Full-text search on `documents.source` | profile_portfolio |
 
@@ -146,8 +168,8 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 
 ## Migration numbering (next files)
 
-All shipped schema lives in **`000001_init.sql`** (users, profiles, trust, blocks, documents, portfolio).  
-**Next migration:** `000002_feed.sql` — **combine traits + feed** for Wave 1 (single file unless size forces a split).
+Shipped DDL: SQLDelight **`0.sqm`** (users, profiles, stats, blocks, ratings, seller_activity_stats).  
+**Next migration:** `000002_feed.sql` / `1.sqm` — **combine traits + feed** for Wave 1.
 
 | File | Wave | Module(s) |
 |------|------|-----------|
@@ -158,6 +180,7 @@ All shipped schema lives in **`000001_init.sql`** (users, profiles, trust, block
 | `000006_chat.sql` | 3 | chat |
 | `000007_validation.sql` | 3 | validation |
 | `000008_moderation.sql` | 5 | moderation |
+| `000009_groups.sql` | 4b | groups (+ feed/chat FK columns if not earlier) |
 
 Canonical table index: [schema.md](./schema.md). Renumber before merge if plans change.
 
@@ -184,9 +207,10 @@ Quick checklist:
 | Wave | Web | Android | iOS |
 |------|-----|---------|-----|
 | 1 | Feed + seller listings | Feed tab | Feed tab |
-| 2 | Media upload + maps tag | Same | Same |
+| 2 | Media upload + location tag | Same | Same |
 | 3 | Trade + chat + QR | Same | Same |
 | 4 | Activity + case studies | Profile tabs | Profile tabs |
+| 4b | Groups | Same | Same |
 | 5 | Report flow | Same | Same |
 
 ---
@@ -209,8 +233,9 @@ Optimize for user-visible outcomes:
 |------|----------------|-------------------|
 | 1 | Seller page with listings | `feed-A`…`feed-D`, `traits-A`, `seller-C` |
 | 2 | Photo offer + location tag | `media-A`, `geo-A`, `portfolio-C` |
-| 3 | Complete barter | `trade-A`…`trade-C`, `chat-A`, `validation-A` |
+| 3 | Complete deal (swap/meetup) | `trade-A`…`trade-C`, `chat-A`, `validation-A` |
 | 4 | Public history | `portfolio-D`, `trade-D` |
+| 4b | Community group | `groups-A`…`groups-C` |
 | 5 | Safety | `mod-A`, `mod-B` |
 
 ### 2. Use Koin contract interfaces for cross-feature calls
@@ -245,16 +270,18 @@ Golden path test (skipped until feed ships): `app/src/test/kotlin/.../Wave1Selle
 
 | Module | Doc | Meta |
 |--------|-----|------|
+| Product vision | [product_vision.md](./product_vision.md) | audience, AI, safety |
 | User & auth | [user_module.md](./user_module.md) | [trust_events.md](./trust_events.md) |
 | Seller profile | [seller_profile_module.md](./seller_profile_module.md) | [auth_and_permissions.md](./auth_and_permissions.md) |
 | Profile & portfolio | [profile_portfolio_module.md](./profile_portfolio_module.md) | [schema.md](./schema.md) |
 | Feed | [feed_module.md](./feed_module.md) | [architecture.md](./architecture.md) |
 | Traits | [traits_module.md](./traits_module.md) | owned by feed migration |
+| Groups | [groups_module.md](./groups_module.md) | communities |
 | Media | [media_module.md](./media_module.md) | |
 | Geolocation | [geolocation_module.md](./geolocation_module.md) | |
-| Trade | [trade_module.md](./trade_module.md) | |
+| Trade | [trade_module.md](./trade_module.md) | swap + meetup templates |
 | Validation | [validation_module.md](./validation_module.md) | |
 | Chat | [chat_module.md](./chat_module.md) | |
 | Moderation | [moderation_module.md](./moderation_module.md) | |
 | Clients | [clients.md](./clients.md) | [api_index.md](./api_index.md) |
-| Onboarding | [README.md](../README.md) | [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md) |
+| Onboarding | [README.md](./README.md) | [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md) |

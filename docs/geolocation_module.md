@@ -6,7 +6,7 @@
 
 **Depends on:** [user_module.md](./user_module.md) (`location_tag` column exists) · **Unblocks:** trip feed context (feed Wave 2)
 
-**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 2.2 (`geo-A`)
+**Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 2.2 (`geo-A`) · **Product:** [product_vision.md](./product_vision.md)
 
 **Related:** [schema.md](./schema.md#geolocation-module-planned--wave-2) · [README.md](../README.md) · [conventions.md](./conventions.md)
 
