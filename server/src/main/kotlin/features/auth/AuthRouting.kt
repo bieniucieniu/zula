@@ -36,151 +36,157 @@ fun Route.configureAuthRouting() {
         clientIp = request.local.remoteHost,
     )
 
-    cacheOutput(1.hours) {
-        get("/auth/providers") {
-            call.respond(OAuthProvidersResponse(config.oauth.configuredProviders(authSettings)))
+    route("auth") {
+
+        cacheOutput(1.hours) {
+            get("/providers") {
+                call.respond(OAuthProvidersResponse(config.oauth.configuredProviders(authSettings)))
+            }.describe {
+                operationId = "listProviders"
+                tag("auth")
+            }
+        }
+
+        get("/oauth/google/start") {
+            val mode = call.request.queryParameters["mode"] ?: "redirect"
+            val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
+            val start = authService.startGoogleOAuth(mode, redirectUri)
+            call.setOAuthStateCookies(start.state, start.nonce, mode)
+            call.respondRedirect(start.authorizeUrl)
         }.describe {
-            operationId = "listProviders"
+            operationId = "startGoogleOAuth"
             tag("auth")
         }
-    }
 
-    get("/auth/oauth/google/start") {
-        val mode = call.request.queryParameters["mode"] ?: "redirect"
-        val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
-        val start = authService.startGoogleOAuth(mode, redirectUri)
-        call.setOAuthStateCookies(start.state, start.nonce, mode)
-        call.respondRedirect(start.authorizeUrl)
-    }.describe {
-        operationId = "startGoogleOAuth"
-        tag("auth")
-    }
-
-    get("/auth/callback/google") {
-        val code = call.request.queryParameters["code"] ?: badRequest("code required")
-        val state = call.request.queryParameters["state"] ?: badRequest("state required")
-        val error = call.request.queryParameters["error"]
-        if (error != null) {
-            val mode = call.readOAuthModeCookie()
-            call.clearOAuthStateCookies()
-            if (mode == "popup") {
-                call.respondOAuthPopupResult(success = false, error = error)
-            } else {
-                call.respondRedirect("/oauth/complete?success=0&error=${error.encodeURLParameter()}")
-            }
-            return@get
-        }
-
-        val expectedState = call.readOAuthStateCookie() ?: unauthorized("Invalid OAuth state")
-        val expectedNonce = call.readOAuthNonceCookie() ?: unauthorized("Invalid OAuth nonce")
-        call.clearOAuthStateCookies()
-        val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
-        val tokens = authService.completeGoogleOAuthCallback(
-            code = code,
-            state = state,
-            expectedState = expectedState,
-            expectedNonce = expectedNonce,
-            redirectUri = redirectUri,
-            session = call.authSessionContext(),
-        )
-        call.setAccessCookies(tokens)
-        val mode = call.readOAuthModeCookie()
-        if (mode == "popup") {
-            call.respondOAuthPopupResult(success = true)
-        } else {
-            call.respondRedirect("/oauth/complete?success=1")
-        }
-    }.describe {
-        operationId = "googleOAuthCallback"
-        tag("auth")
-    }
-
-    post("/auth/authenticate") {
-        val request: AuthenticateRequest = call.receive()
-        val tokens = authService.authenticate(request, call.authSessionContext())
-
-        call.setAccessCookies(tokens)
-
-        call.respond(tokens)
-    }.describe {
-        operationId = "authenticate"
-        tag("auth")
-    }
-
-    post("/auth/refresh") {
-        val refreshBody: RefreshRequest? = runCatching {
-            call.receive<RefreshRequest>()
-        }.getOrNull()
-        val refreshToken = refreshBody?.refreshToken ?: call.readRefreshCookie()
-        ?: badRequest("refreshToken required")
-        val tokens = authService.refresh(refreshToken, call.authSessionContext())
-        call.setAccessCookies(tokens)
-
-        call.respond(tokens)
-    }.describe {
-        operationId = "refresh"
-        tag("auth")
-    }
-
-    authenticate(AuthProviderNames.JWT, optional = true) {
-        get("/auth/session") {
-            val principal: JWTPrincipal? = call.principal()
-            if (principal != null) {
-                val sessionId = principal.payload.getClaim("sid").asString()?.let(Ids::parseOrNull)
-                    ?: unauthorized("Invalid session")
-                authService.ensureAuthenticatedSession(sessionId, forceProviderCheck = false)
-                val email = principal.payload.getClaim("email").asString()
-                    ?: authService.sessionEmail(sessionId)
-                call.respond(
-                    SessionResponse(
-                        expiresIn = jwtConfig.accessTokenTtlSeconds,
-                        email = email,
-                    ),
-                )
+        get("/callback/google") {
+            val code = call.request.queryParameters["code"] ?: badRequest("code required")
+            val state = call.request.queryParameters["state"] ?: badRequest("state required")
+            val error = call.request.queryParameters["error"]
+            if (error != null) {
+                val mode = call.readOAuthModeCookie()
+                call.clearOAuthStateCookies()
+                if (mode == "popup") {
+                    call.respondOAuthPopupResult(success = false, error = error)
+                } else {
+                    call.respondRedirect("/oauth/complete?success=0&error=${error.encodeURLParameter()}")
+                }
                 return@get
             }
 
-            val refreshToken = call.readRefreshCookie() ?: unauthorized("Not authenticated")
-            val tokens = authService.refresh(refreshToken, call.authSessionContext())
-            call.setAccessCookies(tokens)
-            call.respond(
-                SessionResponse(
-                    expiresIn = tokens.expiresIn,
-                ),
+            val expectedState = call.readOAuthStateCookie() ?: unauthorized("Invalid OAuth state")
+            val expectedNonce = call.readOAuthNonceCookie() ?: unauthorized("Invalid OAuth nonce")
+            call.clearOAuthStateCookies()
+            val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
+            val tokens = authService.completeGoogleOAuthCallback(
+                code = code,
+                state = state,
+                expectedState = expectedState,
+                expectedNonce = expectedNonce,
+                redirectUri = redirectUri,
+                session = call.authSessionContext(),
             )
-        }.describe {
-            operationId = "getSession"
-            tag("auth")
-        }
-
-        post("/auth/logout") {
-            val principal: JWTPrincipal? = call.principal()
-            val sessionId = principal?.payload?.getClaim("sid")?.asString()?.let {
-                Ids.parseOrNull(it)
+            call.setAccessCookies(tokens)
+            val mode = call.readOAuthModeCookie()
+            if (mode == "popup") {
+                call.respondOAuthPopupResult(success = true)
+            } else {
+                call.respondRedirect("/oauth/complete?success=1")
             }
-            val refreshBody: RefreshRequest? = runCatching {
-                call.receive<RefreshRequest>()
-            }.getOrNull()
-            val refreshToken = refreshBody?.refreshToken
-                ?: call.readRefreshCookie()
-            authService.logout(sessionId, refreshToken)
-            call.clearAuthCookies()
-            call.respond(HttpStatusCode.NoContent)
         }.describe {
-            operationId = "logout"
+            operationId = "googleOAuthCallback"
             tag("auth")
         }
-    }
 
-    authenticate(AuthProviderNames.JWT) {
-        get("/auth/providers/linked") {
-            val principal: JWTPrincipal? = call.principal()
-            val userId = principal?.payload?.subject?.let(Ids::parseOrNull)
-                ?: unauthorized("Invalid subject")
-            call.respond(authService.listLinkedProviders(userId))
+        post("/authenticate") {
+            val request: AuthenticateRequest = call.receive()
+            val tokens = authService.authenticate(request, call.authSessionContext())
+
+            call.setAccessCookies(tokens)
+
+            call.respond(tokens)
         }.describe {
-            operationId = "listLinkedProviders"
+            operationId = "authenticate"
             tag("auth")
         }
+
+        post("/refresh") {
+            try {
+                val refreshBody: RefreshRequest = call.receive<RefreshRequest>()
+                val refreshToken = refreshBody.refreshToken ?: call.readRefreshCookie()
+                ?: badRequest("refreshToken required")
+                val tokens = authService.refresh(refreshToken, call.authSessionContext())
+                call.setAccessCookies(tokens)
+                call.respond(tokens)
+            } catch (it: Throwable) {
+                call.clearAuthCookies()
+                throw it
+            }
+        }.describe {
+            operationId = "refresh"
+            tag("auth")
+        }
+
+        authenticate(AuthProviderNames.JWT, optional = true) {
+            get("/session") {
+                val principal: JWTPrincipal? = call.principal()
+                if (principal != null) {
+                    val sessionId = principal.payload.getClaim("sid").asString()?.let(Ids::parseOrNull)
+                        ?: unauthorized("Invalid session")
+                    authService.ensureAuthenticatedSession(sessionId, forceProviderCheck = false)
+                    val email = principal.payload.getClaim("email").asString()
+                        ?: authService.sessionEmail(sessionId)
+                    call.respond(
+                        SessionResponse(
+                            expiresIn = jwtConfig.accessTokenTtlSeconds,
+                            email = email,
+                        ),
+                    )
+                    return@get
+                }
+
+                val refreshToken = call.readRefreshCookie() ?: unauthorized("Not authenticated")
+                val tokens = authService.refresh(refreshToken, call.authSessionContext())
+                call.setAccessCookies(tokens)
+                call.respond(
+                    SessionResponse(
+                        expiresIn = tokens.expiresIn,
+                    ),
+                )
+            }.describe {
+                operationId = "getSession"
+                tag("auth")
+            }
+
+            post("/auth/logout") {
+                val principal: JWTPrincipal? = call.principal()
+                val sessionId = principal?.payload?.getClaim("sid")?.asString()?.let {
+                    Ids.parseOrNull(it)
+                }
+                val refreshBody: RefreshRequest? = runCatching {
+                    call.receive<RefreshRequest>()
+                }.getOrNull()
+                val refreshToken = refreshBody?.refreshToken
+                    ?: call.readRefreshCookie()
+                authService.logout(sessionId, refreshToken)
+                call.clearAuthCookies()
+                call.respond(HttpStatusCode.NoContent)
+            }.describe {
+                operationId = "logout"
+                tag("auth")
+            }
+        }
+
+        authenticate(AuthProviderNames.JWT) {
+            get("/providers/linked") {
+                val principal: JWTPrincipal? = call.principal()
+                val userId = principal?.payload?.subject?.let(Ids::parseOrNull)
+                    ?: unauthorized("Invalid subject")
+                call.respond(authService.listLinkedProviders(userId))
+            }.describe {
+                operationId = "listLinkedProviders"
+                tag("auth")
+            }
+        }
+
     }
 }
