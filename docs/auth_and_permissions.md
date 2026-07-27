@@ -90,10 +90,25 @@ Central helper: `enforcePublicTargetAccess` in `UserService` (when shipped); fee
 | `ListForYouFeed` | Auth | Personalized |
 | `ListFeedByAuthor` | Public | Optional auth for block filter |
 | `ListFeedByTrait` | Public | |
+| `ListFeedByGroup` | Public / member | Private groups → members only |
 | `GetFeedItem` | Public | |
-| `CreateFeedItem` | Auth | Author = token user |
+| `CreateFeedItem` | Auth | Author = token user; optional `group_id` requires membership |
 | `UpdateFeedItem` / `DeleteFeedItem` | Auth | Owner only |
 | `FollowTrait` / `UnfollowTrait` | Auth | |
+
+---
+
+## GroupService *(planned)*
+
+| RPC | Level | Notes |
+|-----|-------|-------|
+| `CreateGroup` | Auth | Creator = owner |
+| `GetGroup` | Public / member | Private → `404` if not member |
+| `UpdateGroup` | Auth | Owner/admin |
+| `JoinGroup` / `LeaveGroup` | Auth | |
+| `ListGroupMembers` | Auth | Member |
+
+Doc: [groups_module.md](./groups_module.md)
 
 ---
 
