@@ -1,4 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { useGetMyProfile, useUpdateMyProfile } from "@zula/api/endpoints"
+import type { MyProfileResponse, SellerProfileResponse } from "@zula/api"
 import { useEffect, useState } from "react"
 import {
   ProfileShell,
@@ -12,11 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/lib/auth"
-import {
-  type UpdateMyProfileRequest,
-  useMyProfile,
-  useUpdateMyProfile,
-} from "@/lib/profile-api"
+import { useAppForm } from "@/lib/form"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/profile")({
@@ -29,10 +27,8 @@ export const Route = createFileRoute("/profile")({
 function ProfilePage() {
   const { session, ready } = useAuth()
   const navigate = useNavigate()
-  const profileQuery = useMyProfile(ready && !!session)
-  const updateProfile = useUpdateMyProfile()
+  const profileQuery = useGetMyProfile({ query: { enabled: ready && !!session } })
   const [editing, setEditing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (ready && !session) {
@@ -70,31 +66,6 @@ function ProfilePage() {
   const me = profileQuery.data.data
   const profile = me.public
 
-  async function onSave(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError(null)
-    const form = new FormData(event.currentTarget)
-    const body: UpdateMyProfileRequest = {
-      displayName: String(form.get("displayName") ?? "").trim() || null,
-      sellerHeadline: String(form.get("sellerHeadline") ?? "").trim() || null,
-      bio: String(form.get("bio") ?? ""),
-      locationTag: String(form.get("locationTag") ?? "").trim() || null,
-      timezone: String(form.get("timezone") ?? "").trim() || null,
-      preferredLanguage: String(form.get("preferredLanguage") ?? "").trim() || null,
-      avatarUrl: String(form.get("avatarUrl") ?? "").trim() || null,
-    }
-    try {
-      await updateProfile.mutateAsync(body)
-      setEditing(false)
-    } catch (err) {
-      const detail =
-        err && typeof err === "object" && "detail" in err
-          ? String((err as { detail?: unknown }).detail)
-          : "Save failed"
-      setError(detail)
-    }
-  }
-
   return (
     <ProfileShell title="Your profile">
       <SellerProfileHeader
@@ -111,10 +82,7 @@ function ProfilePage() {
             <Button
               variant={editing ? "secondary" : "outline"}
               size="sm"
-              onClick={() => {
-                setEditing((value) => !value)
-                setError(null)
-              }}
+              onClick={() => setEditing((value) => !value)}
             >
               {editing ? "Cancel" : "Edit"}
             </Button>
@@ -125,66 +93,7 @@ function ProfilePage() {
       <SellerTrustRow profile={profile} />
 
       {editing ? (
-        <form className="space-y-4" onSubmit={(event) => void onSave(event)}>
-          <Field label="Display name" htmlFor="displayName">
-            <Input
-              id="displayName"
-              name="displayName"
-              defaultValue={profile.displayName ?? ""}
-              maxLength={100}
-            />
-          </Field>
-          <Field label="Headline" htmlFor="sellerHeadline">
-            <Input
-              id="sellerHeadline"
-              name="sellerHeadline"
-              defaultValue={profile.sellerHeadline ?? ""}
-              maxLength={160}
-            />
-          </Field>
-          <Field label="Bio" htmlFor="bio">
-            <Textarea id="bio" name="bio" defaultValue={profile.bio ?? ""} maxLength={2000} />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Location tag" htmlFor="locationTag">
-              <Input
-                id="locationTag"
-                name="locationTag"
-                defaultValue={profile.locationTag ?? ""}
-                maxLength={100}
-              />
-            </Field>
-            <Field label="Avatar URL" htmlFor="avatarUrl">
-              <Input
-                id="avatarUrl"
-                name="avatarUrl"
-                defaultValue={profile.avatarUrl ?? ""}
-                maxLength={2048}
-              />
-            </Field>
-            <Field label="Timezone" htmlFor="timezone">
-              <Input
-                id="timezone"
-                name="timezone"
-                defaultValue={me.timezone ?? ""}
-                placeholder="Europe/Warsaw"
-              />
-            </Field>
-            <Field label="Language" htmlFor="preferredLanguage">
-              <Input
-                id="preferredLanguage"
-                name="preferredLanguage"
-                defaultValue={me.preferredLanguage ?? ""}
-                placeholder="en"
-                maxLength={2}
-              />
-            </Field>
-          </div>
-          {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <Button type="submit" disabled={updateProfile.isPending}>
-            {updateProfile.isPending ? "Saving…" : "Save profile"}
-          </Button>
-        </form>
+        <ProfileEditForm me={me} profile={profile} onSaved={() => setEditing(false)} />
       ) : (
         <section className="space-y-6">
           <div className="space-y-2">
@@ -222,6 +131,175 @@ function ProfilePage() {
         </section>
       )}
     </ProfileShell>
+  )
+}
+
+function ProfileEditForm({
+  me,
+  profile,
+  onSaved,
+}: {
+  me: MyProfileResponse
+  profile: SellerProfileResponse
+  onSaved: () => void
+}) {
+  const updateProfile = useUpdateMyProfile()
+  const [error, setError] = useState<string | null>(null)
+
+  const form = useAppForm({
+    defaultValues: {
+      displayName: profile.displayName ?? "",
+      sellerHeadline: profile.sellerHeadline ?? "",
+      bio: profile.bio ?? "",
+      locationTag: profile.locationTag ?? "",
+      avatarUrl: profile.avatarUrl ?? "",
+      timezone: me.timezone ?? "",
+      preferredLanguage: me.preferredLanguage ?? "",
+    },
+    onSubmit: async ({ value }) => {
+      setError(null)
+      try {
+        await updateProfile.mutateAsync({
+          data: {
+            displayName: value.displayName.trim() || null,
+            sellerHeadline: value.sellerHeadline.trim() || null,
+            bio: value.bio,
+            locationTag: value.locationTag.trim() || null,
+            timezone: value.timezone.trim() || null,
+            preferredLanguage: value.preferredLanguage.trim() || null,
+            avatarUrl: value.avatarUrl.trim() || null,
+          },
+        })
+        onSaved()
+      } catch (err) {
+        const detail =
+          err && typeof err === "object" && "detail" in err
+            ? String((err as { detail?: unknown }).detail)
+            : "Save failed"
+        setError(detail)
+      }
+    },
+  })
+
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        void form.handleSubmit()
+      }}
+    >
+      <form.Field name="displayName">
+        {(field) => (
+          <Field label="Display name" htmlFor={field.name}>
+            <Input
+              id={field.name}
+              name={field.name}
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(event) => field.handleChange(event.target.value)}
+              maxLength={100}
+            />
+          </Field>
+        )}
+      </form.Field>
+      <form.Field name="sellerHeadline">
+        {(field) => (
+          <Field label="Headline" htmlFor={field.name}>
+            <Input
+              id={field.name}
+              name={field.name}
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(event) => field.handleChange(event.target.value)}
+              maxLength={160}
+            />
+          </Field>
+        )}
+      </form.Field>
+      <form.Field name="bio">
+        {(field) => (
+          <Field label="Bio" htmlFor={field.name}>
+            <Textarea
+              id={field.name}
+              name={field.name}
+              value={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(event) => field.handleChange(event.target.value)}
+              maxLength={2000}
+            />
+          </Field>
+        )}
+      </form.Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <form.Field name="locationTag">
+          {(field) => (
+            <Field label="Location tag" htmlFor={field.name}>
+              <Input
+                id={field.name}
+                name={field.name}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                maxLength={100}
+              />
+            </Field>
+          )}
+        </form.Field>
+        <form.Field name="avatarUrl">
+          {(field) => (
+            <Field label="Avatar URL" htmlFor={field.name}>
+              <Input
+                id={field.name}
+                name={field.name}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                maxLength={2048}
+              />
+            </Field>
+          )}
+        </form.Field>
+        <form.Field name="timezone">
+          {(field) => (
+            <Field label="Timezone" htmlFor={field.name}>
+              <Input
+                id={field.name}
+                name={field.name}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                placeholder="Europe/Warsaw"
+              />
+            </Field>
+          )}
+        </form.Field>
+        <form.Field name="preferredLanguage">
+          {(field) => (
+            <Field label="Language" htmlFor={field.name}>
+              <Input
+                id={field.name}
+                name={field.name}
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(event) => field.handleChange(event.target.value)}
+                placeholder="en"
+                maxLength={2}
+              />
+            </Field>
+          )}
+        </form.Field>
+      </div>
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      <form.Subscribe selector={(state) => state.isSubmitting}>
+        {(isSubmitting) => (
+          <Button type="submit" disabled={isSubmitting || updateProfile.isPending}>
+            {isSubmitting || updateProfile.isPending ? "Saving…" : "Save profile"}
+          </Button>
+        )}
+      </form.Subscribe>
+    </form>
   )
 }
 
