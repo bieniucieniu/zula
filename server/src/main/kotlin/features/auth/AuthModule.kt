@@ -16,25 +16,6 @@ import org.koin.dsl.module
 
 val authModule = module {
     singleOf(::AuthRepository)
-    single<TokenEncryption?> {
-        val jwtConfig: SecurityConfig = get()
-        val authSettings: AuthSettings = get()
-        val encryption = TokenEncryption.from(jwtConfig.jwt.providerTokenEncryptionKey)
-        if (authSettings.requireProviderRefreshOnLogin && encryption == null) {
-            error(
-                "PROVIDER_TOKEN_ENCRYPTION_KEY is required when AUTH_REQUIRE_PROVIDER_REFRESH_ON_LOGIN=true",
-            )
-        }
-        encryption
-    }
-    single<GoogleOAuthClient?> {
-        val security: SecurityConfig = get()
-        val google = security.oauth.google ?: return@single null
-        val http: HttpClient = get()
-        val json: Json = get()
-        GoogleOAuthClient(google, http, json)
-    }
-    singleOf(::ProviderTokenService)
 
     single<AuthProviders> {
         val http: HttpClient = get()
@@ -64,7 +45,46 @@ val authModule = module {
         }
     }
 
-    singleOf(::AuthService)
+    /**
+     * Build [ProviderTokenService] / [AuthService] explicitly.
+     * Koin `single { … }` must not return null — nullable `GoogleOAuthClient?` /
+     * `TokenEncryption?` bindings blew up with
+     * "Single instance created couldn't return value" when Google (or encryption) was unset.
+     */
+    single {
+        val security: SecurityConfig = get()
+        val authSettings: AuthSettings = get()
+        val encryption = TokenEncryption.from(security.jwt.providerTokenEncryptionKey)
+        if (authSettings.requireProviderRefreshOnLogin && encryption == null) {
+            error(
+                "PROVIDER_TOKEN_ENCRYPTION_KEY is required when AUTH_REQUIRE_PROVIDER_REFRESH_ON_LOGIN=true",
+            )
+        }
+        ProviderTokenService(
+            repository = get(),
+            encryption = encryption,
+            securityConfig = security,
+            authSettings = authSettings,
+            httpClient = get(),
+            json = get(),
+        )
+    }
+
+    single {
+        val security: SecurityConfig = get()
+        val http: HttpClient = get()
+        val json: Json = get()
+        AuthService(
+            repository = get(),
+            providers = get(),
+            jwtIssuer = get(),
+            securityConfig = security,
+            authSettings = get(),
+            providerTokenService = get(),
+            googleOAuthClient = security.oauth.google?.let { GoogleOAuthClient(it, http, json) },
+            json = json,
+        )
+    }
 
     single<JwtSessionValidator> {
         val repo: AuthRepository = get()
