@@ -38,4 +38,12 @@ class DevAuthProviderTest {
       )
     }
   }
+
+  @Test
+  fun `info lists bypass secret for local clients`() {
+    val info = provider.info()
+    assertEquals("dev", info.id)
+    assertEquals("local-dev-bypass", info.clientId)
+    assertEquals(listOf("dev@zula.local"), info.scopes)
+  }
 }

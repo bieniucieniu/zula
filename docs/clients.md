@@ -42,6 +42,7 @@ Contracts: Ktor OpenAPI (`/swagger`).
 |--------|------|
 | Web | Backend Google OAuth popup: `/api/auth/oauth/google/start?mode=popup` → server `/api/auth/callback/google` → `postMessage` (`zula.oauth.complete`) or redirect `/oauth/complete` → session cookies |
 | Native | Provider SDK / AuthSession (PKCE code) → `POST /api/auth/authenticate` → store access/refresh; bearer on requests |
+| Web + Native (local) | When `GET /api/auth/providers` lists `dev`, Dev button uses `clientId` as bypass secret → `POST /api/auth/authenticate` (`provider=dev`) |
 
 There is **no** SPA route `/oauth/callback`. Server callback is Ktor-only; SPA finish page is `/oauth/complete`.
 

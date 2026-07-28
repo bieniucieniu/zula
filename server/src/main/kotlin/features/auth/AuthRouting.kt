@@ -11,6 +11,7 @@ import com.zula.core.security.publicBaseUrl
 import com.zula.features.auth.domain.AuthenticateRequest
 import com.zula.features.auth.domain.RefreshRequest
 import com.zula.features.auth.domain.SessionResponse
+import com.zula.features.auth.provider.AuthProviders
 import com.zula.lib.id.Ids
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -27,8 +28,8 @@ import kotlin.time.Duration.Companion.hours
 fun Route.configureAuthRouting() {
     val config: SecurityConfig = application.getKoin().getOrNull()
         ?: error("SecurityConfig is required to mount auth routes; ensure security module is installed")
-    val authSettings: AuthSettings by inject()
     val authService: AuthService by inject()
+    val authProviders: AuthProviders by inject()
     val jwtConfig = config.jwt
 
     fun ApplicationCall.authSessionContext(): AuthSessionContext = AuthSessionContext(
@@ -40,7 +41,7 @@ fun Route.configureAuthRouting() {
 
         cacheOutput(1.hours) {
             get("/providers") {
-                call.respond(OAuthProvidersResponse(config.oauth.configuredProviders(authSettings)))
+                call.respond(OAuthProvidersResponse(authProviders.publicInfo()))
             }.describe {
                 operationId = "listProviders"
                 tag("auth")

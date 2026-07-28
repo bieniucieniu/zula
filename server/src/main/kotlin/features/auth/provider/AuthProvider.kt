@@ -12,4 +12,6 @@ interface AuthProvider {
 
 class AuthProviders(private val p: Map<String, AuthProvider>) : Map<String, AuthProvider> by p {
     constructor(builder: MutableMap<String, AuthProvider>.() -> Unit) : this(buildMap(builder))
+
+    fun publicInfo(): List<OAuthProviderInfo> = values.mapNotNull { it.info() }
 }

@@ -73,10 +73,8 @@ in
           host="''${lan_ip:-127.0.0.1}"
           export EXPO_PUBLIC_API_URL="http://''${host}:8000/api"
         fi
-        export EXPO_PUBLIC_DEV_AUTH_SECRET="''${EXPO_PUBLIC_DEV_AUTH_SECRET:-''${AUTH_DEV_BYPASS_SECRET:-${defaultDevAuthSecret}}}"
-        export EXPO_PUBLIC_DEV_AUTH_EMAIL="''${EXPO_PUBLIC_DEV_AUTH_EMAIL:-''${AUTH_DEV_BYPASS_EMAIL:-${defaultDevAuthEmail}}}"
         echo "native: EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL"
-        echo "native: dev auth bypass enabled ($EXPO_PUBLIC_DEV_AUTH_EMAIL)"
+        echo "native: use Dev sign-in when GET /api/auth/providers lists provider id=dev"
       '';
     in
     {
@@ -175,8 +173,6 @@ in
     CLICOLOR_FORCE = "1";
     AUTH_DEV_BYPASS_SECRET = devAuthSecret;
     AUTH_DEV_BYPASS_EMAIL = devAuthEmail;
-    EXPO_PUBLIC_DEV_AUTH_SECRET = secrets.EXPO_PUBLIC_DEV_AUTH_SECRET or devAuthSecret;
-    EXPO_PUBLIC_DEV_AUTH_EMAIL = secrets.EXPO_PUBLIC_DEV_AUTH_EMAIL or devAuthEmail;
   };
 
   scripts.pg = {
@@ -214,7 +210,7 @@ in
     echo "  db:      psql                          # interactive (needs devenv up)"
     echo "  jdbc:    $DATABASE_JDBC_URL"
     echo "  app:     $APP_URL"
-    echo "  devauth: $AUTH_DEV_BYPASS_EMAIL (bypass secret set for server + native)"
+    echo "  devauth: $AUTH_DEV_BYPASS_EMAIL (listed on GET /api/auth/providers when secret set)"
     if lan_ip="$("${root}/scripts/lan-ip.sh" 2>/dev/null)"; then
       echo "  lan:     $lan_ip  # native uses http://$lan_ip:8000/api unless EXPO_PUBLIC_API_URL set"
     fi
@@ -234,7 +230,6 @@ in
     test -n "$APP_URL"
     test -n "$PROVIDER_TOKEN_ENCRYPTION_KEY"
     test -n "$AUTH_DEV_BYPASS_SECRET"
-    test -n "$EXPO_PUBLIC_DEV_AUTH_SECRET"
 
     echo "Checking docker compose accessibility (warn-only if CI without Docker)"
     if command -v docker >/dev/null 2>&1; then

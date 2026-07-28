@@ -16,6 +16,11 @@ export const PROVIDER_DEFINITIONS: Record<string, OAuthProviderDefinition> = {
     label: "Apple",
     extraAuthParams: { response_mode: "fragment" },
   },
+  /** Local bypass when server lists `dev` on GET /auth/providers. */
+  dev: {
+    id: "dev",
+    label: "Dev",
+  },
 }
 
 export function getProviderDefinition(providerId: string): OAuthProviderDefinition | undefined {
