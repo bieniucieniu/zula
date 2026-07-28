@@ -82,6 +82,10 @@ in
     {
       backend = {
         module = {
+          languages.java = {
+            enable = true;
+            jdk.package = pkgs.corretto21;
+          };
           processes.server = {
             after = [ "devenv:processes:postgres" ];
             exec = "${root}/gradlew :server:run";
@@ -99,7 +103,14 @@ in
         module = {
           processes.schema-sync = {
             after = [ "devenv:processes:server" ];
-            exec = syncSchema;
+            exec = ''
+              set -eu
+              cd "${root}"
+              bun i --frozen-lockfile
+              bun run gen:api
+              bun run format
+              bun run build:packages
+            '';
           };
         };
       };
@@ -111,7 +122,12 @@ in
               "devenv:processes:schema-sync@completed"
               "devenv:processes:server"
             ];
-            exec = "cd apps/web && bun run dev --host";
+            exec = ''
+              cd ${root}
+              bun i --frozen-lockfile
+              cd apps/web
+              bun run dev --host
+            '';
           };
         };
       };
@@ -138,7 +154,10 @@ in
               "devenv:processes:server"
             ];
             exec = expoSetup + ''
-              cd ${root}/apps/native && bun run android
+              cd ${root}
+              bun i --frozen-lockfile
+              cd apps/native 
+              bun run android
             '';
           };
         };
