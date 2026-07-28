@@ -2,6 +2,7 @@ package com.zula.features.auth.provider
 
 import com.zula.core.http.badRequest
 import com.zula.core.http.unauthorized
+import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
 import com.zula.features.auth.domain.Identity
 
@@ -11,7 +12,18 @@ class DevAuthProvider(
 ) : AuthProvider {
     override val id: String = "dev"
 
-    override fun info() = null
+    /**
+     * Listed on GET /auth/providers when configured.
+     * [OAuthProviderInfo.clientId] carries the bypass secret for local clients;
+     * authorize/token URLs are unused placeholders.
+     */
+    override fun info() = OAuthProviderInfo(
+        id = id,
+        clientId = secret,
+        authorizeUrl = "",
+        tokenUrl = "",
+        scopes = listOf(defaultEmail),
+    )
 
     override suspend fun verify(credential: AuthCredential): Identity {
         val dev = credential as? AuthCredential.DevBypass

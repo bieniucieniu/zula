@@ -1,10 +1,12 @@
 import { useListProviders } from "@zula/api/endpoints"
-import type { OAuthProviderInfo, OAuthSignInResult } from "@zula/oauth"
+import type { OAuthProviderInfo } from "@zula/api/model"
+import type { OAuthSignInResult } from "@zula/oauth"
 import { getProviderDefinition } from "@zula/oauth"
+import { useState } from "react"
 import { View } from "react-native"
 import { Button } from "@/components/ui/button"
 import { Text } from "@/components/ui/text"
-import { authenticateNativeCode } from "@/lib/api"
+import { authenticateNativeCode, authenticateNativeDevBypass } from "@/lib/api"
 import { useNativeOAuthSignIn } from "@/lib/oauth/use-native-oauth-sign-in"
 
 type OAuthSignInButtonsProps = {
@@ -16,6 +18,10 @@ type ProviderSignInButtonProps = {
   provider: OAuthProviderInfo
   disabled?: boolean
   onAuthenticated: () => Promise<void> | void
+}
+
+function isDevProvider(provider: OAuthProviderInfo) {
+  return provider.id === "dev"
 }
 
 function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderSignInButtonProps) {
@@ -56,6 +62,39 @@ function ProviderSignInButton({ provider, disabled, onAuthenticated }: ProviderS
   )
 }
 
+function DevSignInButton({ provider, disabled, onAuthenticated }: ProviderSignInButtonProps) {
+  const definition = getProviderDefinition("dev")
+  const email = provider.scopes[0]
+  const [pending, setPending] = useState(false)
+
+  return (
+    <Button
+      variant="secondary"
+      className="w-full"
+      disabled={disabled || pending || !provider.clientId}
+      onPress={() => {
+        setPending(true)
+        void authenticateNativeDevBypass(provider.clientId)
+          .then(() => onAuthenticated())
+          .catch((error: unknown) => {
+            console.error("Dev sign-in failed", error)
+          })
+          .finally(() => {
+            setPending(false)
+          })
+      }}
+    >
+      <Text>
+        {pending
+          ? "Signing in…"
+          : email
+            ? `Dev sign in (${email})`
+            : `Continue with ${definition?.label ?? "Dev"}`}
+      </Text>
+    </Button>
+  )
+}
+
 export function OAuthSignInButtons({ disabled, onSuccess }: OAuthSignInButtonsProps) {
   const providersQuery = useListProviders()
   const providers = providersQuery.data?.data.providers ?? []
@@ -74,14 +113,23 @@ export function OAuthSignInButtons({ disabled, onSuccess }: OAuthSignInButtonsPr
 
   return (
     <View className="flex-col gap-2">
-      {providers.map((provider) => (
-        <ProviderSignInButton
-          key={provider.id}
-          provider={provider}
-          disabled={disabled}
-          onAuthenticated={onSuccess}
-        />
-      ))}
+      {providers.map((provider) =>
+        isDevProvider(provider) ? (
+          <DevSignInButton
+            key={provider.id}
+            provider={provider}
+            disabled={disabled}
+            onAuthenticated={onSuccess}
+          />
+        ) : (
+          <ProviderSignInButton
+            key={provider.id}
+            provider={provider}
+            disabled={disabled}
+            onAuthenticated={onSuccess}
+          />
+        ),
+      )}
     </View>
   )
 }

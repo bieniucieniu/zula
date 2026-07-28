@@ -31,7 +31,7 @@ class GoogleAuthProvider(
         id = id,
         clientId = config.clientId,
         authorizeUrl = "https://accounts.google.com/o/oauth2/auth",
-        tokenUrl = "https://accounts.google.com/o/oauth2/token",
+        tokenUrl = "https://oauth2.googleapis.com/token",
         scopes = listOf("openid", "email", "profile"),
     )
 

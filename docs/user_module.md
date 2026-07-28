@@ -155,7 +155,7 @@ Upon user registration/login via OAuth (`POST /api/auth/authenticate` with provi
 
 | Route | Auth | Purpose |
 |-------|------|---------|
-| `GET /api/auth/providers` | Public | List OAuth providers |
+| `GET /api/auth/providers` | Public | List providers via `AuthProvider.info()` (incl. `dev` when configured) |
 | `POST /api/auth/authenticate` | Public | Exchange `idToken` → access JWT (+ refresh when issued) |
 | `POST /api/auth/refresh` | Public | Rotate refresh token; new access JWT |
 | `GET /api/auth/session` | Public / Auth | Session probe (Bearer or refresh cookie) |
