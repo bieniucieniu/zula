@@ -8,8 +8,10 @@ import com.zula.core.security.jwt.keys.JwtKeySetVerifier
 import com.zula.core.security.jwt.keys.loadJwtKeySet
 import com.zula.lib.id.Ids
 import io.ktor.client.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
 import io.ktor.http.auth.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
@@ -55,7 +57,11 @@ fun securityModule(config: SecurityConfig): Module = module {
     }
 
     single {
-        HttpClient()
+        HttpClient {
+            install(ContentNegotiation) {
+                json(get())
+            }
+        }
     }
 }
 

@@ -4,7 +4,7 @@ import com.zula.core.http.badRequest
 import com.zula.core.http.unauthorized
 import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
-import com.zula.features.auth.domain.Identity
+import com.zula.features.auth.domain.ProviderIdentity
 
 class DevAuthProvider(
     private val secret: String,
@@ -25,7 +25,7 @@ class DevAuthProvider(
         scopes = listOf(defaultEmail),
     )
 
-    override suspend fun verify(credential: AuthCredential): Identity {
+    override suspend fun verify(credential: AuthCredential): ProviderIdentity {
         val dev = credential as? AuthCredential.DevBypass
             ?: badRequest("dev requires DevBypass credential")
         if (!constantTimeEquals(dev.secret, secret)) {
@@ -33,7 +33,7 @@ class DevAuthProvider(
         }
 
         val email = defaultEmail
-        return Identity(
+        return ProviderIdentity(
             provider = id,
             providerUserId = email.lowercase(),
             email = email,

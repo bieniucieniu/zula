@@ -3,7 +3,7 @@ package com.zula.features.auth.provider
 import com.zula.core.security.AppleOAuthConfig
 import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
-import com.zula.features.auth.domain.Identity
+import com.zula.features.auth.domain.ProviderIdentity
 import io.ktor.client.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -32,11 +32,11 @@ class AppleAuthProvider(
         scopes = listOf("name", "email"),
     )
 
-    override suspend fun verify(credential: AuthCredential): Identity {
+    override suspend fun verify(credential: AuthCredential): ProviderIdentity {
         val idToken = (credential as? AuthCredential.OAuthIdToken)?.idToken
             ?: error("Apple auth requires OAuthIdToken credential")
         val decoded = verifier.verify(idToken)
-        return Identity(
+        return ProviderIdentity(
             provider = id,
             providerUserId = decoded.subject,
             email = decoded.getClaim("email").asString(),

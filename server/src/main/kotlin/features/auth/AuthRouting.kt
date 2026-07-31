@@ -41,7 +41,11 @@ fun Route.configureAuthRouting() {
 
         cacheOutput(1.hours) {
             get("/providers") {
-                call.respond(OAuthProvidersResponse(authProviders.publicInfo()))
+                call.respond(
+                    OAuthProvidersResponse(
+                        providers = authProviders.publicInfo()
+                    )
+                )
             }.describe {
                 operationId = "listProviders"
                 tag("auth")
@@ -51,48 +55,38 @@ fun Route.configureAuthRouting() {
         get("/oauth/google/start") {
             val mode = call.request.queryParameters["mode"] ?: "redirect"
             val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
-            val start = authService.startGoogleOAuth(mode, redirectUri)
-            call.setOAuthStateCookies(start.state, start.nonce, mode)
-            call.respondRedirect(start.authorizeUrl)
+            val (authorizeUrl, state, nonce) = authService.startGoogleOAuth(mode, redirectUri)
+            call.setOAuthStateCookies(state, nonce, mode)
+            call.respondRedirect(authorizeUrl)
         }.describe {
             operationId = "startGoogleOAuth"
             tag("auth")
         }
 
         get("/callback/google") {
-            val code = call.request.queryParameters["code"] ?: badRequest("code required")
-            val state = call.request.queryParameters["state"] ?: badRequest("state required")
             val error = call.request.queryParameters["error"]
             if (error != null) {
                 val mode = call.readOAuthModeCookie()
                 call.clearOAuthStateCookies()
-                if (mode == "popup") {
-                    call.respondOAuthPopupResult(success = false, error = error)
-                } else {
-                    call.respondRedirect("/oauth/complete?success=0&error=${error.encodeURLParameter()}")
-                }
+                if (mode == "popup") call.respondOAuthPopupResult(success = false, error = error)
+                else call.respondRedirect("/oauth/complete?success=0&error=${error.encodeURLParameter()}")
                 return@get
             }
+            if (!call.isOAuthStateMatch()) unauthorized("Invalid OAuth state")
 
-            val expectedState = call.readOAuthStateCookie() ?: unauthorized("Invalid OAuth state")
-            val expectedNonce = call.readOAuthNonceCookie() ?: unauthorized("Invalid OAuth nonce")
-            call.clearOAuthStateCookies()
-            val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
             val tokens = authService.completeGoogleOAuthCallback(
-                code = code,
-                state = state,
-                expectedState = expectedState,
-                expectedNonce = expectedNonce,
-                redirectUri = redirectUri,
+                code = call.request.queryParameters["code"] ?: badRequest("code required"),
+                expectedNonce = call.readOAuthNonceCookie() ?: unauthorized("Invalid OAuth nonce"),
+                redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl),
                 session = call.authSessionContext(),
             )
+
+            call.clearOAuthStateCookies()
             call.setAccessCookies(tokens)
+
             val mode = call.readOAuthModeCookie()
-            if (mode == "popup") {
-                call.respondOAuthPopupResult(success = true)
-            } else {
-                call.respondRedirect("/oauth/complete?success=1")
-            }
+            if (mode == "popup") call.respondOAuthPopupResult(success = true)
+            else call.respondRedirect("/oauth/complete?success=1")
         }.describe {
             operationId = "googleOAuthCallback"
             tag("auth")
@@ -113,8 +107,8 @@ fun Route.configureAuthRouting() {
         post("/refresh") {
             try {
                 val refreshBody: RefreshRequest = call.receive<RefreshRequest>()
-                val refreshToken = refreshBody.refreshToken ?: call.readRefreshCookie()
-                ?: badRequest("refreshToken required")
+                val refreshToken =
+                    refreshBody.refreshToken ?: call.readRefreshCookie() ?: badRequest("refreshToken required")
                 val tokens = authService.refresh(refreshToken, call.authSessionContext())
                 call.setAccessCookies(tokens)
                 call.respond(tokens)
@@ -131,11 +125,11 @@ fun Route.configureAuthRouting() {
             get("/session") {
                 val principal: JWTPrincipal? = call.principal()
                 if (principal != null) {
-                    val sessionId = principal.payload.getClaim("sid").asString()?.let(Ids::parseOrNull)
-                        ?: unauthorized("Invalid session")
+                    val sessionId = principal.payload.getClaim("sid").asString()?.let(Ids::parseOrNull) ?: unauthorized(
+                        "Invalid session"
+                    )
                     authService.ensureAuthenticatedSession(sessionId, forceProviderCheck = false)
-                    val email = principal.payload.getClaim("email").asString()
-                        ?: authService.sessionEmail(sessionId)
+                    val email = principal.payload.getClaim("email").asString() ?: authService.sessionEmail(sessionId)
                     call.respond(
                         SessionResponse(
                             expiresIn = jwtConfig.accessTokenTtlSeconds,
@@ -166,8 +160,7 @@ fun Route.configureAuthRouting() {
                 val refreshBody: RefreshRequest? = runCatching {
                     call.receive<RefreshRequest>()
                 }.getOrNull()
-                val refreshToken = refreshBody?.refreshToken
-                    ?: call.readRefreshCookie()
+                val refreshToken = refreshBody?.refreshToken ?: call.readRefreshCookie()
                 authService.logout(sessionId, refreshToken)
                 call.clearAuthCookies()
                 call.respond(HttpStatusCode.NoContent)
@@ -180,8 +173,7 @@ fun Route.configureAuthRouting() {
         authenticate(AuthProviderNames.JWT) {
             get("/providers/linked") {
                 val principal: JWTPrincipal? = call.principal()
-                val userId = principal?.payload?.subject?.let(Ids::parseOrNull)
-                    ?: unauthorized("Invalid subject")
+                val userId = principal?.payload?.subject?.let(Ids::parseOrNull) ?: unauthorized("Invalid subject")
                 call.respond(authService.listLinkedProviders(userId))
             }.describe {
                 operationId = "listLinkedProviders"

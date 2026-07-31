@@ -1,6 +1,6 @@
 package com.zula.features.auth
 
-import com.zula.User_identities
+import com.zula.Database
 import com.zula.core.http.badRequest
 import com.zula.core.http.conflict
 import com.zula.core.http.unauthorized
@@ -17,7 +17,7 @@ import kotlinx.serialization.json.JsonObject
 import org.postgresql.util.PSQLException
 import java.security.SecureRandom
 import java.time.Instant
-import java.util.Base64
+import java.util.*
 import kotlin.uuid.Uuid
 
 data class AuthSessionContext(
@@ -40,6 +40,7 @@ class AuthService(
     val providerTokenService: ProviderTokenService,
     val googleOAuthClient: GoogleOAuthClient?,
     val json: Json,
+    val db: Database
 ) {
     private val secureRandom = SecureRandom()
 
@@ -65,26 +66,20 @@ class AuthService(
 
     suspend fun completeGoogleOAuthCallback(
         code: String,
-        state: String,
-        expectedState: String,
         expectedNonce: String,
         redirectUri: String,
         session: AuthSessionContext,
     ): AuthTokensResponse {
-        if (state != expectedState) unauthorized("Invalid OAuth state")
+        val tokenResponse = requireGoogleOAuthClient().exchangeCode(code, redirectUri)
 
-        val tokenResponse = requireGoogleOAuthClient().exchangeCode(
-            code = code,
-            redirectUri = redirectUri,
-        )
-        if (tokenResponse.error != null || tokenResponse.idToken.isNullOrBlank()) {
+        if (tokenResponse.error != null || tokenResponse.idToken.isNullOrBlank())
             badRequest(tokenResponse.errorDescription ?: tokenResponse.error ?: "Google token exchange failed")
-        }
+
 
         return authenticateOAuthTokens(
             session = session,
             provider = "google",
-            idToken = tokenResponse.idToken!!,
+            idToken = tokenResponse.idToken,
             providerRefreshToken = tokenResponse.refreshToken,
             deviceInfo = null,
             expectedNonce = expectedNonce,
@@ -101,22 +96,22 @@ class AuthService(
 
     suspend fun ensureIdentity(
         userId: Uuid,
-        identity: Identity,
+        providerIdentity: ProviderIdentity,
         status: String,
         scopes: String?,
     ): Uuid {
         val metadataJson =
-            identity.metadata?.let {
+            providerIdentity.metadata?.let {
                 val serializer = JsonObject.serializer()
                 json.encodeToString(serializer, it)
             }
-        val existingIdentity = repository.findIdentity(identity.provider, identity.providerUserId)
+        val existingIdentity = repository.findIdentity(providerIdentity.provider, providerIdentity.providerUserId)
         if (existingIdentity?.id == null) {
             return repository.insertIdentity(
                 userId = userId,
-                provider = identity.provider,
-                providerUserId = identity.providerUserId,
-                email = identity.email,
+                provider = providerIdentity.provider,
+                providerUserId = providerIdentity.providerUserId,
+                email = providerIdentity.email,
                 metadata = metadataJson,
                 refreshEnc = null,
                 status = status,
@@ -128,7 +123,7 @@ class AuthService(
         }
         repository.updateIdentityLogin(
             id = existingIdentity.id,
-            email = identity.email,
+            email = providerIdentity.email,
             metadata = metadataJson,
             status = existingIdentity.credentials_status,
             scopes = scopes ?: existingIdentity.scopes,
@@ -158,44 +153,41 @@ class AuthService(
         session: AuthSessionContext,
     ): AuthTokensResponse {
         val provider = providers[request.provider] ?: badRequest("Unknown auth provider: ${request.provider}")
-        val identity = provider.verify(AuthCredential.DevBypass(request.code!!, email = null))
+        val identity = provider.verify(request.code ?: badRequest("missing code"))
+
         val existingUser = repository.findUserByIdentity(identity.provider, identity.providerUserId)
         val userId = existingUser?.id ?: createUserWithUniqueUsername(identity)
         val identityId = ensureIdentity(userId, identity, CredentialsStatus.MISSING, scopes = null)
-        return establishSession(
-            session = session,
-            userId = userId,
-            identityId = identityId,
-            amr = AuthMethods.DEV,
-            deviceInfo = request.deviceInfo,
-        )
+        return establishSession(session, userId, identityId, AuthMethods.DEV, request.deviceInfo)
     }
 
     private suspend fun authenticateAuthorizationCode(
         request: AuthenticateRequest,
         session: AuthSessionContext,
     ): AuthTokensResponse {
-        if (request.provider != "google") {
-            badRequest("Authorization code flow is only supported for Google")
-        }
         val redirectUri = request.redirectUri?.takeIf { it.isNotBlank() }
             ?: badRequest("redirectUri required for authorization code flow")
-        val tokenResponse = requireGoogleOAuthClient().exchangeCode(
-            code = request.code!!,
-            redirectUri = redirectUri,
-            codeVerifier = request.codeVerifier,
-        )
-        if (tokenResponse.error != null || tokenResponse.idToken.isNullOrBlank()) {
-            badRequest(tokenResponse.errorDescription ?: tokenResponse.error ?: "Google token exchange failed")
+        val code = request.code.takeIf { it.isNullOrBlank() }
+            ?: badRequest("Authorization code required for authorization flow")
+        return when (request.provider) {
+            "google" -> {
+                val tokenResponse = requireGoogleOAuthClient().exchangeCode(code, redirectUri, request.codeVerifier)
+
+                if (tokenResponse.error != null || tokenResponse.idToken.isNullOrBlank())
+                    badRequest(tokenResponse.errorDescription ?: tokenResponse.error ?: "Google token exchange failed")
+
+                authenticateOAuthTokens(
+                    session = session,
+                    provider = request.provider,
+                    idToken = tokenResponse.idToken,
+                    providerRefreshToken = tokenResponse.refreshToken,
+                    deviceInfo = request.deviceInfo,
+                    scopes = request.scopes,
+                )
+            }
+
+            else -> badRequest("Authorization code flow is not supported for [${request.provider}], is only supported for Google")
         }
-        return authenticateOAuthTokens(
-            session = session,
-            provider = request.provider,
-            idToken = tokenResponse.idToken!!,
-            providerRefreshToken = tokenResponse.refreshToken,
-            deviceInfo = request.deviceInfo,
-            scopes = request.scopes,
-        )
     }
 
     private suspend fun authenticateOAuthTokens(
@@ -208,49 +200,21 @@ class AuthService(
         expectedNonce: String? = null,
     ): AuthTokensResponse {
         val authProvider = providers[provider] ?: badRequest("Unknown auth provider: $provider")
-        val identity = authProvider.verify(
-            AuthCredential.OAuthIdToken(
-                idToken = idToken,
-                providerRefreshToken = providerRefreshToken,
-                scopes = scopes,
-                expectedNonce = expectedNonce,
-            ),
-        )
+        val providerIdentity = authProvider.verify(idToken, providerRefreshToken, scopes, expectedNonce)
 
-        val existingUser = repository.findUserByIdentity(identity.provider, identity.providerUserId)
-        val userId = existingUser?.id ?: createUserWithUniqueUsername(identity)
+        val userId = ensureUserByProvider(providerIdentity)
+        val identityId = ensureIdentity(userId, providerIdentity, CredentialsStatus.MISSING, scopes)
 
-        val identityId = ensureIdentity(
-            userId,
-            identity,
-            status = CredentialsStatus.MISSING,
-            scopes = scopes,
-        )
-        val identityRow = repository.findIdentityById(identityId)
-            ?: badRequest("Identity not found")
+        persistProviderRefresh(identityId, providerRefreshToken)
 
-        persistProviderRefresh(identityRow, providerRefreshToken)
-
-        return establishSession(
-            session = session,
-            userId = userId,
-            identityId = identityId,
-            amr = AuthMethods.amrFor(provider),
-            deviceInfo = deviceInfo,
-        )
+        return establishSession(session, userId, identityId, AuthMethods.amrFor(provider), deviceInfo)
     }
 
-    private fun persistProviderRefresh(identity: User_identities, providerRefreshToken: String?) {
-        if (!providerRefreshToken.isNullOrBlank()) {
-            providerTokenService.storeProviderRefresh(identity.id, providerRefreshToken)
-            return
-        }
-        if (providerTokenService.hasStoredProviderRefresh(identity)) {
-            return
-        }
-        if (authSettings.requireProviderRefreshOnLogin) {
-            badRequest("provider_refresh_required")
-        }
+    private fun persistProviderRefresh(identityId: Uuid, providerRefreshToken: String?) {
+        if (!providerRefreshToken.isNullOrBlank())
+            return providerTokenService.storeProviderRefresh(identityId, providerRefreshToken)
+
+        if (authSettings.requireProviderRefreshOnLogin) badRequest("provider_refresh_required")
     }
 
     suspend fun refresh(refreshToken: String, session: AuthSessionContext): AuthTokensResponse {
@@ -376,7 +340,14 @@ class AuthService(
         )
     }
 
-    private fun createUserWithUniqueUsername(identity: Identity): Uuid {
+    private fun ensureUserByProvider(identity: ProviderIdentity): Uuid {
+        return db.transactionWithResult {
+            val existingUser = repository.findUserByIdentity(identity.provider, identity.providerUserId)
+            existingUser?.id ?: createUserWithUniqueUsername(identity)
+        }
+    }
+
+    private fun createUserWithUniqueUsername(identity: ProviderIdentity): Uuid {
         val base = generateUsername(identity)
         repeat(8) { attempt ->
             val username = if (attempt == 0) {
@@ -406,7 +377,7 @@ class AuthService(
         return false
     }
 
-    private fun generateUsername(identity: Identity): String {
+    private fun generateUsername(identity: ProviderIdentity): String {
         val base = identity.email?.substringBefore('@')
             ?: "${identity.provider}_${identity.providerUserId.take(8)}"
         return base.lowercase().filter { it.isLetterOrDigit() || it == '_' }.take(40)

@@ -2,8 +2,8 @@ package com.zula.features.auth.provider
 
 import com.zula.core.security.GoogleOAuthConfig
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.request.forms.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -43,8 +43,8 @@ class GoogleOAuthClient(
         code: String,
         redirectUri: String,
         codeVerifier: String? = null,
-    ): GoogleAuthorizationCodeResponse {
-        val body = httpClient.submitForm(
+    ): GoogleAuthorizationCodeResponse =
+        httpClient.submitForm(
             url = "https://oauth2.googleapis.com/token",
             formParameters = Parameters.build {
                 append("grant_type", "authorization_code")
@@ -56,9 +56,7 @@ class GoogleOAuthClient(
                     append("code_verifier", codeVerifier)
                 }
             },
-        ).bodyAsText()
-        return json.decodeFromString(body)
-    }
+        ).body()
 }
 
 @Serializable

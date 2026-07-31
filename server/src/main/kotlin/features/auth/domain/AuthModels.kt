@@ -3,7 +3,7 @@ package com.zula.features.auth.domain
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
-data class Identity(
+data class ProviderIdentity(
     val provider: String,
     val providerUserId: String,
     val email: String?,

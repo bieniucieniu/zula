@@ -5,7 +5,7 @@ import com.zula.core.http.unauthorized
 import com.zula.core.security.GoogleOAuthConfig
 import com.zula.features.auth.OAuthProviderInfo
 import com.zula.features.auth.domain.AuthCredential
-import com.zula.features.auth.domain.Identity
+import com.zula.features.auth.domain.ProviderIdentity
 import io.ktor.client.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -35,7 +35,7 @@ class GoogleAuthProvider(
         scopes = listOf("openid", "email", "profile"),
     )
 
-    override suspend fun verify(credential: AuthCredential): Identity {
+    override suspend fun verify(credential: AuthCredential): ProviderIdentity {
         val token = credential as? AuthCredential.OAuthIdToken
             ?: error("Google auth requires OAuthIdToken credential")
         val decoded = verifier.verify(token.idToken)
@@ -44,7 +44,7 @@ class GoogleAuthProvider(
             val nonce = decoded.getClaim("nonce").asString()
             if (nonce != expectedNonce) unauthorized("Invalid OAuth nonce")
         }
-        return Identity(
+        return ProviderIdentity(
             provider = id,
             providerUserId = decoded.subject,
             email = decoded.getClaim("email").asString(),

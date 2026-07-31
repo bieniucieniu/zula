@@ -16,6 +16,9 @@ import java.security.spec.RSAPublicKeySpec
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+
+const val KEYS_LOADED_MAX_AGE = 900_000 // 15 min
+
 class OidcIdTokenVerifier(
     val httpClient: HttpClient,
     val jwksUrl: String,
@@ -30,10 +33,7 @@ class OidcIdTokenVerifier(
         refreshKeysIfNeeded()
         val decoded = JWT.decode(idToken)
         val kid = decoded.keyId ?: error("ID token missing kid")
-        val algorithm = keyCache[kid] ?: run {
-            refreshKeys(force = true)
-            keyCache[kid] ?: error("Unknown key id: $kid")
-        }
+        val algorithm = keyCache[kid] ?: error("Unknown key id: $kid")
         val verifier = JWT.require(algorithm)
             .withIssuer(*issuers.toTypedArray())
             .withAudience(*audiences.toTypedArray())
@@ -42,13 +42,12 @@ class OidcIdTokenVerifier(
     }
 
     private suspend fun refreshKeysIfNeeded() {
-        if (keyCache.isEmpty() || System.currentTimeMillis() - keysLoadedAt > 3_600_000) {
-            refreshKeys(force = true)
+        if (keyCache.isEmpty() || System.currentTimeMillis() - keysLoadedAt > KEYS_LOADED_MAX_AGE) {
+            refreshKeys()
         }
     }
 
-    private suspend fun refreshKeys(force: Boolean) {
-        if (!force && keyCache.isNotEmpty()) return
+    private suspend fun refreshKeys() {
         val remote: String = httpClient.get(jwksUrl).body()
         val jwks: RemoteJwks = json.decodeFromString(remote)
         val next = ConcurrentHashMap<String, Algorithm>()

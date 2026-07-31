@@ -1,9 +1,10 @@
 package com.zula.features.auth.persistence
 
-import com.zula.*
-import com.zula.core.http.badRequest
+import com.zula.Database
+import com.zula.User_identities
+import com.zula.User_sessions
+import com.zula.Users
 import com.zula.core.http.unauthorized
-import com.zula.features.auth.domain.AuthMethods
 import java.time.Instant
 import kotlin.uuid.Uuid
 
@@ -51,13 +52,13 @@ class AuthRepository(
     fun findIdentity(provider: String, providerUserId: String): User_identities? =
         queries.findIdentityByProvider(provider, providerUserId).executeAsOneOrNull()
 
-    fun updateIdentityLogin(id: Uuid, email: String?, metadata: String?, status: String, scopes: String?) {
+    fun updateIdentityLogin(id: Uuid, email: String?, metadata: String?, status: String, scopes: String?) =
         queries.updateIdentityLogin(email, metadata, status, scopes, id)
-    }
 
-    fun updateIdentityProviderRefresh(id: Uuid, refreshEnc: String?, status: String, checkedAt: Long) {
+
+    fun updateIdentityProviderRefresh(id: Uuid, refreshEnc: String?, status: String, checkedAt: Long) =
         queries.updateIdentityProviderRefresh(refreshEnc, status, checkedAt, id)
-    }
+
 
     fun updateIdentityProviderTokens(
         id: Uuid,

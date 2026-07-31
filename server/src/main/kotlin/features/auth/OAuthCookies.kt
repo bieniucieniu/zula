@@ -2,7 +2,6 @@ package com.zula.features.auth
 
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 
 const val OAUTH_STATE_COOKIE_NAME = "zula_oauth_state"
@@ -32,6 +31,13 @@ fun ApplicationCall.setOAuthStateCookies(state: String, nonce: String, mode: Str
 }
 
 fun ApplicationCall.readOAuthStateCookie(): String? = request.cookies[OAUTH_STATE_COOKIE_NAME]
+
+fun ApplicationCall.isOAuthStateMatch(
+    expectedState: String? = request.queryParameters["state"],
+    cookieState: String? = readOAuthStateCookie()
+): Boolean {
+    return (cookieState != null && expectedState != null && expectedState == cookieState)
+}
 
 fun ApplicationCall.readOAuthNonceCookie(): String? = request.cookies[OAUTH_NONCE_COOKIE_NAME]
 
