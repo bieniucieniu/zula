@@ -4,11 +4,7 @@ import com.zula.core.security.JwtSessionValidator
 import com.zula.core.security.SecurityConfig
 import com.zula.features.auth.crypto.TokenEncryption
 import com.zula.features.auth.persistence.AuthRepository
-import com.zula.features.auth.provider.AppleAuthProvider
-import com.zula.features.auth.provider.AuthProviders
-import com.zula.features.auth.provider.DevAuthProvider
-import com.zula.features.auth.provider.GoogleAuthProvider
-import com.zula.features.auth.provider.GoogleOAuthClient
+import com.zula.features.auth.provider.*
 import io.ktor.client.*
 import kotlinx.serialization.json.Json
 import org.koin.core.module.dsl.singleOf
@@ -83,6 +79,7 @@ val authModule = module {
             providerTokenService = get(),
             googleOAuthClient = security.oauth.google?.let { GoogleOAuthClient(it, http, json) },
             json = json,
+            db = get()
         )
     }
 
