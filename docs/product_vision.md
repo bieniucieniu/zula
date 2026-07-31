@@ -12,7 +12,7 @@ Zula is a **social marketplace**: a personalized feed plus tools to match **supp
 
 Closest analogs: **Booksy** (services) × **OLX / Facebook sales groups** (offers, local demand, import/resell communities) — without classifieds chaos and unsafe off-platform DMs.
 
-**Primary goal:** simplify and protect the path from discovery → negotiation → handoff, for both sides.
+**Primary goal:** simplify and protect the path from discovery → negotiation → location/schedule → handoff (payments later), for both sides.
 
 ---
 
@@ -53,20 +53,28 @@ See [groups_module.md](./groups_module.md).
 
 ### Communication & deals
 
-- **Chat** — rooms with **2+** participants: trade-scoped (MVP) and later group-scoped.
+- **Chat** — rooms with **2+** participants: trade-scoped (MVP) and later group-scoped. Delivery via **SSE** (`GET /api/events/stream`), not WebSockets. [chat_module.md](./chat_module.md).
 - **Negotiation** — price and terms inside chat + trade state machine (thin clients; rules on backend).
-- **Trade templates** — including **barter / swap** and **cash meetup** coordination ([trade_module.md](./trade_module.md)). No in-app card payments in current plan; platform **coordinates** the deal and **verifies handoff**.
+- **Trade templates** — including **barter / swap** and **cash meetup** coordination ([trade_module.md](./trade_module.md)). Platform **coordinates** the deal and **verifies handoff**.
+- **Payments** — **not in MVP**. Keep a **payment-ready seam**: trade states / events that can later emit `PAYMENT_*` and a `PaymentGateway` port (Stripe / PayU / BLIK). No card rails, InPost labels, or recurring billing until a dedicated post-MVP wave.
 - **Safety** — blocks, moderation, dual trust scores, meetup **PIN/QR validation**, optional public disclosures — protect buyer **and** seller time/reputation (not escrow unless product later decides).
 
-### Personalized feed
+### Personalized feed & social layer
 
 - Shared for-you surface for offers, needs, and trips.
-- Ranking: interest / search / activity first; later optional external signals (Meta, Google, cookies) if privacy policy allows.
+- **Social actions (MVP):** `like` / **bump** (like also boosts ranking), public **comments**, private **bookmarks** (save for later). [feed_module.md](./feed_module.md).
+- Ranking: interest / search / activity / bumps first; later optional external signals (Meta, Google, cookies) if privacy policy allows.
 - Trait taxonomy + embeddings: [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md).
 
-### Geolocation
+### Location — decision matrix + fingerprints
 
-Coarse **location tags** from **network fingerprints** — no continuous GPS on the server. Used for profile `location_tag`, trip posts, and local matching. [geolocation_module.md](./geolocation_module.md).
+Two complementary layers:
+
+1. **Location decision matrix (trade / offer logistics)** — when creating an offer or negotiating in chat, parties set who picks the place:
+   - **Provider** — service at supplier site (workshop, salon, tutor’s place).
+   - **Client** — mobile service; exact address shared **after** accept.
+   - **Negotiated / mutual** — neutral meetup, trip pickup, swap point.
+2. **Network fingerprints (discovery)** — coarse **location tags** from fingerprints — no continuous GPS on the server. Profile `location_tag`, trip posts, local matching. [geolocation_module.md](./geolocation_module.md).
 
 ### Public seller presence
 
@@ -96,13 +104,13 @@ AI is a **quiet assistant**, not an agent that owns the relationship.
 | Identity, trust, blocks, ratings | [user_module.md](./user_module.md), [trust_events.md](./trust_events.md) |
 | Public seller page | [seller_profile_module.md](./seller_profile_module.md) |
 | Portfolio / activity | [profile_portfolio_module.md](./profile_portfolio_module.md) |
-| Offers, needs, trips, for-you | [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md) |
+| Offers, needs, trips, for-you, like/bump, comments, bookmarks | [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md) |
 | Communities | [groups_module.md](./groups_module.md) |
 | Uploads & image vectors | [media_module.md](./media_module.md) |
-| Coarse location | [geolocation_module.md](./geolocation_module.md) |
-| Deal lifecycle, **swap / meetup** templates | [trade_module.md](./trade_module.md) |
+| Coarse fingerprint location | [geolocation_module.md](./geolocation_module.md) |
+| Deal lifecycle, **swap / meetup**, location modes, payment prep | [trade_module.md](./trade_module.md) |
 | Meetup PIN/QR | [validation_module.md](./validation_module.md) |
-| Multi-party chat | [chat_module.md](./chat_module.md) |
+| Multi-party chat + SSE events | [chat_module.md](./chat_module.md) |
 | Reports / hide | [moderation_module.md](./moderation_module.md) |
 
 Rollout order: [implementation_plan.md](./implementation_plan.md). **MVP includes groups** (membership + group feed in Wave 1; group chat in Wave 3) — not a post-launch add-on.

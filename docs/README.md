@@ -10,7 +10,7 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 
 | Doc | Purpose |
 |-----|---------|
-| [product_vision.md](./product_vision.md) | Product framing: audience, offers/needs, groups, trade/geo/AI |
+| [product_vision.md](./product_vision.md) | Product framing: audience, offers/needs, groups, social, location modes, trade/geo/AI |
 | [architecture.md](./architecture.md) | Ktor `app` / `core` / `features` layout, boundaries, ownership |
 | [schema.md](./schema.md) | Canonical database tables by module |
 | [api_index.md](./api_index.md) | REST routes (see also `/swagger`) |
@@ -51,12 +51,12 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 |-----------------------|---------------|
 | Product vision & audience | [product_vision.md](./product_vision.md) |
 | Thin-client, heavy-backend | [conventions.md](./conventions.md) |
-| Social feed (offers / needs / trips) | [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md) |
+| Social feed (offers / needs / trips) + like/bump, comments, bookmarks | [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md) |
 | Communities (FB-group analog) | [groups_module.md](./groups_module.md) |
-| Stateful group chats | [chat_module.md](./chat_module.md) |
-| Deal coordination + barter/swap templates | [trade_module.md](./trade_module.md) |
+| Stateful group chats + SSE | [chat_module.md](./chat_module.md) |
+| Deal coordination + location modes + payment prep | [trade_module.md](./trade_module.md) |
 | Dual trust system | [user_module.md](./user_module.md), [trust_events.md](./trust_events.md), [validation_module.md](./validation_module.md) |
-| Network geolocation | [geolocation_module.md](./geolocation_module.md) |
+| Network geolocation (fingerprints) | [geolocation_module.md](./geolocation_module.md) |
 | AI media tagging | [media_module.md](./media_module.md), feed Phase E |
 | Hand-to-hand validation | [validation_module.md](./validation_module.md) |
 | Public seller profiles | [seller_profile_module.md](./seller_profile_module.md), [profile_portfolio_module.md](./profile_portfolio_module.md) |

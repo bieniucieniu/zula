@@ -2,7 +2,7 @@
 
 REST auth is enforced by Ktor `Authentication` plugin (`core:security`). Routes **not** listed as public require a valid Bearer JWT in the `Authorization` header.
 
-WebSocket chat (planned) uses the same JWT at connect time.
+WebSocket chat is **not** used — realtime is **SSE** (`GET /api/events/stream`, same JWT).
 
 ---
 
@@ -94,6 +94,11 @@ Central helper: `enforcePublicTargetAccess` in `UserService` (when shipped); fee
 | `GetFeedItem` | Public | |
 | `CreateFeedItem` | Auth | Author = token user; optional `group_id` requires membership |
 | `UpdateFeedItem` / `DeleteFeedItem` | Auth | Owner only |
+| `LikeFeedItem` / `UnlikeFeedItem` | Auth | Like = bump |
+| `ListComments` | Public | Keyset |
+| `AddComment` | Auth | |
+| `BookmarkFeedItem` / `UnbookmarkFeedItem` | Auth | Private |
+| `ListBookmarks` | Auth | Viewer only |
 | `FollowTrait` / `UnfollowTrait` | Auth | |
 
 ---
@@ -136,6 +141,7 @@ Doc: [groups_module.md](./groups_module.md)
 | `CreateTrade` | Auth | Participant |
 | `AcceptTrade` / `CancelTrade` | Auth | Counterparty / participant rules |
 | `GetTrade` | Auth | Participants only |
+| `SetLocationMode` / `SetFulfillmentPlace` | Auth | Participants; client address after accept |
 | `ProposeMeetup` / `ConfirmMeetup` | Auth | Participants |
 
 ---
@@ -153,8 +159,8 @@ Doc: [groups_module.md](./groups_module.md)
 
 | RPC | Level | Notes |
 |-----|-------|-------|
-| `GetRoom` / `ListMessages` / `SendMessage` | Auth | Room participant |
-| WebSocket subscribe | Auth | JWT at handshake |
+| `GetRoom` / `ListMessages` / `SendMessage` | Auth | Room participant; `clientMessageId` on send |
+| SSE `GET /api/events/stream` | Auth | JWT at connect; events scoped to membership |
 
 ---
 

@@ -17,14 +17,14 @@ Empty feature packages (`chat`/`feed`/… Module+Service+Publisher+Consumer+Rout
 | [user](./user_module.md) | Full | ✅ MVP | Auth, trust, blocks, profiles |
 | [seller_profile](./seller_profile_module.md) | Full | ✅ A–B | Listings tab blocked on feed |
 | [profile_portfolio](./profile_portfolio_module.md) | Full | ✅ A–B | Activity/feed body blocked on feed |
-| [feed](./feed_module.md) | Full | ⬜ | **MVP critical** — offers / needs / trips |
+| [feed](./feed_module.md) | Full | ⬜ | **MVP critical** — offers / needs / trips + like/bump, comments, bookmarks |
 | [traits](./traits_module.md) | Plan | ⬜ | Can ship inside feed Phase A |
 | [groups](./groups_module.md) | Plan | ⬜ | **MVP critical** — communities + group feed (Wave 1) |
 | [media](./media_module.md) | Plan | ⬜ | MinIO in local dev only |
-| [geolocation](./geolocation_module.md) | Plan | ⬜ | `location_tag` column exists |
-| [trade](./trade_module.md) | Plan | ⬜ | Templates: `swap`, `meetup_cash` |
+| [geolocation](./geolocation_module.md) | Plan | ⬜ | Fingerprint `location_tag`; complements trade location modes |
+| [trade](./trade_module.md) | Plan | ⬜ | `swap` / `meetup_cash` + location matrix; payment prep only (no rails) |
 | [validation](./validation_module.md) | Plan | ⬜ | Trust ledger exists |
-| [chat](./chat_module.md) | Plan | ⬜ | Trade rooms + group rooms (MVP Wave 3) |
+| [chat](./chat_module.md) | Plan | ⬜ | Trade/group rooms + **SSE** stream (MVP Wave 3) |
 | [moderation](./moderation_module.md) | Plan | ⬜ | `BlockUser` only |
 
 ---
@@ -92,15 +92,16 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 | 1.1 | **traits** | `traits` table, seed tree, SQLDelight, no standalone route yet | [traits_module.md](./traits_module.md) |
 | 1.2 | **feed** Phase A–C | Schema, `FeedService`, `CreateFeedItem`, `ListForYouFeed`, blocks filter | [feed_module.md](./feed_module.md) |
 | 1.3 | **feed** Phase D | `ListFeedByAuthor`, `ListFeedByTrait` | feed |
+| 1.3b | **feed** Phase G | Social: like/bump, comments, bookmarks | feed |
 | 1.4 | **groups** Phase A | `groups` / `group_members`, create/join/leave | [groups_module.md](./groups_module.md) |
 | 1.5 | **groups** Phase B + **feed** | `feed_items.group_id`, `GET /feed/by-group/{id}`, member-only create | groups, feed |
 | 1.6 | **seller_profile** Phase C | Wire seller listings tab; sync `seller_activity_stats` | [seller_profile_module.md](./seller_profile_module.md) |
 
-**Exit criteria:** Seller page = profile header + author feed; public group with members + group feed posts via REST.
+**Exit criteria:** Seller page = profile header + author feed; public group with members + group feed posts via REST; like/bump + comment + bookmark work on feed items.
 
 ---
 
-### Wave 2 — Rich listings (media + location)
+### Wave 2 — Rich listings (media + fingerprint location)
 
 **Goal:** Image uploads, async tagging, trip/location signals on feed.
 
@@ -116,20 +117,20 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 
 ---
 
-### Wave 3 — Barter lifecycle + group chat (**MVP**)
+### Wave 3 — Barter lifecycle + group chat + SSE (**MVP**)
 
-**Goal:** Two parties coordinate a swap/meetup and close it with trust impact; communities get multi-party chat.
+**Goal:** Two parties coordinate a swap/meetup (with location mode) and close it with trust impact; communities get multi-party chat over **SSE**.
 
 | Step | Module | Deliverable | Doc |
 |------|--------|-------------|-----|
-| 3.1 | **trade** Phase A–B | `trades` schema, state machine, templates (swap / meetup) | [trade_module.md](./trade_module.md) |
-| 3.2 | **chat** Phase A | Trade-scoped room, message persistence, WS gateway | [chat_module.md](./chat_module.md) |
+| 3.1 | **trade** Phase A–B | `trades` schema, state machine, templates (swap / meetup), **location decision matrix** | [trade_module.md](./trade_module.md) |
+| 3.2 | **chat** Phase A–B | Trade-scoped room, message persistence, **SSE** event stream (`GET /api/events/stream`) | [chat_module.md](./chat_module.md) |
 | 3.3 | **groups** Phase C + **chat** | Group-scoped multi-party rooms (`chat_rooms.group_id`) | [groups_module.md](./groups_module.md), chat |
-| 3.4 | **trade** Phase C | Link feed item → trade; cancel/expire rules | trade |
+| 3.4 | **trade** Phase C | Link feed item → trade; cancel/expire rules; **payment-ready hooks** (no rails) | trade |
 | 3.5 | **validation** Phase A–B | PIN/QR generation, handoff verify, trust delta | [validation_module.md](./validation_module.md) |
 | 3.6 | **user** | `RecordPeerRating` caller from validation; optional `SubmitRating` RPC | user_module |
 
-**Exit criteria:** Alice offers → Bob starts trade → chat → meetup PIN → trust + rating unlock; group room with 2+ members messaging.
+**Exit criteria:** Alice offers → Bob starts trade (location mode set) → chat via SSE → meetup PIN → trust + rating unlock; group room with 2+ members messaging; `PaymentGateway` port stub present but unused.
 
 ---
 
@@ -195,9 +196,9 @@ Quick checklist:
 
 | Wave | Web | Android | iOS |
 |------|-----|---------|-----|
-| 1 | Feed + groups + seller listings | Feed + groups | Feed + groups |
+| 1 | Feed + groups + seller listings + social | Feed + groups + social | Feed + groups + social |
 | 2 | Media upload + location tag | Same | Same |
-| 3 | Trade + chat + group rooms + QR | Same | Same |
+| 3 | Trade (location modes) + chat SSE + group rooms + QR | Same | Same |
 | 4 | Activity + case studies | Profile tabs | Profile tabs |
 | 5 | Report flow | Same | Same |
 
@@ -219,9 +220,9 @@ Optimize for user-visible outcomes:
 
 | Wave | Vertical slice | Primary phase IDs |
 |------|----------------|-------------------|
-| 1 | Seller listings **+ community group feed** | `feed-A`…`feed-D`, `traits-A`, `groups-A`, `groups-B`, `seller-C` |
+| 1 | Seller listings **+ community group feed** + social | `feed-A`…`feed-D`, `feed-G`, `traits-A`, `groups-A`, `groups-B`, `seller-C` |
 | 2 | Photo offer + location tag | `media-A`, `geo-A`, `portfolio-C` |
-| 3 | Complete deal (swap/meetup) **+ group chat** | `trade-A`…`trade-C`, `chat-A`, `groups-C`, `validation-A` |
+| 3 | Complete deal (swap/meetup + location mode) **+ group chat SSE** | `trade-A`…`trade-C`, `chat-A`, `chat-B`, `groups-C`, `validation-A` |
 | 4 | Public history | `portfolio-D`, `trade-D` |
 | 5 | Safety | `mod-A`, `mod-B` |
 
@@ -248,6 +249,7 @@ A phase is **done** only when:
 | portfolio-G | profile | Full-text search on documents |
 | chat-C | chat | Typing indicators |
 | media-D | media | AI tag metadata display |
+| payments | trade | Live Stripe/PayU/BLIK + InPost — **post-MVP**; MVP keeps `PaymentGateway` port stub only |
 | groups-D | groups | Owner remove/report hooks — with moderation Wave 5 |
 | groups discovery | groups | `GET /api/groups` search — link/slug enough for MVP |
 
@@ -265,14 +267,14 @@ Golden path test (skipped until feed ships): `app/src/test/kotlin/.../Wave1Selle
 | User & auth | [user_module.md](./user_module.md) | [trust_events.md](./trust_events.md) |
 | Seller profile | [seller_profile_module.md](./seller_profile_module.md) | [auth_and_permissions.md](./auth_and_permissions.md) |
 | Profile & portfolio | [profile_portfolio_module.md](./profile_portfolio_module.md) | [schema.md](./schema.md) |
-| Feed | [feed_module.md](./feed_module.md) | [architecture.md](./architecture.md) |
+| Feed | [feed_module.md](./feed_module.md) | social: like/bump, comments, bookmarks |
 | Traits | [traits_module.md](./traits_module.md) | owned by feed migration |
 | Groups | [groups_module.md](./groups_module.md) | **MVP** communities |
 | Media | [media_module.md](./media_module.md) | |
-| Geolocation | [geolocation_module.md](./geolocation_module.md) | |
-| Trade | [trade_module.md](./trade_module.md) | swap + meetup templates |
+| Geolocation | [geolocation_module.md](./geolocation_module.md) | fingerprints; trade owns location modes |
+| Trade | [trade_module.md](./trade_module.md) | swap + meetup + location matrix + payment prep |
 | Validation | [validation_module.md](./validation_module.md) | |
-| Chat | [chat_module.md](./chat_module.md) | |
+| Chat | [chat_module.md](./chat_module.md) | REST + **SSE** |
 | Moderation | [moderation_module.md](./moderation_module.md) | |
 | Clients | [clients.md](./clients.md) | [api_index.md](./api_index.md) |
 | Onboarding | [README.md](./README.md) | [MODULE_TEMPLATE.md](./MODULE_TEMPLATE.md) |

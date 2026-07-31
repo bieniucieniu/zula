@@ -2,6 +2,8 @@
 
 **Coarse travel/location tags** from network fingerprint shifts — **no continuous GPS** on server.
 
+**Complements** trade **location decision matrix** (`provider` / `client` / `negotiated`) in [trade_module.md](./trade_module.md): fingerprints = discovery/ranking; matrix = who picks fulfillment place.
+
 **Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:geolocation`
 
 **Depends on:** [user_module.md](./user_module.md) (`location_tag` column exists) · **Unblocks:** trip feed context (feed Wave 2)
@@ -20,6 +22,7 @@
 | **Coarse label** | Resolver → `user_profiles.location_tag` |
 | **Trip posts** | Optional denormalized tag on feed trip items |
 | **Privacy** | No raw GPS; TTL on fingerprint events |
+| **Not logistics** | Exact meetup / client addresses live on trade — not here |
 
 ---
 
@@ -136,3 +139,4 @@ Authenticated users only; rate limited per user/IP. [auth_and_permissions.md](./
 
 - [seller_profile_module.md](./seller_profile_module.md) — displays `location_tag`
 - [feed_module.md](./feed_module.md) — trip posts
+- [trade_module.md](./trade_module.md) — location decision matrix (logistics)
