@@ -66,6 +66,10 @@ OAuth-only login (Google, Apple `idToken`). No email OTP challenge flow.
 | `ListFeed` | Public |
 | `ListFeedByAuthor` | Public |
 | `ListFeedByTrait` | Public |
+| `LikeFeedItem` / `UnlikeFeedItem` | Auth | like = bump |
+| `ListComments` / `AddComment` | Public list / Auth write |
+| `BookmarkFeedItem` / `UnbookmarkFeedItem` | Auth |
+| `ListBookmarks` | Auth |
 | `FollowTrait` / `UnfollowTrait` | Auth |
 
 Doc: [feed_module.md](./feed_module.md)
@@ -100,6 +104,7 @@ Doc: [geolocation_module.md](./geolocation_module.md)
 | `CreateTrade` | Auth |
 | `AcceptTrade` / `CancelTrade` | Auth |
 | `GetTrade` | Auth |
+| `SetLocationMode` / `SetFulfillmentPlace` | Auth |
 | `ProposeMeetup` / `ConfirmMeetup` | Auth |
 
 Doc: [trade_module.md](./trade_module.md)
@@ -123,9 +128,9 @@ Doc: [validation_module.md](./validation_module.md)
 |-----|------|
 | `GetRoom` | Auth |
 | `ListMessages` | Auth |
-| `SendMessage` | Auth |
+| `SendMessage` | Auth (`clientMessageId` idempotency) |
 
-WebSocket: room subscription (same JWT). Doc: [chat_module.md](./chat_module.md)
+SSE: `GET /api/events/stream` (`text/event-stream`, JWT; `Last-Event-ID` catch-up). Doc: [chat_module.md](./chat_module.md)
 
 ---
 

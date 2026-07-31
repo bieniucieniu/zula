@@ -23,6 +23,7 @@ Conventions: thin clients, backend-owned business rules, SQLDelight, REST via Kt
 | **Filtered feeds** | By trait, by author, later by **group** |
 | **Writes** | `POST /api/feed/items`, `GET /api/feed/items/{id}` |
 | **Kinds** | `offer` (services / batches), `need` (buyer demand), `trip` (travel/availability) |
+| **Social (MVP)** | `like` / **bump** (like boosts ranking), public **comments**, private **bookmarks** |
 | **Product rule** | Not a casual single-item classifieds board — see [product_vision.md](./product_vision.md) |
 | **No N+1** | Fixed ~4–5 SQL round-trips per page regardless of `limit` |
 | **Controllable ranking** | Hard SQL filters first; vectors re-rank inside a bounded candidate set |
@@ -76,6 +77,7 @@ score =
   + w_rec   * recency_decay(created_at)     -- e.g. exp(-age_days / 7)
   + w_trust * normalize(user_stats.implicit_trust_score)
   + w_trait * trait_overlap_bonus           -- 0 or 1 if viewer follows matching trait
+  + w_bump  * bump_score(last_bumped_at, like_count)  -- like = bump
 ```
 
 Hard gates always apply in SQL: `status = active`, `visibility = public`, blocked authors excluded via `user_blocks`.
@@ -129,6 +131,12 @@ CREATE TABLE feed_items (
     available_until  timestamptz,
     -- personalization (text embedding at MVP; image fusion later)
     embedding        vector(768),
+    like_count       int NOT NULL DEFAULT 0,
+    comment_count    int NOT NULL DEFAULT 0,
+    last_bumped_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    default_location_mode varchar(20)
+                     CHECK (default_location_mode IS NULL
+                            OR default_location_mode IN ('provider', 'client', 'negotiated')),
     created_at       timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -195,6 +203,46 @@ Interest vector sources (MVP):
 1. **Onboarding** — user selects traits; centroid = average of trait prototype embeddings (store prototypes in `traits` or a `trait_embeddings` table).
 2. **Implicit (later)** — rolling average of embeddings from saved/completed items.
 
+### 1.4b Social interactions (MVP)
+
+```sql
+CREATE TABLE feed_item_likes (
+    feed_item_id UUID NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
+    user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (feed_item_id, user_id)
+);
+
+-- Like = bump: on insert, bump feed_items.last_bumped_at and increment like_count.
+
+CREATE TABLE feed_item_comments (
+    id           UUID PRIMARY KEY DEFAULT uuidv7(),
+    feed_item_id UUID NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
+    author_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    body         text NOT NULL,
+    created_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX feed_item_comments_item_idx
+    ON feed_item_comments (feed_item_id, created_at DESC, id DESC);
+
+CREATE TABLE feed_item_bookmarks (
+    user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    feed_item_id UUID NOT NULL REFERENCES feed_items(id) ON DELETE CASCADE,
+    created_at   timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, feed_item_id)
+);
+
+CREATE INDEX feed_item_bookmarks_user_idx
+    ON feed_item_bookmarks (user_id, created_at DESC, feed_item_id DESC);
+```
+
+| Action | Behavior |
+|--------|----------|
+| **Like / bump** | Idempotent like; updates `last_bumped_at` + `like_count`; feeds into for-you score |
+| **Comment** | Public thread on item; increments `comment_count` |
+| **Bookmark** | Private save; list via `GET /api/feed/bookmarks` |
+
 ### 1.5 Optional read projection (post-MVP optimization)
 
 Defer `feed_item_cards` until join cost is measured. Documented here for when Postgres Q2 joins become hot:
@@ -227,6 +275,13 @@ Add route summaries to `core/openapi/src/main/resources/openapi.yaml` and DTOs u
 | `GET` | `/api/feed/by-author/{authorId}` | Public | Author listings tab |
 | `POST` | `/api/feed/items` | Auth | Create listing |
 | `GET` | `/api/feed/items/{id}` | Public | Single item detail |
+| `POST` | `/api/feed/items/{id}/like` | Auth | Like (= bump) |
+| `DELETE` | `/api/feed/items/{id}/like` | Auth | Unlike |
+| `GET` | `/api/feed/items/{id}/comments` | Public | List comments (keyset) |
+| `POST` | `/api/feed/items/{id}/comments` | Auth | Add comment |
+| `POST` | `/api/feed/items/{id}/bookmark` | Auth | Save for later |
+| `DELETE` | `/api/feed/items/{id}/bookmark` | Auth | Unsave |
+| `GET` | `/api/feed/bookmarks` | Auth | Private saved list |
 | `POST` | `/api/feed/traits/{traitId}/follow` | Auth | Follow trait (interest profile) |
 | `DELETE` | `/api/feed/traits/{traitId}/follow` | Auth | Unfollow trait |
 
@@ -741,6 +796,13 @@ Invalidation is simple at MVP: feed reads hit source tables. Profile changes may
 - [ ] `GET /feed/by-trait/{traitId}` (exact trait; subtree later)
 - [ ] `GET /feed/by-author/{authorId}`
 
+### Phase feed-G — Social layer (MVP)
+
+- [ ] Tables: likes, comments, bookmarks + counters / `last_bumped_at`
+- [ ] Like/unlike (= bump), list/add comments, bookmark/unbookmark, list bookmarks
+- [ ] Include `likedByMe` / `bookmarkedByMe` / counts on feed DTOs when authenticated
+- [ ] Tests: idempotent like; bump moves item in for-you; bookmarks private
+
 ### Phase feed-E — Media & async embeddings
 
 - [ ] MinIO upload path for `media_object_keys`
@@ -819,6 +881,8 @@ curl -H "Authorization: Bearer $TOKEN" "http://localhost:8000/api/feed/for-you?l
 5. **Fixed query budget** — batch `IN ?` for traits and media; no per-item DB calls.
 6. **Embeddings on write** for text; async for images via JobRunr.
 7. **No Redis** until Postgres profiling shows need.
+8. **Like = bump** — one action; no separate bump endpoint in MVP.
+9. **Bookmarks are private** — never leak on public profiles.
 
 ---
 

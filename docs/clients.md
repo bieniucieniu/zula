@@ -28,9 +28,10 @@ Regenerate after backend route/DTO changes.
 ## Web API access
 
 - Browser uses **REST JSON** at `/api/*` via `@zula/api` (cookie session; Vite proxies `/api` → Ktor).
+- Realtime: **SSE** (`EventSource` or fetch stream) to `/api/events/stream` — not WebSockets.
 - Production: ingress routes `/api/**` to the backend; web serves the SPA at `/`.
 
-Native uses the same REST API with bearer tokens (`API_URL` must be `http(s)://host[:port]/api`).
+Native uses the same REST API with bearer tokens (`API_URL` must be `http(s)://host[:port]/api`). SSE with `Authorization: Bearer …`.
 
 Contracts: Ktor OpenAPI (`/swagger`).
 
@@ -59,7 +60,8 @@ There is **no** SPA route `/oauth/callback`. Server callback is Ktor-only; SPA f
 | API client boot | `setDefaultApiClient(createApiClient(...))` from app entry (`__root` / `_layout`) — no import-order globals | — |
 | Image upload | PUT to presigned URL | Issue URL, validate `object_key` |
 | Pagination | Pass opaque cursor from previous response | Keyset SQL on UUIDv7 `id` |
-| Trade / validation UI | Show QR/PIN, scan | State machine, codes |
+| Realtime (chat / trade) | Open SSE `GET /api/events/stream`; reconnect with `Last-Event-ID` | Fan-out events; JWT on connect |
+| Trade / validation UI | Show QR/PIN, scan; location mode picker | State machine, codes, location rules |
 | Entity ids | Use ids from API responses only | DB `DEFAULT uuidv7()` + `RETURNING id` |
 
 ---

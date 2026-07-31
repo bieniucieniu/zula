@@ -85,8 +85,11 @@ Create endpoints return persisted ids in the response (e.g. `AuthTokensResponse.
 
 | Table | Purpose |
 |-------|---------|
-| `feed_items` | Posts: kind, status, author, embedding, `body_document_id` |
+| `feed_items` | Posts: kind, status, author, embedding, `body_document_id`, like/comment counts, `last_bumped_at`, optional `default_location_mode` |
 | `feed_item_media` | Object keys + optional `vector` embedding |
+| `feed_item_likes` | Like = bump (user ↔ item) |
+| `feed_item_comments` | Public comments on items |
+| `feed_item_bookmarks` | Private saves |
 | `user_trait_follows` | User follows trait |
 | `user_interest_profiles` | Interest vector for ranking |
 | `feed_item_cards` | Optional denormalized projection (Phase F) |
@@ -186,6 +189,8 @@ Feed/chat FKs: nullable `feed_items.group_id`, `chat_rooms.group_id`.
 
 Writes to `user_profiles.location_tag`; optional `feed_items.origin_location_tag` on trip posts.
 
+Trade **location modes** (`provider` / `client` / `negotiated`) live under [trade](#trade-module-planned--wave-3) — not in geolocation tables.
+
 ---
 
 ## Trade module *(planned — Wave 3)*
@@ -194,10 +199,13 @@ Writes to `user_profiles.location_tag`; optional `feed_items.origin_location_tag
 
 | Table | Purpose |
 |-------|---------|
-| `trades` | Lifecycle state, template type |
+| `trades` | Lifecycle state, template type, `location_mode` |
 | `trade_participants` | Initiator + counterparty |
 | `trade_items` | Linked feed items / sides |
+| `trade_locations` | Fulfillment place (post-accept for `client` mode) |
 | `trade_public_disclosures` | Opt-in public summaries |
+
+Payment columns / intent ids: **defer** until payment wave; MVP keeps `PaymentGateway` port only.
 
 ---
 
@@ -219,7 +227,8 @@ Writes to `user_profiles.location_tag`; optional `feed_items.origin_location_tag
 |-------|---------|
 | `chat_rooms` | One per trade (MVP); later also group-scoped |
 | `chat_participants` | Membership |
-| `chat_messages` | Persisted messages |
+| `chat_messages` | Persisted messages + `client_message_id` |
+| `sse_event_log` | Optional durable SSE replay for `Last-Event-ID` |
 
 ---
 

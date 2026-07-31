@@ -7,7 +7,7 @@ Cross-cutting rules referenced by all module docs.
 ## Thin clients, heavy backend
 
 - Validation, state machines, and SQL live on the **backend**.
-- Clients render UI, parse markdown locally, and call REST/WS.
+- Clients render UI, parse markdown locally, and call REST + SSE.
 - Never trust client-computed trust scores, trade states, or pagination cursors without server validation.
 
 ---
