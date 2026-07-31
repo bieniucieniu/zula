@@ -23,7 +23,7 @@ WebSocket chat (planned) uses the same JWT at connect time.
 |-----|-------|-------|
 | `GetAuthProviders` | Public | Configured OAuth providers (Google, Apple) |
 | `Authenticate` | Public | Exchange provider `idToken` or auth `code` (+ PKCE) → access JWT (+ optional refresh token) |
-| `Refresh` | Public | Rotate refresh token; issue new access JWT |
+| `Refresh` | Public | Validate refresh → provider credential check → rotate session; issue new access JWT |
 | `GetSession` | Public / Auth | Optional Bearer JWT; else refresh cookie → session probe (may rotate cookies) |
 | `Logout` | Auth | Revoke session by `sid` and/or refresh token |
 | `ListLinkedProviders` | Auth | Own linked identities only |
@@ -186,7 +186,7 @@ Clients obtain the initial session via OAuth (web backend popup or native `POST 
 | `GET /auth/session` | Optional JWT; if missing, refresh cookie may rotate tokens (SPA bootstrap) |
 | Session `email` | From JWT `email` claim or linked identity — **not** username |
 | Logout | Soft provider credential check; local session always revoked; logout does not fail the client |
-| Google refresh revoke | Only on OAuth `invalid_grant` (not network/transient errors) |
+| Google refresh revoke | Only on OAuth `invalid_grant` (not network/transient errors); checked **before** creating next session on refresh |
 | Dev bypass | Fixed `dev@zula.local` only when `AUTH_DEV_BYPASS_SECRET` set; appears on `GET /auth/providers` (`clientId` = secret) |
 | OAuth nonce | Server Google start stores nonce cookie; verified against id_token |
 | Identity link | Reject if provider identity already owned by another user; update scopes on login |

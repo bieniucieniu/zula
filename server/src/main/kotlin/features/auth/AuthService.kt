@@ -219,21 +219,23 @@ class AuthService(
 
     suspend fun refresh(refreshToken: String, session: AuthSessionContext): AuthTokensResponse {
         val hash = RefreshTokenGenerator.hash(refreshToken)
+        val now = Instant.now().epochSecond
+
+        // Validate first (no claim / no next session). Provider check must pass before rotate.
+        val pending = repository.requireValidRefreshSession(hash, now)
+        pending.identity_id?.let { identityId ->
+            providerTokenService.ensureProviderCredentialsValid(identityId, force = false)
+        }
+
         val newRefresh = RefreshTokenGenerator.generate()
         val newHash = RefreshTokenGenerator.hash(newRefresh)
-        val now = Instant.now().epochSecond
         val newExpires = now + securityConfig.jwt.refreshTokenTtlSeconds
-
         val (oldSession, nextId) = repository.rotateRefreshSession(
             refreshHash = hash,
             newRefreshHash = newHash,
             newExpiresAt = newExpires,
             now = now,
         )
-
-        oldSession.identity_id?.let { identityId ->
-            providerTokenService.ensureProviderCredentialsValid(identityId, force = false)
-        }
 
         val user = repository.getUserById(oldSession.user_id)
             ?: unauthorized("User not found")

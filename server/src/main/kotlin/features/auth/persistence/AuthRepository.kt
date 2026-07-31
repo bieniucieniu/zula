@@ -139,6 +139,27 @@ class AuthRepository(
         }
     }
 
+    /**
+     * Validate refresh token session without claiming/rotating.
+     * Use before provider credential checks so a failed check does not burn the refresh token
+     * or create a next session.
+     */
+    fun requireValidRefreshSession(
+        refreshHash: String,
+        now: Long = Instant.now().epochSecond,
+    ): User_sessions {
+        val session = findAnySessionByRefreshHash(refreshHash)
+            ?: unauthorized("Invalid refresh token")
+        if (session.is_revoked != 0L) {
+            revokeRotationFamily(session.id)
+            unauthorized("Refresh token reuse detected")
+        }
+        if (session.expires_at < now) {
+            unauthorized("Refresh token expired")
+        }
+        return session
+    }
+
     fun rotateRefreshSession(
         refreshHash: String,
         newRefreshHash: String,
@@ -146,16 +167,7 @@ class AuthRepository(
         now: Long = Instant.now().epochSecond,
     ): Pair<User_sessions, Uuid> {
         return database.transactionWithResult {
-            val session = queries.findAnySessionByRefreshHash(refreshHash).executeAsOneOrNull()
-                ?: unauthorized("Invalid refresh token")
-
-            if (session.is_revoked != 0L) {
-                revokeRotationFamily(session.id)
-                unauthorized("Refresh token reuse detected")
-            }
-            if (session.expires_at < now) {
-                unauthorized("Refresh token expired")
-            }
+            val session = requireValidRefreshSession(refreshHash, now)
 
             queries.claimSessionForRefresh(session.id, now).executeAsOneOrNull()
                 ?: unauthorized("Invalid refresh token")
