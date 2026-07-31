@@ -60,6 +60,32 @@ class AuthSessionLogicTest {
     }
 
     @Test
+    fun `provider check failure before rotate leaves refresh usable`() {
+        val now = Instant.now().epochSecond
+        val refresh = RefreshTokenGenerator.generate()
+        val hash = RefreshTokenGenerator.hash(refresh)
+        val userId = Ids.next()
+        val sessionId = store.insert(
+            userId = userId,
+            authMethod = AuthMethods.OAUTH,
+            refreshHash = hash,
+            expiresAt = now + 3600,
+        )
+
+        // Mirror AuthService.refresh: validate → provider fail → do not rotate.
+        val pending = store.requireValid(hash, now)
+        assertTrue(pending == sessionId)
+        // Simulated provider revoke of identity sessions without consuming refresh hash.
+        store.revoke(sessionId)
+
+        assertFailsWith<HttpException> {
+            store.requireValid(hash, now)
+        }
+        assertTrue(store.findByHash(hash) == null || store.isRevoked(sessionId))
+        assertTrue(store.countForUser(userId) == 1)
+    }
+
+    @Test
     fun `logout by sid revokes session`() {
         val now = Instant.now().epochSecond
         val sid = store.insert(Ids.next(), AuthMethods.OAUTH, null, now + 900)
@@ -108,7 +134,12 @@ private class InMemorySessionStore {
     fun allRevokedForUser(userId: Uuid): Boolean =
         rows.values.filter { it.userId == userId }.all { it.revoked }
 
-    fun rotate(oldHash: String, newHash: String, newExpires: Long, now: Long): Uuid {
+    fun countForUser(userId: Uuid): Int = rows.values.count { it.userId == userId }
+
+    fun findByHash(hash: String): Uuid? =
+        rows.values.find { it.refreshHash == hash && !it.revoked }?.id
+
+    fun requireValid(oldHash: String, now: Long): Uuid {
         val session = rows.values.find { it.refreshHash == oldHash }
             ?: unauthorized("Invalid refresh token")
         if (session.revoked) {
@@ -116,6 +147,13 @@ private class InMemorySessionStore {
             unauthorized("Refresh token reuse detected")
         }
         if (session.expiresAt < now) unauthorized("Refresh token expired")
+        return session.id
+    }
+
+    fun rotate(oldHash: String, newHash: String, newExpires: Long, now: Long): Uuid {
+        requireValid(oldHash, now)
+        val session = rows.values.find { it.refreshHash == oldHash }
+            ?: unauthorized("Invalid refresh token")
         session.revoked = true
         return insert(session.userId, session.authMethod, newHash, newExpires, rotatedFrom = session.id)
     }
