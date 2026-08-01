@@ -21,8 +21,6 @@ export {
   type StoredOAuthSession,
 } from "./oauth"
 export {
-  requestUpload,
   uploadImageObject,
-  type RequestUploadRequest,
-  type RequestUploadResponse,
+  type UploadMediaResponse,
 } from "./media"

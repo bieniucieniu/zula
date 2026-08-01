@@ -16,7 +16,7 @@
 
 | Goal | Detail |
 |------|--------|
-| **Presigned uploads** | Clients PUT bytes to MinIO; backend never streams bodies over REST |
+| **Ktor upload/download** | Clients POST/GET bytes via `/api/media/*`; Ktor talks to MinIO |
 | **Object keys** | `feed_item_media`, portfolio `cover_object_key`, avatars |
 | **Media registry** | Every S3 object tracked in `media_objects` — pending → active → deleted |
 | **Reference tracking** | `ref_count` on registry; commit on link, release on unlink |
@@ -30,18 +30,14 @@
 
 ```text
 Client                    MediaService              MinIO
-  │ RequestUpload ──────────► INSERT media_objects (pending)
-  │                         presigned PUT URL
-  │ PUT bytes ─────────────────────────────────────► object
-  │ CreateFeedItem(keys[]) ──► commitKeys() → active, ref_count++
-  │                         FeedService links feed_item_media rows
-  │
-  └── async worker ◄──────── embedding job ◄── feed_item_media row
-
-MediaGcConsumer (daily) ──► DELETE pending >24h, deleted past grace, ref_count=0
+  │ POST /media/uploads ────► INSERT media_objects (pending)
+  │   (raw bytes)             PUT object ───────────► object
+  │                           ← objectKey + /api/media/objects/…
+  │ UpsertPortfolio(keys[]) ─► commitKeys() → active, ref_count++
+  │ GET /media/objects/… ────► GET object ◄─────────── stream
 ```
 
-**Ownership:** `features:media` owns the registry, presign, commit/release, GC, and MinIO deletes. Feed/user features **store key strings** in their tables and call `MediaService.commitKeys` / `releaseKey` inside the same transaction.
+**Ownership:** `features:media` owns the registry, upload/download proxy, commit/release, GC, and MinIO deletes. Feed/user features **store key strings** in their tables and call `MediaService.commitKeys` / `releaseKey` inside the same transaction.
 
 Feature layout:
 

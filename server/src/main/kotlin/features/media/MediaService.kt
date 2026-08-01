@@ -4,9 +4,10 @@ import com.zula.core.http.badRequest
 import com.zula.core.http.forbidden
 import com.zula.core.http.notFound
 import com.zula.core.storage.ObjectStorage
-import com.zula.features.media.domain.RequestUploadRequest
-import com.zula.features.media.domain.RequestUploadResponse
+import com.zula.core.storage.StoredObject
+import com.zula.features.media.domain.UploadMediaResponse
 import com.zula.lib.id.Ids
+import java.io.ByteArrayInputStream
 import java.time.Instant
 import kotlin.uuid.Uuid
 
@@ -21,20 +22,21 @@ class MediaService(
         "image/gif",
     )
 
-    fun requestUpload(ownerUserId: Uuid, req: RequestUploadRequest): RequestUploadResponse {
+    fun upload(
+        ownerUserId: Uuid,
+        contentTypeRaw: String,
+        bytes: ByteArray,
+    ): UploadMediaResponse {
         if (!storage.config.enabled) {
             badRequest("Object storage is disabled")
         }
-        val contentType = req.contentType.trim().lowercase()
+        val contentType = contentTypeRaw.trim().lowercase().substringBefore(';').trim()
         if (contentType !in allowedContentTypes) {
             badRequest("contentType must be one of ${allowedContentTypes.joinToString()}")
         }
-        val length = req.contentLength
-        if (length != null) {
-            if (length <= 0) badRequest("contentLength must be positive")
-            if (length > storage.config.maxUploadBytes) {
-                badRequest("contentLength must be at most ${storage.config.maxUploadBytes} bytes")
-            }
+        if (bytes.isEmpty()) badRequest("body must not be empty")
+        if (bytes.size.toLong() > storage.config.maxUploadBytes) {
+            badRequest("body must be at most ${storage.config.maxUploadBytes} bytes")
         }
         val objectKey = "uploads/$ownerUserId/${Ids.next()}"
         val now = Instant.now().epochSecond
@@ -42,22 +44,35 @@ class MediaService(
             objectKey = objectKey,
             ownerUserId = ownerUserId,
             contentType = contentType,
-            byteSize = length,
+            byteSize = bytes.size.toLong(),
             createdAt = now,
         )
-        val put = storage.presignPut(objectKey, contentType, length)
-        return RequestUploadResponse(
+        storage.putObject(
             objectKey = objectKey,
-            uploadUrl = put.uploadUrl,
-            headers = put.headers,
-            publicUrl = storage.publicObjectUrl(objectKey),
-            expiresAt = put.expiresAt.toString(),
+            contentType = contentType,
+            contentLength = bytes.size.toLong(),
+            body = ByteArrayInputStream(bytes),
         )
+        return UploadMediaResponse(
+            objectKey = objectKey,
+            publicUrl = publicUrl(objectKey)!!,
+        )
+    }
+
+    fun openObject(objectKey: String): Pair<String?, StoredObject> {
+        val key = normalizeKey(objectKey)
+        val row = repository.get(key)
+        if (row == null || row.status == "deleted") {
+            notFound("Media object not found")
+        }
+        val stored = storage.getObject(key) ?: notFound("Media object not found")
+        val contentType = stored.contentType ?: row.content_type
+        return contentType to stored
     }
 
     fun publicUrl(objectKey: String?): String? {
         val key = objectKey?.trim()?.ifEmpty { null } ?: return null
-        return storage.publicObjectUrl(key)
+        return "/api/media/objects/$key"
     }
 
     fun requireOwnedUploadKey(ownerUserId: Uuid, objectKey: String): String {
@@ -93,6 +108,14 @@ class MediaService(
         val key = objectKey?.trim()?.ifEmpty { null } ?: return
         val deleteAfter = Instant.now().epochSecond + DELETE_GRACE_SECONDS
         repository.release(key, deleteAfter)
+    }
+
+    private fun normalizeKey(objectKey: String): String {
+        val key = objectKey.trim().trimStart('/')
+        if (key.isEmpty() || key.contains("..") || !key.startsWith("uploads/")) {
+            badRequest("Invalid object key")
+        }
+        return key
     }
 
     private fun validateUploadKey(ownerUserId: Uuid, key: String) {

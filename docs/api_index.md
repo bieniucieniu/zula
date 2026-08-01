@@ -79,7 +79,8 @@ Doc: [feed_module.md](./feed_module.md)
 
 | RPC | Auth | HTTP |
 |-----|------|------|
-| `RequestUpload` | Auth | `POST /api/media/uploads` |
+| `UploadMedia` | Auth | `POST /api/media/uploads` (raw image body) |
+| `GetMediaObject` | Public | `GET /api/media/objects/{key…}` |
 | `RequestAvatarUpload` | Auth | 🔜 |
 
 Doc: [media_module.md](./media_module.md)

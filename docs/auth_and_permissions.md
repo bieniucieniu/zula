@@ -121,7 +121,7 @@ Doc: [groups_module.md](./groups_module.md)
 
 | RPC | Level | Notes |
 |-----|-------|-------|
-| `RequestUpload` | Auth | Presigned PUT for caller |
+| `UploadMedia` | Auth | Raw body upload via Ktor → MinIO |
 | `RequestAvatarUpload` | Auth | Same; key scoped to user |
 
 ---

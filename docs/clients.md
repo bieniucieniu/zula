@@ -60,7 +60,7 @@ There is **no** SPA route `/oauth/callback`. Server callback is Ktor-only; SPA f
 | Sign-in | See [Sign-in paths](#sign-in-paths) | Verify token / code, issue JWT + session |
 | Session refresh | `POST /api/auth/refresh` (cookie or body); web/native configure `createApiClient({ onUnauthorized })` at boot | Rotate refresh token, new access JWT |
 | API client boot | `setDefaultApiClient(createApiClient(...))` from app entry (`__root` / `_layout`) — no import-order globals | — |
-| Image upload | PUT to presigned URL | Issue URL, validate `object_key` |
+| Image upload | `POST /api/media/uploads` (raw body) | Store in MinIO; return `object_key` |
 | Pagination | Pass opaque cursor from previous response | Keyset SQL on UUIDv7 `id` |
 | Realtime (chat / trade) | Open SSE `GET /api/events/stream`; reconnect with `Last-Event-ID` | Fan-out events; JWT on connect |
 | Trade / validation UI | Show QR/PIN, scan; location mode picker | State machine, codes, location rules |
