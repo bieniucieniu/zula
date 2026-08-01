@@ -1,0 +1,34 @@
+insertGroup:
+INSERT INTO groups (slug, title, description, visibility, created_by, created_at)
+VALUES (?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+getGroupById:
+SELECT * FROM groups WHERE id = ? LIMIT 1;
+
+getGroupBySlug:
+SELECT * FROM groups WHERE slug = ? LIMIT 1;
+
+updateGroup:
+UPDATE groups SET title = ?, description = ?, visibility = ? WHERE id = ?
+RETURNING *;
+
+insertMember:
+INSERT INTO group_members (group_id, user_id, role, joined_at)
+VALUES (?, ?, ?, ?)
+ON CONFLICT DO NOTHING;
+
+deleteMember:
+DELETE FROM group_members WHERE group_id = ? AND user_id = ?;
+
+getMember:
+SELECT * FROM group_members WHERE group_id = ? AND user_id = ? LIMIT 1;
+
+listMembersFirst:
+SELECT * FROM group_members WHERE group_id = ? ORDER BY user_id ASC LIMIT ?;
+
+listMembersPage:
+SELECT * FROM group_members
+WHERE group_id = ? AND user_id > ?
+ORDER BY user_id ASC
+LIMIT ?;

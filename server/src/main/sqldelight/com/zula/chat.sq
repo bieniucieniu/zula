@@ -1,0 +1,60 @@
+insertChatRoom:
+INSERT INTO chat_rooms (trade_id, group_id, created_at)
+VALUES (?, ?, ?)
+RETURNING *;
+
+getRoomById:
+SELECT * FROM chat_rooms WHERE id = ? LIMIT 1;
+
+getRoomByTradeId:
+SELECT * FROM chat_rooms WHERE trade_id = ? LIMIT 1;
+
+getRoomByGroupId:
+SELECT * FROM chat_rooms WHERE group_id = ? LIMIT 1;
+
+insertChatParticipant:
+INSERT INTO chat_participants (room_id, user_id, joined_at)
+VALUES (?, ?, ?)
+ON CONFLICT DO NOTHING;
+
+isRoomParticipant:
+SELECT COUNT(*) FROM chat_participants WHERE room_id = ? AND user_id = ?;
+
+listRoomParticipants:
+SELECT user_id FROM chat_participants WHERE room_id = ?;
+
+insertMessage:
+INSERT INTO chat_messages (room_id, sender_id, body, client_message_id)
+VALUES (?, ?, ?, ?)
+RETURNING *;
+
+getMessageByClientId:
+SELECT * FROM chat_messages
+WHERE room_id = ? AND sender_id = ? AND client_message_id = ?
+LIMIT 1;
+
+listMessagesFirst:
+SELECT * FROM chat_messages WHERE room_id = ? ORDER BY id DESC LIMIT ?;
+
+listMessagesPage:
+SELECT * FROM chat_messages
+WHERE room_id = ? AND id < ?
+ORDER BY id DESC
+LIMIT ?;
+
+insertSseEvent:
+INSERT INTO sse_event_log (user_id, event_type, payload, created_at)
+VALUES (?, ?, ?, ?)
+RETURNING *;
+
+listSseEventsAfter:
+SELECT * FROM sse_event_log
+WHERE user_id = ? AND id > ?
+ORDER BY id ASC
+LIMIT ?;
+
+listSseEventsFirst:
+SELECT * FROM sse_event_log
+WHERE user_id = ?
+ORDER BY id DESC
+LIMIT ?;

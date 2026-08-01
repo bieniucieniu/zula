@@ -4,7 +4,7 @@
 
 **Transport:** **SSE** (Server-Sent Events) for inbound delivery — not WebSockets. Clients **send** via REST; server **pushes** via `GET /api/events/stream`.
 
-**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:chat`
+**Status:** Doc complete · **Backend:** ✅ A–B · **Feature:** `features:chat`
 
 **Depends on:** [trade_module.md](./trade_module.md), [user_module.md](./user_module.md) (blocks) · **Unblocks:** [moderation](./moderation_module.md) content reports, [groups](./groups_module.md) group chat
 

@@ -5,4 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type RequestUploadResponseHeaders = { [key: string]: string }
+export type ListCommentsParams = {
+  cursor?: string
+  limit?: string
+}

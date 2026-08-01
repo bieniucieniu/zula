@@ -31,14 +31,14 @@ Onboarding starts here. Module guides follow [MODULE_TEMPLATE.md](./MODULE_TEMPL
 | User & auth | ✅ MVP | [user_module.md](./user_module.md) | `features:auth`, `features:user` |
 | Seller profile | 🔶 partial (A–B) | [seller_profile_module.md](./seller_profile_module.md) | `features:user` |
 | Profile & portfolio | ✅ A–B (`offer` link / activity stub open) | [profile_portfolio_module.md](./profile_portfolio_module.md) | `features:user` |
-| Feed | ⬜ | [feed_module.md](./feed_module.md) | `features:feed` (planned) |
-| Traits | ⬜ | [traits_module.md](./traits_module.md) | (SQL only → feed) |
-| Groups | ⬜ | [groups_module.md](./groups_module.md) | `features:groups` — **MVP** Wave 1 |
-| Media | ⬜ | [media_module.md](./media_module.md) | `features:media` (planned) |
+| Feed | ✅ MVP | [feed_module.md](./feed_module.md) | `features:feed` |
+| Traits | ✅ seed + tree API | [traits_module.md](./traits_module.md) | via `features:feed` |
+| Groups | ✅ A–C (CRUD + feed + chat rooms) | [groups_module.md](./groups_module.md) | `features:groups` |
+| Media | ✅ A–B + GC (Ktor proxy) | [media_module.md](./media_module.md) | `features:media` |
 | Geolocation | ⬜ | [geolocation_module.md](./geolocation_module.md) | `features:geolocation` (planned) |
-| Trade | ⬜ | [trade_module.md](./trade_module.md) | `features:trade` (planned) |
+| Trade | ✅ A–C (no validation PIN) | [trade_module.md](./trade_module.md) | `features:trade` |
 | Validation | ⬜ | [validation_module.md](./validation_module.md) | `features:validation` (planned) |
-| Chat | ⬜ | [chat_module.md](./chat_module.md) | `features:chat` (planned) |
+| Chat | ✅ A–B + SSE | [chat_module.md](./chat_module.md) | `features:chat` |
 | Moderation | ⬜ (blocks only) | [moderation_module.md](./moderation_module.md) | `features:moderation` (planned) |
 
 **Legend:** ✅ MVP = core shipped · 🔶 partial = some phases done · ⬜ = not started

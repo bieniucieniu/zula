@@ -2,7 +2,7 @@
 
 **Named communities** for import, resell, craft, and local services — the Facebook sales-group job, inside Zula: shared posts, membership, and multi-party chat.
 
-**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:groups` (planned)
+**Status:** Doc complete · **Backend:** ✅ A–C · **Feature:** `features:groups`
 
 **Depends on:** [user_module.md](./user_module.md), [feed_module.md](./feed_module.md) · **Unblocks:** group-scoped chat, group feed filters · **Product:** [product_vision.md](./product_vision.md)
 

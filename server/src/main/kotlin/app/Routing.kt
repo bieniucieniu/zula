@@ -7,6 +7,7 @@ import com.zula.features.auth.configureAuthRouting
 import com.zula.features.chat.configureChatRouting
 import com.zula.features.feed.configureFeedRouting
 import com.zula.features.geolocation.configureGeolocationRouting
+import com.zula.features.groups.configureGroupRouting
 import com.zula.features.media.configureMediaRouting
 import com.zula.features.moderation.configureModerationRouting
 import com.zula.features.trade.configureTradeRouting
@@ -27,6 +28,7 @@ fun Application.configureRouting() {
             configureAuthRouting()
             configureUserRouting()
             configureFeedRouting()
+            configureGroupRouting()
             configureMediaRouting()
             configureGeolocationRouting()
             configureTradeRouting()

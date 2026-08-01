@@ -2,7 +2,7 @@
 
 Shared **traits tree** for categorizing feed items (goods, services, travel). Schema ships inside the feed migration; trait **REST routes** are owned by FeedService in `features:feed`.
 
-**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:feed` (traits schema & SQL; no standalone `features:traits` module)
+**Status:** Doc complete · **Backend:** ✅ seed + tree via feed · **Feature:** `features:feed` (traits schema & SQL; no standalone `features:traits` module)
 
 **Depends on:** — · **Unblocks:** [feed_module.md](./feed_module.md) feed-A
 

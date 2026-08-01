@@ -2,7 +2,7 @@
 
 Listings for **needs**, **offers** (services and product **batches**), and **trip** availabilities — trait filters and personalized ranking via embeddings.
 
-**Status:** Doc complete · **Backend:** ⬜ not started · **Feature:** `features:feed`
+**Status:** Doc complete · **Backend:** ✅ MVP · **Feature:** `features:feed`
 
 **Depends on:** [user_module.md](./user_module.md), [traits_module.md](./traits_module.md) · **Unblocks:** [seller_profile](./seller_profile_module.md) seller-C, [profile_portfolio](./profile_portfolio_module.md) portfolio-C/D, [groups](./groups_module.md) group feed
 

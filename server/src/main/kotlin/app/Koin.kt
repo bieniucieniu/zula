@@ -12,6 +12,7 @@ import com.zula.features.auth.authModule
 import com.zula.features.chat.chatModule
 import com.zula.features.feed.feedModule
 import com.zula.features.geolocation.geolocationModule
+import com.zula.features.groups.groupModule
 import com.zula.features.media.mediaModule
 import com.zula.features.moderation.moderationModule
 import com.zula.features.trade.tradeModule
@@ -62,6 +63,7 @@ fun Application.configureKoin() {
             // unimplemented
             openApiModule,
             userModule,
+            groupModule,
             feedModule,
             mediaModule,
             geolocationModule,

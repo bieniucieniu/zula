@@ -17,14 +17,14 @@ Empty feature packages (`chat`/`feed`/… Module+Service+Publisher+Consumer+Rout
 | [user](./user_module.md) | Full | ✅ MVP | Auth, trust, blocks, profiles |
 | [seller_profile](./seller_profile_module.md) | Full | ✅ A–B | Listings tab blocked on feed; seller embeds readme/pins |
 | [profile_portfolio](./profile_portfolio_module.md) | Full | ✅ A–B | Docs/readme/portfolio/pins in `0.sqm`; `offer` + activity blocked on feed |
-| [feed](./feed_module.md) | Full | ⬜ | **MVP critical** — offers / needs / trips + like/bump, comments, bookmarks |
-| [traits](./traits_module.md) | Plan | ⬜ | Can ship inside feed Phase A |
-| [groups](./groups_module.md) | Plan | ⬜ | **MVP critical** — communities + group feed (Wave 1) |
-| [media](./media_module.md) | Plan | ⬜ | MinIO in local dev only |
+| [feed](./feed_module.md) | Full | ✅ MVP | Offers/needs/trips + social; For-You = chrono cold-start |
+| [traits](./traits_module.md) | Plan | ✅ seed | Tree in `0.sqm`; `GET /api/feed/traits` |
+| [groups](./groups_module.md) | Plan | ✅ A–C | Communities + group feed + chat rooms |
+| [media](./media_module.md) | Plan | ✅ A–B+GC | Ktor upload/download + registry GC (no embeddings) |
 | [geolocation](./geolocation_module.md) | Plan | ⬜ | Fingerprint `location_tag`; complements trade location modes |
-| [trade](./trade_module.md) | Plan | ⬜ | `swap` / `meetup_cash` + location matrix; payment prep only (no rails) |
+| [trade](./trade_module.md) | Plan | ✅ A–C | State machine + location modes; validation PIN deferred |
 | [validation](./validation_module.md) | Plan | ⬜ | Trust ledger exists |
-| [chat](./chat_module.md) | Plan | ⬜ | Trade/group rooms + **SSE** stream (MVP Wave 3) |
+| [chat](./chat_module.md) | Plan | ✅ A–B | Trade/group rooms + SSE stream |
 | [moderation](./moderation_module.md) | Plan | ⬜ | `BlockUser` only |
 
 ---
@@ -158,20 +158,13 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 
 ## Migration numbering (next files)
 
-Shipped DDL: SQLDelight **`0.sqm`** (users, profiles, stats, blocks, ratings, seller_activity_stats, documents, portfolio, pins).  
-**Next migration:** `1.sqm` — **combine traits + feed** for Wave 1.
+Shipped DDL: SQLDelight **`0.sqm`** (users, profiles, portfolio, media, **traits, feed, groups, trades, chat**).  
+Pre-prod still **mutates `0.sqm`** (wipe local PG after DDL changes). Versioned `1.sqm+` reserved for post-prod.
 
 | File | Wave | Module(s) |
 |------|------|-----------|
-| `0.sqm` | — | user + seller + portfolio (init; mutate until prod) |
-| `1.sqm` / `000002_feed.sql` | 1 | traits + feed (nullable `group_id` OK before groups table if deferred FK) |
-| `000003_groups.sql` | 1 | groups + `group_members`; FK `feed_items.group_id` |
-| `000004_media.sql` | 2 | media (or merge into feed if tables already stubbed) |
-| `000005_geolocation.sql` | 2 | geolocation |
-| `000006_trades.sql` | 3 | trade |
-| `000007_chat.sql` | 3 | chat (+ `chat_rooms.group_id` for groups-C) |
-| `000008_validation.sql` | 3 | validation |
-| `000009_moderation.sql` | 5 | moderation |
+| `0.sqm` | — | all shipped tables (mutate until prod) |
+| `1.sqm+` | post-prod | incremental migrations when locking init |
 
 Canonical table index: [schema.md](./schema.md). Renumber before merge if plans change.
 

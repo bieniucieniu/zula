@@ -4,7 +4,7 @@
 
 **Payments:** **not in MVP**. Keep a **payment-ready seam** (`PaymentGateway` port + reserved trade/SSE event names) so Stripe / PayU / BLIK / InPost can plug in later without rewriting the state machine.
 
-**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:trade`
+**Status:** Doc complete · **Backend:** ✅ A–C (validation PIN deferred) · **Feature:** `features:trade`
 
 **Depends on:** [feed_module.md](./feed_module.md), [user_module.md](./user_module.md) · **Unblocks:** [validation](./validation_module.md), [chat](./chat_module.md), [profile_portfolio](./profile_portfolio_module.md) portfolio-E
 

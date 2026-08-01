@@ -24,7 +24,16 @@ import type {
   AuthTokensResponse,
   AuthenticateRequest,
   BlockUserResponse,
+  BookmarkResponse,
+  ChatMessageResponse,
+  ChatRoomResponse,
+  CommentResponse,
+  CreateCommentRequest,
+  CreateFeedItemRequest,
+  CreateGroupRequest,
+  CreateTradeRequest,
   DeletePortfolioItemResponse,
+  FeedItemResponse,
   GetHealth200One,
   GetHealth200Two,
   GetHealth503One,
@@ -33,14 +42,34 @@ import type {
   GetJobsPing202Two,
   GetJobsPing503One,
   GetJobsPing503Two,
+  GetMediaObject200One,
+  GetMediaObject200Two,
+  GetMediaObjectParams,
   GoogleOAuthCallbackParams,
+  GroupResponse,
   JwksResponse,
+  LeaveGroupResponse,
+  LikeResponse,
   LinkedProvidersResponse,
+  ListBookmarksParams,
+  ListChatMessagesParams,
+  ListCommentsParams,
+  ListCommentsResponse,
+  ListFeedByAuthorParams,
+  ListFeedByGroupParams,
+  ListFeedByTraitParams,
+  ListFeedItemsResponse,
+  ListFeedParams,
+  ListForYouFeedParams,
+  ListGroupMembersParams,
+  ListGroupMembersResponse,
+  ListMessagesResponse,
   ListPortfolioItemsParams,
   ListPortfolioItemsResponse,
   ListPublicActivityResponse,
   ListSellerReviewsParams,
   ListSellerReviewsResponse,
+  ListTraitsResponse,
   MyProfileResponse,
   OAuthProvidersResponse,
   PinPortfolioItemRequest,
@@ -50,15 +79,19 @@ import type {
   RefreshRequest,
   ReorderProfilePinsRequest,
   ReorderProfilePinsResponse,
-  RequestUploadRequest,
-  RequestUploadResponse,
   SellerProfileResponse,
+  SendMessageRequest,
   SessionResponse,
+  SetFulfillmentPlaceRequest,
+  SetLocationModeRequest,
   StartGoogleOAuthParams,
+  TradeResponse,
   UnblockUserResponse,
   UnpinPortfolioItemResponse,
+  UpdateGroupRequest,
   UpdateMyProfileRequest,
   UpdateTrustRequest,
+  UploadMediaResponse,
   UpsertPortfolioItemRequest,
   UserResponse,
 } from "./model"
@@ -3728,73 +3761,671 @@ export function useGetUserByUsername<
   return withQueryKey(query, queryOptions.queryKey)
 }
 
-export type requestUploadResponse200ApplicationJson = {
-  data: RequestUploadResponse
+export type listTraitsResponse200ApplicationJson = {
+  data: ListTraitsResponse
   status: 200
 }
 
-export type requestUploadResponse200ApplicationProblemJson = {
-  data: RequestUploadResponse
+export type listTraitsResponse200ApplicationProblemJson = {
+  data: ListTraitsResponse
   status: 200
 }
 
-export type requestUploadResponse500ApplicationJson = {
+export type listTraitsResponse500ApplicationJson = {
   data: ProblemDetails
   status: 500
 }
 
-export type requestUploadResponse500ApplicationProblemJson = {
+export type listTraitsResponse500ApplicationProblemJson = {
   data: ProblemDetails
   status: 500
 }
 
-export type requestUploadResponseSuccess = (
-  | requestUploadResponse200ApplicationJson
-  | requestUploadResponse200ApplicationProblemJson
+export type listTraitsResponseSuccess = (
+  | listTraitsResponse200ApplicationJson
+  | listTraitsResponse200ApplicationProblemJson
 ) & {
   headers: Headers
 }
-export type requestUploadResponseError = (
-  | requestUploadResponse500ApplicationJson
-  | requestUploadResponse500ApplicationProblemJson
+export type listTraitsResponseError = (
+  | listTraitsResponse500ApplicationJson
+  | listTraitsResponse500ApplicationProblemJson
 ) & {
   headers: Headers
 }
 
-export const getRequestUploadUrl = () => {
-  return `/api/media/uploads`
+export const getListTraitsUrl = () => {
+  return `/api/feed/traits`
 }
 
-export const requestUpload = async (
-  requestUploadRequest?: RequestUploadRequest,
+export const listTraits = async (
   options?: Parameters<typeof customInstance>[1]
-): Promise<requestUploadResponseSuccess> => {
-  return customInstance<requestUploadResponseSuccess>(getRequestUploadUrl(), {
+): Promise<listTraitsResponseSuccess> => {
+  return customInstance<listTraitsResponseSuccess>(getListTraitsUrl(), {
     ...options,
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(requestUploadRequest),
+    method: "GET",
   })
 }
 
-export const getRequestUploadMutationOptions = <
+export const getListTraitsQueryKey = () => {
+  return [`/api/feed/traits`] as const
+}
+
+export const getListTraitsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTraits>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTraits>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListTraitsQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTraits>>> = ({ signal }) =>
+    listTraits({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTraits>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListTraitsQueryResult = NonNullable<Awaited<ReturnType<typeof listTraits>>>
+export type ListTraitsQueryError = ProblemDetails
+
+export function useListTraits<
+  TData = Awaited<ReturnType<typeof listTraits>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTraits>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTraits>>,
+          TError,
+          Awaited<ReturnType<typeof listTraits>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTraits<
+  TData = Awaited<ReturnType<typeof listTraits>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTraits>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listTraits>>,
+          TError,
+          Awaited<ReturnType<typeof listTraits>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListTraits<
+  TData = Awaited<ReturnType<typeof listTraits>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTraits>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListTraits<
+  TData = Awaited<ReturnType<typeof listTraits>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listTraits>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListTraitsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type listFeedResponse200ApplicationJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listFeedResponse200ApplicationProblemJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listFeedResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listFeedResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listFeedResponseSuccess = (
+  | listFeedResponse200ApplicationJson
+  | listFeedResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listFeedResponseError = (
+  | listFeedResponse500ApplicationJson
+  | listFeedResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListFeedUrl = (params?: ListFeedParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0 ? `/api/feed?${stringifiedParams}` : `/api/feed`
+}
+
+export const listFeed = async (
+  params?: ListFeedParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listFeedResponseSuccess> => {
+  return customInstance<listFeedResponseSuccess>(getListFeedUrl(params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListFeedQueryKey = (params?: ListFeedParams) => {
+  return [`/api/feed`, ...(params ? [params] : [])] as const
+}
+
+export const getListFeedQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFeed>>,
+  TError = ProblemDetails,
+>(
+  params?: ListFeedParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeed>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListFeedQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFeed>>> = ({ signal }) =>
+    listFeed(params, { signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listFeed>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListFeedQueryResult = NonNullable<Awaited<ReturnType<typeof listFeed>>>
+export type ListFeedQueryError = ProblemDetails
+
+export function useListFeed<TData = Awaited<ReturnType<typeof listFeed>>, TError = ProblemDetails>(
+  params: undefined | ListFeedParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeed>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFeed>>,
+          TError,
+          Awaited<ReturnType<typeof listFeed>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFeed<TData = Awaited<ReturnType<typeof listFeed>>, TError = ProblemDetails>(
+  params?: ListFeedParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeed>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFeed>>,
+          TError,
+          Awaited<ReturnType<typeof listFeed>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFeed<TData = Awaited<ReturnType<typeof listFeed>>, TError = ProblemDetails>(
+  params?: ListFeedParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeed>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListFeed<TData = Awaited<ReturnType<typeof listFeed>>, TError = ProblemDetails>(
+  params?: ListFeedParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeed>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListFeedQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type listForYouFeedResponse200ApplicationJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listForYouFeedResponse200ApplicationProblemJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listForYouFeedResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listForYouFeedResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listForYouFeedResponseSuccess = (
+  | listForYouFeedResponse200ApplicationJson
+  | listForYouFeedResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listForYouFeedResponseError = (
+  | listForYouFeedResponse500ApplicationJson
+  | listForYouFeedResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListForYouFeedUrl = (params?: ListForYouFeedParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/feed/for-you?${stringifiedParams}`
+    : `/api/feed/for-you`
+}
+
+export const listForYouFeed = async (
+  params?: ListForYouFeedParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listForYouFeedResponseSuccess> => {
+  return customInstance<listForYouFeedResponseSuccess>(getListForYouFeedUrl(params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListForYouFeedQueryKey = (params?: ListForYouFeedParams) => {
+  return [`/api/feed/for-you`, ...(params ? [params] : [])] as const
+}
+
+export const getListForYouFeedQueryOptions = <
+  TData = Awaited<ReturnType<typeof listForYouFeed>>,
+  TError = ProblemDetails,
+>(
+  params?: ListForYouFeedParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listForYouFeed>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListForYouFeedQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listForYouFeed>>> = ({ signal }) =>
+    listForYouFeed(params, { signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listForYouFeed>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListForYouFeedQueryResult = NonNullable<Awaited<ReturnType<typeof listForYouFeed>>>
+export type ListForYouFeedQueryError = ProblemDetails
+
+export function useListForYouFeed<
+  TData = Awaited<ReturnType<typeof listForYouFeed>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | ListForYouFeedParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listForYouFeed>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listForYouFeed>>,
+          TError,
+          Awaited<ReturnType<typeof listForYouFeed>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListForYouFeed<
+  TData = Awaited<ReturnType<typeof listForYouFeed>>,
+  TError = ProblemDetails,
+>(
+  params?: ListForYouFeedParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listForYouFeed>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listForYouFeed>>,
+          TError,
+          Awaited<ReturnType<typeof listForYouFeed>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListForYouFeed<
+  TData = Awaited<ReturnType<typeof listForYouFeed>>,
+  TError = ProblemDetails,
+>(
+  params?: ListForYouFeedParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listForYouFeed>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListForYouFeed<
+  TData = Awaited<ReturnType<typeof listForYouFeed>>,
+  TError = ProblemDetails,
+>(
+  params?: ListForYouFeedParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listForYouFeed>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListForYouFeedQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getFeedItemResponse200ApplicationJson = {
+  data: FeedItemResponse
+  status: 200
+}
+
+export type getFeedItemResponse200ApplicationProblemJson = {
+  data: FeedItemResponse
+  status: 200
+}
+
+export type getFeedItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getFeedItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getFeedItemResponseSuccess = (
+  | getFeedItemResponse200ApplicationJson
+  | getFeedItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getFeedItemResponseError = (
+  | getFeedItemResponse500ApplicationJson
+  | getFeedItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetFeedItemUrl = (id: string) => {
+  return `/api/feed/items/${id}`
+}
+
+export const getFeedItem = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getFeedItemResponseSuccess> => {
+  return customInstance<getFeedItemResponseSuccess>(getGetFeedItemUrl(id), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetFeedItemQueryKey = (id: string) => {
+  return [`/api/feed/items/${id}`] as const
+}
+
+export const getGetFeedItemQueryOptions = <
+  TData = Awaited<ReturnType<typeof getFeedItem>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeedItem>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetFeedItemQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeedItem>>> = ({ signal }) =>
+    getFeedItem(id, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getFeedItem>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetFeedItemQueryResult = NonNullable<Awaited<ReturnType<typeof getFeedItem>>>
+export type GetFeedItemQueryError = ProblemDetails
+
+export function useGetFeedItem<
+  TData = Awaited<ReturnType<typeof getFeedItem>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeedItem>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFeedItem>>,
+          TError,
+          Awaited<ReturnType<typeof getFeedItem>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFeedItem<
+  TData = Awaited<ReturnType<typeof getFeedItem>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeedItem>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getFeedItem>>,
+          TError,
+          Awaited<ReturnType<typeof getFeedItem>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetFeedItem<
+  TData = Awaited<ReturnType<typeof getFeedItem>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeedItem>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetFeedItem<
+  TData = Awaited<ReturnType<typeof getFeedItem>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getFeedItem>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetFeedItemQueryOptions(id, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type addCommentResponse200ApplicationJson = {
+  data: CommentResponse
+  status: 200
+}
+
+export type addCommentResponse200ApplicationProblemJson = {
+  data: CommentResponse
+  status: 200
+}
+
+export type addCommentResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type addCommentResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type addCommentResponseSuccess = (
+  | addCommentResponse200ApplicationJson
+  | addCommentResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type addCommentResponseError = (
+  | addCommentResponse500ApplicationJson
+  | addCommentResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getAddCommentUrl = (id: string) => {
+  return `/api/feed/items/${id}/comments`
+}
+
+export const addComment = async (
+  id: string,
+  createCommentRequest?: CreateCommentRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<addCommentResponseSuccess> => {
+  return customInstance<addCommentResponseSuccess>(getAddCommentUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createCommentRequest),
+  })
+}
+
+export const getAddCommentMutationOptions = <
   TError = ProblemDetails,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof requestUpload>>,
+    Awaited<ReturnType<typeof addComment>>,
     TError,
-    { data?: BodyType<RequestUploadRequest> },
+    { id: string; data?: BodyType<CreateCommentRequest> },
     TContext
   >
   request?: SecondParameter<typeof customInstance>
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof requestUpload>>,
+  Awaited<ReturnType<typeof addComment>>,
   TError,
-  { data?: BodyType<RequestUploadRequest> },
+  { id: string; data?: BodyType<CreateCommentRequest> },
   TContext
 > => {
-  const mutationKey = ["requestUpload"]
+  const mutationKey = ["addComment"]
   const { mutation: mutationOptions, request: requestOptions } = options
     ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
       ? options
@@ -3802,37 +4433,4244 @@ export const getRequestUploadMutationOptions = <
     : { mutation: { mutationKey }, request: undefined }
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof requestUpload>>,
-    { data?: BodyType<RequestUploadRequest> }
+    Awaited<ReturnType<typeof addComment>>,
+    { id: string; data?: BodyType<CreateCommentRequest> }
   > = (props) => {
-    const { data } = props ?? {}
+    const { id, data } = props ?? {}
 
-    return requestUpload(data, requestOptions)
+    return addComment(id, data, requestOptions)
   }
 
   return { mutationFn, ...mutationOptions }
 }
 
-export type RequestUploadMutationResult = NonNullable<Awaited<ReturnType<typeof requestUpload>>>
-export type RequestUploadMutationBody = BodyType<RequestUploadRequest> | undefined
-export type RequestUploadMutationError = ProblemDetails
+export type AddCommentMutationResult = NonNullable<Awaited<ReturnType<typeof addComment>>>
+export type AddCommentMutationBody = BodyType<CreateCommentRequest> | undefined
+export type AddCommentMutationError = ProblemDetails
 
-export const useRequestUpload = <TError = ProblemDetails, TContext = unknown>(
+export const useAddComment = <TError = ProblemDetails, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof requestUpload>>,
+      Awaited<ReturnType<typeof addComment>>,
       TError,
-      { data?: BodyType<RequestUploadRequest> },
+      { id: string; data?: BodyType<CreateCommentRequest> },
       TContext
     >
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseMutationResult<
-  Awaited<ReturnType<typeof requestUpload>>,
+  Awaited<ReturnType<typeof addComment>>,
   TError,
-  { data?: BodyType<RequestUploadRequest> },
+  { id: string; data?: BodyType<CreateCommentRequest> },
   TContext
 > => {
-  return useMutation(getRequestUploadMutationOptions(options), queryClient)
+  return useMutation(getAddCommentMutationOptions(options), queryClient)
+}
+
+export type listCommentsResponse200ApplicationJson = {
+  data: ListCommentsResponse
+  status: 200
+}
+
+export type listCommentsResponse200ApplicationProblemJson = {
+  data: ListCommentsResponse
+  status: 200
+}
+
+export type listCommentsResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listCommentsResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listCommentsResponseSuccess = (
+  | listCommentsResponse200ApplicationJson
+  | listCommentsResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listCommentsResponseError = (
+  | listCommentsResponse500ApplicationJson
+  | listCommentsResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListCommentsUrl = (id: string, params?: ListCommentsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/feed/items/${id}/comments?${stringifiedParams}`
+    : `/api/feed/items/${id}/comments`
+}
+
+export const listComments = async (
+  id: string,
+  params?: ListCommentsParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listCommentsResponseSuccess> => {
+  return customInstance<listCommentsResponseSuccess>(getListCommentsUrl(id, params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListCommentsQueryKey = (id: string, params?: ListCommentsParams) => {
+  return [`/api/feed/items/${id}/comments`, ...(params ? [params] : [])] as const
+}
+
+export const getListCommentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listComments>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListCommentsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListCommentsQueryKey(id, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listComments>>> = ({ signal }) =>
+    listComments(id, params, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListCommentsQueryResult = NonNullable<Awaited<ReturnType<typeof listComments>>>
+export type ListCommentsQueryError = ProblemDetails
+
+export function useListComments<
+  TData = Awaited<ReturnType<typeof listComments>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params: undefined | ListCommentsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listComments>>,
+          TError,
+          Awaited<ReturnType<typeof listComments>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListComments<
+  TData = Awaited<ReturnType<typeof listComments>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListCommentsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listComments>>,
+          TError,
+          Awaited<ReturnType<typeof listComments>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListComments<
+  TData = Awaited<ReturnType<typeof listComments>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListCommentsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListComments<
+  TData = Awaited<ReturnType<typeof listComments>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListCommentsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listComments>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListCommentsQueryOptions(id, params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type listFeedByAuthorResponse200ApplicationJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listFeedByAuthorResponse200ApplicationProblemJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listFeedByAuthorResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listFeedByAuthorResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listFeedByAuthorResponseSuccess = (
+  | listFeedByAuthorResponse200ApplicationJson
+  | listFeedByAuthorResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listFeedByAuthorResponseError = (
+  | listFeedByAuthorResponse500ApplicationJson
+  | listFeedByAuthorResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListFeedByAuthorUrl = (userId: string, params?: ListFeedByAuthorParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/feed/by-author/${userId}?${stringifiedParams}`
+    : `/api/feed/by-author/${userId}`
+}
+
+export const listFeedByAuthor = async (
+  userId: string,
+  params?: ListFeedByAuthorParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listFeedByAuthorResponseSuccess> => {
+  return customInstance<listFeedByAuthorResponseSuccess>(getListFeedByAuthorUrl(userId, params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListFeedByAuthorQueryKey = (userId: string, params?: ListFeedByAuthorParams) => {
+  return [`/api/feed/by-author/${userId}`, ...(params ? [params] : [])] as const
+}
+
+export const getListFeedByAuthorQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFeedByAuthor>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params?: ListFeedByAuthorParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByAuthor>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListFeedByAuthorQueryKey(userId, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFeedByAuthor>>> = ({ signal }) =>
+    listFeedByAuthor(userId, params, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: userId !== null && userId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listFeedByAuthor>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListFeedByAuthorQueryResult = NonNullable<Awaited<ReturnType<typeof listFeedByAuthor>>>
+export type ListFeedByAuthorQueryError = ProblemDetails
+
+export function useListFeedByAuthor<
+  TData = Awaited<ReturnType<typeof listFeedByAuthor>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params: undefined | ListFeedByAuthorParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByAuthor>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFeedByAuthor>>,
+          TError,
+          Awaited<ReturnType<typeof listFeedByAuthor>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFeedByAuthor<
+  TData = Awaited<ReturnType<typeof listFeedByAuthor>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params?: ListFeedByAuthorParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByAuthor>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFeedByAuthor>>,
+          TError,
+          Awaited<ReturnType<typeof listFeedByAuthor>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFeedByAuthor<
+  TData = Awaited<ReturnType<typeof listFeedByAuthor>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params?: ListFeedByAuthorParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByAuthor>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListFeedByAuthor<
+  TData = Awaited<ReturnType<typeof listFeedByAuthor>>,
+  TError = ProblemDetails,
+>(
+  userId: string,
+  params?: ListFeedByAuthorParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByAuthor>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListFeedByAuthorQueryOptions(userId, params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type listFeedByTraitResponse200ApplicationJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listFeedByTraitResponse200ApplicationProblemJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listFeedByTraitResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listFeedByTraitResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listFeedByTraitResponseSuccess = (
+  | listFeedByTraitResponse200ApplicationJson
+  | listFeedByTraitResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listFeedByTraitResponseError = (
+  | listFeedByTraitResponse500ApplicationJson
+  | listFeedByTraitResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListFeedByTraitUrl = (traitId: string, params?: ListFeedByTraitParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/feed/by-trait/${traitId}?${stringifiedParams}`
+    : `/api/feed/by-trait/${traitId}`
+}
+
+export const listFeedByTrait = async (
+  traitId: string,
+  params?: ListFeedByTraitParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listFeedByTraitResponseSuccess> => {
+  return customInstance<listFeedByTraitResponseSuccess>(getListFeedByTraitUrl(traitId, params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListFeedByTraitQueryKey = (traitId: string, params?: ListFeedByTraitParams) => {
+  return [`/api/feed/by-trait/${traitId}`, ...(params ? [params] : [])] as const
+}
+
+export const getListFeedByTraitQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFeedByTrait>>,
+  TError = ProblemDetails,
+>(
+  traitId: string,
+  params?: ListFeedByTraitParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByTrait>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListFeedByTraitQueryKey(traitId, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFeedByTrait>>> = ({ signal }) =>
+    listFeedByTrait(traitId, params, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: traitId !== null && traitId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listFeedByTrait>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListFeedByTraitQueryResult = NonNullable<Awaited<ReturnType<typeof listFeedByTrait>>>
+export type ListFeedByTraitQueryError = ProblemDetails
+
+export function useListFeedByTrait<
+  TData = Awaited<ReturnType<typeof listFeedByTrait>>,
+  TError = ProblemDetails,
+>(
+  traitId: string,
+  params: undefined | ListFeedByTraitParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByTrait>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFeedByTrait>>,
+          TError,
+          Awaited<ReturnType<typeof listFeedByTrait>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFeedByTrait<
+  TData = Awaited<ReturnType<typeof listFeedByTrait>>,
+  TError = ProblemDetails,
+>(
+  traitId: string,
+  params?: ListFeedByTraitParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByTrait>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFeedByTrait>>,
+          TError,
+          Awaited<ReturnType<typeof listFeedByTrait>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFeedByTrait<
+  TData = Awaited<ReturnType<typeof listFeedByTrait>>,
+  TError = ProblemDetails,
+>(
+  traitId: string,
+  params?: ListFeedByTraitParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByTrait>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListFeedByTrait<
+  TData = Awaited<ReturnType<typeof listFeedByTrait>>,
+  TError = ProblemDetails,
+>(
+  traitId: string,
+  params?: ListFeedByTraitParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByTrait>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListFeedByTraitQueryOptions(traitId, params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type listFeedByGroupResponse200ApplicationJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listFeedByGroupResponse200ApplicationProblemJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listFeedByGroupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listFeedByGroupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listFeedByGroupResponseSuccess = (
+  | listFeedByGroupResponse200ApplicationJson
+  | listFeedByGroupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listFeedByGroupResponseError = (
+  | listFeedByGroupResponse500ApplicationJson
+  | listFeedByGroupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListFeedByGroupUrl = (groupId: string, params?: ListFeedByGroupParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/feed/by-group/${groupId}?${stringifiedParams}`
+    : `/api/feed/by-group/${groupId}`
+}
+
+export const listFeedByGroup = async (
+  groupId: string,
+  params?: ListFeedByGroupParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listFeedByGroupResponseSuccess> => {
+  return customInstance<listFeedByGroupResponseSuccess>(getListFeedByGroupUrl(groupId, params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListFeedByGroupQueryKey = (groupId: string, params?: ListFeedByGroupParams) => {
+  return [`/api/feed/by-group/${groupId}`, ...(params ? [params] : [])] as const
+}
+
+export const getListFeedByGroupQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFeedByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  params?: ListFeedByGroupParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListFeedByGroupQueryKey(groupId, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFeedByGroup>>> = ({ signal }) =>
+    listFeedByGroup(groupId, params, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: groupId !== null && groupId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listFeedByGroup>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListFeedByGroupQueryResult = NonNullable<Awaited<ReturnType<typeof listFeedByGroup>>>
+export type ListFeedByGroupQueryError = ProblemDetails
+
+export function useListFeedByGroup<
+  TData = Awaited<ReturnType<typeof listFeedByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  params: undefined | ListFeedByGroupParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByGroup>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFeedByGroup>>,
+          TError,
+          Awaited<ReturnType<typeof listFeedByGroup>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFeedByGroup<
+  TData = Awaited<ReturnType<typeof listFeedByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  params?: ListFeedByGroupParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByGroup>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listFeedByGroup>>,
+          TError,
+          Awaited<ReturnType<typeof listFeedByGroup>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListFeedByGroup<
+  TData = Awaited<ReturnType<typeof listFeedByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  params?: ListFeedByGroupParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListFeedByGroup<
+  TData = Awaited<ReturnType<typeof listFeedByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  params?: ListFeedByGroupParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listFeedByGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListFeedByGroupQueryOptions(groupId, params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type createFeedItemResponse200ApplicationJson = {
+  data: FeedItemResponse
+  status: 200
+}
+
+export type createFeedItemResponse200ApplicationProblemJson = {
+  data: FeedItemResponse
+  status: 200
+}
+
+export type createFeedItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type createFeedItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type createFeedItemResponseSuccess = (
+  | createFeedItemResponse200ApplicationJson
+  | createFeedItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type createFeedItemResponseError = (
+  | createFeedItemResponse500ApplicationJson
+  | createFeedItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getCreateFeedItemUrl = () => {
+  return `/api/feed/items`
+}
+
+export const createFeedItem = async (
+  createFeedItemRequest?: CreateFeedItemRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<createFeedItemResponseSuccess> => {
+  return customInstance<createFeedItemResponseSuccess>(getCreateFeedItemUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createFeedItemRequest),
+  })
+}
+
+export const getCreateFeedItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createFeedItem>>,
+    TError,
+    { data?: BodyType<CreateFeedItemRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createFeedItem>>,
+  TError,
+  { data?: BodyType<CreateFeedItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["createFeedItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createFeedItem>>,
+    { data?: BodyType<CreateFeedItemRequest> }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return createFeedItem(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CreateFeedItemMutationResult = NonNullable<Awaited<ReturnType<typeof createFeedItem>>>
+export type CreateFeedItemMutationBody = BodyType<CreateFeedItemRequest> | undefined
+export type CreateFeedItemMutationError = ProblemDetails
+
+export const useCreateFeedItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createFeedItem>>,
+      TError,
+      { data?: BodyType<CreateFeedItemRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof createFeedItem>>,
+  TError,
+  { data?: BodyType<CreateFeedItemRequest> },
+  TContext
+> => {
+  return useMutation(getCreateFeedItemMutationOptions(options), queryClient)
+}
+
+export type likeFeedItemResponse200ApplicationJson = {
+  data: LikeResponse
+  status: 200
+}
+
+export type likeFeedItemResponse200ApplicationProblemJson = {
+  data: LikeResponse
+  status: 200
+}
+
+export type likeFeedItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type likeFeedItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type likeFeedItemResponseSuccess = (
+  | likeFeedItemResponse200ApplicationJson
+  | likeFeedItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type likeFeedItemResponseError = (
+  | likeFeedItemResponse500ApplicationJson
+  | likeFeedItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getLikeFeedItemUrl = (id: string) => {
+  return `/api/feed/items/${id}/likes`
+}
+
+export const likeFeedItem = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<likeFeedItemResponseSuccess> => {
+  return customInstance<likeFeedItemResponseSuccess>(getLikeFeedItemUrl(id), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getLikeFeedItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof likeFeedItem>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof likeFeedItem>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["likeFeedItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof likeFeedItem>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return likeFeedItem(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type LikeFeedItemMutationResult = NonNullable<Awaited<ReturnType<typeof likeFeedItem>>>
+
+export type LikeFeedItemMutationError = ProblemDetails
+
+export const useLikeFeedItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof likeFeedItem>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof likeFeedItem>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getLikeFeedItemMutationOptions(options), queryClient)
+}
+
+export type unlikeFeedItemResponse200ApplicationJson = {
+  data: LikeResponse
+  status: 200
+}
+
+export type unlikeFeedItemResponse200ApplicationProblemJson = {
+  data: LikeResponse
+  status: 200
+}
+
+export type unlikeFeedItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type unlikeFeedItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type unlikeFeedItemResponseSuccess = (
+  | unlikeFeedItemResponse200ApplicationJson
+  | unlikeFeedItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type unlikeFeedItemResponseError = (
+  | unlikeFeedItemResponse500ApplicationJson
+  | unlikeFeedItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUnlikeFeedItemUrl = (id: string) => {
+  return `/api/feed/items/${id}/likes`
+}
+
+export const unlikeFeedItem = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<unlikeFeedItemResponseSuccess> => {
+  return customInstance<unlikeFeedItemResponseSuccess>(getUnlikeFeedItemUrl(id), {
+    ...options,
+    method: "DELETE",
+  })
+}
+
+export const getUnlikeFeedItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unlikeFeedItem>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unlikeFeedItem>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["unlikeFeedItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlikeFeedItem>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return unlikeFeedItem(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UnlikeFeedItemMutationResult = NonNullable<Awaited<ReturnType<typeof unlikeFeedItem>>>
+
+export type UnlikeFeedItemMutationError = ProblemDetails
+
+export const useUnlikeFeedItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unlikeFeedItem>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof unlikeFeedItem>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getUnlikeFeedItemMutationOptions(options), queryClient)
+}
+
+export type bookmarkFeedItemResponse200ApplicationJson = {
+  data: BookmarkResponse
+  status: 200
+}
+
+export type bookmarkFeedItemResponse200ApplicationProblemJson = {
+  data: BookmarkResponse
+  status: 200
+}
+
+export type bookmarkFeedItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type bookmarkFeedItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type bookmarkFeedItemResponseSuccess = (
+  | bookmarkFeedItemResponse200ApplicationJson
+  | bookmarkFeedItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type bookmarkFeedItemResponseError = (
+  | bookmarkFeedItemResponse500ApplicationJson
+  | bookmarkFeedItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getBookmarkFeedItemUrl = (id: string) => {
+  return `/api/feed/items/${id}/bookmarks`
+}
+
+export const bookmarkFeedItem = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<bookmarkFeedItemResponseSuccess> => {
+  return customInstance<bookmarkFeedItemResponseSuccess>(getBookmarkFeedItemUrl(id), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getBookmarkFeedItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bookmarkFeedItem>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bookmarkFeedItem>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["bookmarkFeedItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bookmarkFeedItem>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return bookmarkFeedItem(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type BookmarkFeedItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bookmarkFeedItem>>
+>
+
+export type BookmarkFeedItemMutationError = ProblemDetails
+
+export const useBookmarkFeedItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof bookmarkFeedItem>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof bookmarkFeedItem>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getBookmarkFeedItemMutationOptions(options), queryClient)
+}
+
+export type unbookmarkFeedItemResponse200ApplicationJson = {
+  data: BookmarkResponse
+  status: 200
+}
+
+export type unbookmarkFeedItemResponse200ApplicationProblemJson = {
+  data: BookmarkResponse
+  status: 200
+}
+
+export type unbookmarkFeedItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type unbookmarkFeedItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type unbookmarkFeedItemResponseSuccess = (
+  | unbookmarkFeedItemResponse200ApplicationJson
+  | unbookmarkFeedItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type unbookmarkFeedItemResponseError = (
+  | unbookmarkFeedItemResponse500ApplicationJson
+  | unbookmarkFeedItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUnbookmarkFeedItemUrl = (id: string) => {
+  return `/api/feed/items/${id}/bookmarks`
+}
+
+export const unbookmarkFeedItem = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<unbookmarkFeedItemResponseSuccess> => {
+  return customInstance<unbookmarkFeedItemResponseSuccess>(getUnbookmarkFeedItemUrl(id), {
+    ...options,
+    method: "DELETE",
+  })
+}
+
+export const getUnbookmarkFeedItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unbookmarkFeedItem>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unbookmarkFeedItem>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["unbookmarkFeedItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unbookmarkFeedItem>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {}
+
+    return unbookmarkFeedItem(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UnbookmarkFeedItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof unbookmarkFeedItem>>
+>
+
+export type UnbookmarkFeedItemMutationError = ProblemDetails
+
+export const useUnbookmarkFeedItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unbookmarkFeedItem>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof unbookmarkFeedItem>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getUnbookmarkFeedItemMutationOptions(options), queryClient)
+}
+
+export type listBookmarksResponse200ApplicationJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listBookmarksResponse200ApplicationProblemJson = {
+  data: ListFeedItemsResponse
+  status: 200
+}
+
+export type listBookmarksResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listBookmarksResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listBookmarksResponseSuccess = (
+  | listBookmarksResponse200ApplicationJson
+  | listBookmarksResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listBookmarksResponseError = (
+  | listBookmarksResponse500ApplicationJson
+  | listBookmarksResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListBookmarksUrl = (params?: ListBookmarksParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/feed/bookmarks?${stringifiedParams}`
+    : `/api/feed/bookmarks`
+}
+
+export const listBookmarks = async (
+  params?: ListBookmarksParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listBookmarksResponseSuccess> => {
+  return customInstance<listBookmarksResponseSuccess>(getListBookmarksUrl(params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListBookmarksQueryKey = (params?: ListBookmarksParams) => {
+  return [`/api/feed/bookmarks`, ...(params ? [params] : [])] as const
+}
+
+export const getListBookmarksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listBookmarks>>,
+  TError = ProblemDetails,
+>(
+  params?: ListBookmarksParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listBookmarks>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListBookmarksQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listBookmarks>>> = ({ signal }) =>
+    listBookmarks(params, { signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listBookmarks>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListBookmarksQueryResult = NonNullable<Awaited<ReturnType<typeof listBookmarks>>>
+export type ListBookmarksQueryError = ProblemDetails
+
+export function useListBookmarks<
+  TData = Awaited<ReturnType<typeof listBookmarks>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | ListBookmarksParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listBookmarks>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listBookmarks>>,
+          TError,
+          Awaited<ReturnType<typeof listBookmarks>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListBookmarks<
+  TData = Awaited<ReturnType<typeof listBookmarks>>,
+  TError = ProblemDetails,
+>(
+  params?: ListBookmarksParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listBookmarks>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listBookmarks>>,
+          TError,
+          Awaited<ReturnType<typeof listBookmarks>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListBookmarks<
+  TData = Awaited<ReturnType<typeof listBookmarks>>,
+  TError = ProblemDetails,
+>(
+  params?: ListBookmarksParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listBookmarks>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListBookmarks<
+  TData = Awaited<ReturnType<typeof listBookmarks>>,
+  TError = ProblemDetails,
+>(
+  params?: ListBookmarksParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listBookmarks>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListBookmarksQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type createGroupResponse200ApplicationJson = {
+  data: GroupResponse
+  status: 200
+}
+
+export type createGroupResponse200ApplicationProblemJson = {
+  data: GroupResponse
+  status: 200
+}
+
+export type createGroupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type createGroupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type createGroupResponseSuccess = (
+  | createGroupResponse200ApplicationJson
+  | createGroupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type createGroupResponseError = (
+  | createGroupResponse500ApplicationJson
+  | createGroupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getCreateGroupUrl = () => {
+  return `/api/groups`
+}
+
+export const createGroup = async (
+  createGroupRequest?: CreateGroupRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<createGroupResponseSuccess> => {
+  return customInstance<createGroupResponseSuccess>(getCreateGroupUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createGroupRequest),
+  })
+}
+
+export const getCreateGroupMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGroup>>,
+    TError,
+    { data?: BodyType<CreateGroupRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createGroup>>,
+  TError,
+  { data?: BodyType<CreateGroupRequest> },
+  TContext
+> => {
+  const mutationKey = ["createGroup"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createGroup>>,
+    { data?: BodyType<CreateGroupRequest> }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return createGroup(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CreateGroupMutationResult = NonNullable<Awaited<ReturnType<typeof createGroup>>>
+export type CreateGroupMutationBody = BodyType<CreateGroupRequest> | undefined
+export type CreateGroupMutationError = ProblemDetails
+
+export const useCreateGroup = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createGroup>>,
+      TError,
+      { data?: BodyType<CreateGroupRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof createGroup>>,
+  TError,
+  { data?: BodyType<CreateGroupRequest> },
+  TContext
+> => {
+  return useMutation(getCreateGroupMutationOptions(options), queryClient)
+}
+
+export type getGroupResponse200ApplicationJson = {
+  data: GroupResponse
+  status: 200
+}
+
+export type getGroupResponse200ApplicationProblemJson = {
+  data: GroupResponse
+  status: 200
+}
+
+export type getGroupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getGroupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getGroupResponseSuccess = (
+  | getGroupResponse200ApplicationJson
+  | getGroupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getGroupResponseError = (
+  | getGroupResponse500ApplicationJson
+  | getGroupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetGroupUrl = (idOrSlug: string) => {
+  return `/api/groups/${idOrSlug}`
+}
+
+export const getGroup = async (
+  idOrSlug: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getGroupResponseSuccess> => {
+  return customInstance<getGroupResponseSuccess>(getGetGroupUrl(idOrSlug), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetGroupQueryKey = (idOrSlug: string) => {
+  return [`/api/groups/${idOrSlug}`] as const
+}
+
+export const getGetGroupQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGroup>>,
+  TError = ProblemDetails,
+>(
+  idOrSlug: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetGroupQueryKey(idOrSlug)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getGroup>>> = ({ signal }) =>
+    getGroup(idOrSlug, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: idOrSlug !== null && idOrSlug !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetGroupQueryResult = NonNullable<Awaited<ReturnType<typeof getGroup>>>
+export type GetGroupQueryError = ProblemDetails
+
+export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError = ProblemDetails>(
+  idOrSlug: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGroup>>,
+          TError,
+          Awaited<ReturnType<typeof getGroup>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError = ProblemDetails>(
+  idOrSlug: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getGroup>>,
+          TError,
+          Awaited<ReturnType<typeof getGroup>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError = ProblemDetails>(
+  idOrSlug: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError = ProblemDetails>(
+  idOrSlug: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetGroupQueryOptions(idOrSlug, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type updateGroupResponse200ApplicationJson = {
+  data: GroupResponse
+  status: 200
+}
+
+export type updateGroupResponse200ApplicationProblemJson = {
+  data: GroupResponse
+  status: 200
+}
+
+export type updateGroupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type updateGroupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type updateGroupResponseSuccess = (
+  | updateGroupResponse200ApplicationJson
+  | updateGroupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type updateGroupResponseError = (
+  | updateGroupResponse500ApplicationJson
+  | updateGroupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUpdateGroupUrl = (id: string) => {
+  return `/api/groups/${id}`
+}
+
+export const updateGroup = async (
+  id: string,
+  updateGroupRequest?: UpdateGroupRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<updateGroupResponseSuccess> => {
+  return customInstance<updateGroupResponseSuccess>(getUpdateGroupUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateGroupRequest),
+  })
+}
+
+export const getUpdateGroupMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateGroup>>,
+    TError,
+    { id: string; data?: BodyType<UpdateGroupRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateGroup>>,
+  TError,
+  { id: string; data?: BodyType<UpdateGroupRequest> },
+  TContext
+> => {
+  const mutationKey = ["updateGroup"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateGroup>>,
+    { id: string; data?: BodyType<UpdateGroupRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return updateGroup(id, data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UpdateGroupMutationResult = NonNullable<Awaited<ReturnType<typeof updateGroup>>>
+export type UpdateGroupMutationBody = BodyType<UpdateGroupRequest> | undefined
+export type UpdateGroupMutationError = ProblemDetails
+
+export const useUpdateGroup = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateGroup>>,
+      TError,
+      { id: string; data?: BodyType<UpdateGroupRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateGroup>>,
+  TError,
+  { id: string; data?: BodyType<UpdateGroupRequest> },
+  TContext
+> => {
+  return useMutation(getUpdateGroupMutationOptions(options), queryClient)
+}
+
+export type joinGroupResponse200ApplicationJson = {
+  data: GroupResponse
+  status: 200
+}
+
+export type joinGroupResponse200ApplicationProblemJson = {
+  data: GroupResponse
+  status: 200
+}
+
+export type joinGroupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type joinGroupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type joinGroupResponseSuccess = (
+  | joinGroupResponse200ApplicationJson
+  | joinGroupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type joinGroupResponseError = (
+  | joinGroupResponse500ApplicationJson
+  | joinGroupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getJoinGroupUrl = (id: string) => {
+  return `/api/groups/${id}/join`
+}
+
+export const joinGroup = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<joinGroupResponseSuccess> => {
+  return customInstance<joinGroupResponseSuccess>(getJoinGroupUrl(id), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getJoinGroupMutationOptions = <TError = ProblemDetails, TContext = unknown>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof joinGroup>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<Awaited<ReturnType<typeof joinGroup>>, TError, { id: string }, TContext> => {
+  const mutationKey = ["joinGroup"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinGroup>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return joinGroup(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type JoinGroupMutationResult = NonNullable<Awaited<ReturnType<typeof joinGroup>>>
+
+export type JoinGroupMutationError = ProblemDetails
+
+export const useJoinGroup = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof joinGroup>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<Awaited<ReturnType<typeof joinGroup>>, TError, { id: string }, TContext> => {
+  return useMutation(getJoinGroupMutationOptions(options), queryClient)
+}
+
+export type leaveGroupResponse200ApplicationJson = {
+  data: LeaveGroupResponse
+  status: 200
+}
+
+export type leaveGroupResponse200ApplicationProblemJson = {
+  data: LeaveGroupResponse
+  status: 200
+}
+
+export type leaveGroupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type leaveGroupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type leaveGroupResponseSuccess = (
+  | leaveGroupResponse200ApplicationJson
+  | leaveGroupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type leaveGroupResponseError = (
+  | leaveGroupResponse500ApplicationJson
+  | leaveGroupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getLeaveGroupUrl = (id: string) => {
+  return `/api/groups/${id}/members/me`
+}
+
+export const leaveGroup = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<leaveGroupResponseSuccess> => {
+  return customInstance<leaveGroupResponseSuccess>(getLeaveGroupUrl(id), {
+    ...options,
+    method: "DELETE",
+  })
+}
+
+export const getLeaveGroupMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof leaveGroup>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof leaveGroup>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["leaveGroup"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof leaveGroup>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return leaveGroup(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type LeaveGroupMutationResult = NonNullable<Awaited<ReturnType<typeof leaveGroup>>>
+
+export type LeaveGroupMutationError = ProblemDetails
+
+export const useLeaveGroup = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof leaveGroup>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<Awaited<ReturnType<typeof leaveGroup>>, TError, { id: string }, TContext> => {
+  return useMutation(getLeaveGroupMutationOptions(options), queryClient)
+}
+
+export type listGroupMembersResponse200ApplicationJson = {
+  data: ListGroupMembersResponse
+  status: 200
+}
+
+export type listGroupMembersResponse200ApplicationProblemJson = {
+  data: ListGroupMembersResponse
+  status: 200
+}
+
+export type listGroupMembersResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listGroupMembersResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listGroupMembersResponseSuccess = (
+  | listGroupMembersResponse200ApplicationJson
+  | listGroupMembersResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listGroupMembersResponseError = (
+  | listGroupMembersResponse500ApplicationJson
+  | listGroupMembersResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListGroupMembersUrl = (id: string, params?: ListGroupMembersParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/groups/${id}/members?${stringifiedParams}`
+    : `/api/groups/${id}/members`
+}
+
+export const listGroupMembers = async (
+  id: string,
+  params?: ListGroupMembersParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listGroupMembersResponseSuccess> => {
+  return customInstance<listGroupMembersResponseSuccess>(getListGroupMembersUrl(id, params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListGroupMembersQueryKey = (id: string, params?: ListGroupMembersParams) => {
+  return [`/api/groups/${id}/members`, ...(params ? [params] : [])] as const
+}
+
+export const getListGroupMembersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listGroupMembers>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListGroupMembersParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listGroupMembers>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListGroupMembersQueryKey(id, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listGroupMembers>>> = ({ signal }) =>
+    listGroupMembers(id, params, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listGroupMembers>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListGroupMembersQueryResult = NonNullable<Awaited<ReturnType<typeof listGroupMembers>>>
+export type ListGroupMembersQueryError = ProblemDetails
+
+export function useListGroupMembers<
+  TData = Awaited<ReturnType<typeof listGroupMembers>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params: undefined | ListGroupMembersParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listGroupMembers>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listGroupMembers>>,
+          TError,
+          Awaited<ReturnType<typeof listGroupMembers>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListGroupMembers<
+  TData = Awaited<ReturnType<typeof listGroupMembers>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListGroupMembersParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listGroupMembers>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listGroupMembers>>,
+          TError,
+          Awaited<ReturnType<typeof listGroupMembers>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListGroupMembers<
+  TData = Awaited<ReturnType<typeof listGroupMembers>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListGroupMembersParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listGroupMembers>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListGroupMembers<
+  TData = Awaited<ReturnType<typeof listGroupMembers>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListGroupMembersParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listGroupMembers>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListGroupMembersQueryOptions(id, params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getMediaObjectResponse200ApplicationJson = {
+  data: GetMediaObject200One
+  status: 200
+}
+
+export type getMediaObjectResponse200ApplicationProblemJson = {
+  data: GetMediaObject200Two
+  status: 200
+}
+
+export type getMediaObjectResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getMediaObjectResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getMediaObjectResponseSuccess = (
+  | getMediaObjectResponse200ApplicationJson
+  | getMediaObjectResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getMediaObjectResponseError = (
+  | getMediaObjectResponse500ApplicationJson
+  | getMediaObjectResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetMediaObjectUrl = (params?: GetMediaObjectParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/media/objects?${stringifiedParams}`
+    : `/api/media/objects`
+}
+
+/**
+ * @summary *}`.
+ */
+export const getMediaObject = async (
+  params?: GetMediaObjectParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getMediaObjectResponseSuccess> => {
+  return customInstance<getMediaObjectResponseSuccess>(getGetMediaObjectUrl(params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetMediaObjectQueryKey = (params?: GetMediaObjectParams) => {
+  return [`/api/media/objects`, ...(params ? [params] : [])] as const
+}
+
+export const getGetMediaObjectQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMediaObject>>,
+  TError = ProblemDetails,
+>(
+  params?: GetMediaObjectParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaObject>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetMediaObjectQueryKey(params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMediaObject>>> = ({ signal }) =>
+    getMediaObject(params, { signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMediaObject>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMediaObjectQueryResult = NonNullable<Awaited<ReturnType<typeof getMediaObject>>>
+export type GetMediaObjectQueryError = ProblemDetails
+
+export function useGetMediaObject<
+  TData = Awaited<ReturnType<typeof getMediaObject>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetMediaObjectParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaObject>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMediaObject>>,
+          TError,
+          Awaited<ReturnType<typeof getMediaObject>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMediaObject<
+  TData = Awaited<ReturnType<typeof getMediaObject>>,
+  TError = ProblemDetails,
+>(
+  params?: GetMediaObjectParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaObject>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMediaObject>>,
+          TError,
+          Awaited<ReturnType<typeof getMediaObject>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMediaObject<
+  TData = Awaited<ReturnType<typeof getMediaObject>>,
+  TError = ProblemDetails,
+>(
+  params?: GetMediaObjectParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaObject>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary *}`.
+ */
+
+export function useGetMediaObject<
+  TData = Awaited<ReturnType<typeof getMediaObject>>,
+  TError = ProblemDetails,
+>(
+  params?: GetMediaObjectParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMediaObject>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMediaObjectQueryOptions(params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type uploadMediaResponse200ApplicationJson = {
+  data: UploadMediaResponse
+  status: 200
+}
+
+export type uploadMediaResponse200ApplicationProblemJson = {
+  data: UploadMediaResponse
+  status: 200
+}
+
+export type uploadMediaResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type uploadMediaResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type uploadMediaResponseSuccess = (
+  | uploadMediaResponse200ApplicationJson
+  | uploadMediaResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type uploadMediaResponseError = (
+  | uploadMediaResponse500ApplicationJson
+  | uploadMediaResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUploadMediaUrl = () => {
+  return `/api/media/uploads`
+}
+
+export const uploadMedia = async (
+  options?: Parameters<typeof customInstance>[1]
+): Promise<uploadMediaResponseSuccess> => {
+  return customInstance<uploadMediaResponseSuccess>(getUploadMediaUrl(), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getUploadMediaMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof uploadMedia>>, TError, void, TContext>
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<Awaited<ReturnType<typeof uploadMedia>>, TError, void, TContext> => {
+  const mutationKey = ["uploadMedia"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadMedia>>, void> = () => {
+    return uploadMedia(requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UploadMediaMutationResult = NonNullable<Awaited<ReturnType<typeof uploadMedia>>>
+
+export type UploadMediaMutationError = ProblemDetails
+
+export const useUploadMedia = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<Awaited<ReturnType<typeof uploadMedia>>, TError, void, TContext>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<Awaited<ReturnType<typeof uploadMedia>>, TError, void, TContext> => {
+  return useMutation(getUploadMediaMutationOptions(options), queryClient)
+}
+
+export type createTradeResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type createTradeResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type createTradeResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type createTradeResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type createTradeResponseSuccess = (
+  | createTradeResponse200ApplicationJson
+  | createTradeResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type createTradeResponseError = (
+  | createTradeResponse500ApplicationJson
+  | createTradeResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getCreateTradeUrl = () => {
+  return `/api/trades`
+}
+
+export const createTrade = async (
+  createTradeRequest?: CreateTradeRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<createTradeResponseSuccess> => {
+  return customInstance<createTradeResponseSuccess>(getCreateTradeUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createTradeRequest),
+  })
+}
+
+export const getCreateTradeMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createTrade>>,
+    TError,
+    { data?: BodyType<CreateTradeRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createTrade>>,
+  TError,
+  { data?: BodyType<CreateTradeRequest> },
+  TContext
+> => {
+  const mutationKey = ["createTrade"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createTrade>>,
+    { data?: BodyType<CreateTradeRequest> }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return createTrade(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CreateTradeMutationResult = NonNullable<Awaited<ReturnType<typeof createTrade>>>
+export type CreateTradeMutationBody = BodyType<CreateTradeRequest> | undefined
+export type CreateTradeMutationError = ProblemDetails
+
+export const useCreateTrade = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createTrade>>,
+      TError,
+      { data?: BodyType<CreateTradeRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof createTrade>>,
+  TError,
+  { data?: BodyType<CreateTradeRequest> },
+  TContext
+> => {
+  return useMutation(getCreateTradeMutationOptions(options), queryClient)
+}
+
+export type getTradeResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type getTradeResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type getTradeResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getTradeResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getTradeResponseSuccess = (
+  | getTradeResponse200ApplicationJson
+  | getTradeResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getTradeResponseError = (
+  | getTradeResponse500ApplicationJson
+  | getTradeResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetTradeUrl = (id: string) => {
+  return `/api/trades/${id}`
+}
+
+export const getTrade = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getTradeResponseSuccess> => {
+  return customInstance<getTradeResponseSuccess>(getGetTradeUrl(id), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetTradeQueryKey = (id: string) => {
+  return [`/api/trades/${id}`] as const
+}
+
+export const getGetTradeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTrade>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrade>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetTradeQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTrade>>> = ({ signal }) =>
+    getTrade(id, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTrade>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetTradeQueryResult = NonNullable<Awaited<ReturnType<typeof getTrade>>>
+export type GetTradeQueryError = ProblemDetails
+
+export function useGetTrade<TData = Awaited<ReturnType<typeof getTrade>>, TError = ProblemDetails>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrade>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTrade>>,
+          TError,
+          Awaited<ReturnType<typeof getTrade>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTrade<TData = Awaited<ReturnType<typeof getTrade>>, TError = ProblemDetails>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrade>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTrade>>,
+          TError,
+          Awaited<ReturnType<typeof getTrade>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTrade<TData = Awaited<ReturnType<typeof getTrade>>, TError = ProblemDetails>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrade>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetTrade<TData = Awaited<ReturnType<typeof getTrade>>, TError = ProblemDetails>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTrade>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTradeQueryOptions(id, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type acceptTradeResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type acceptTradeResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type acceptTradeResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type acceptTradeResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type acceptTradeResponseSuccess = (
+  | acceptTradeResponse200ApplicationJson
+  | acceptTradeResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type acceptTradeResponseError = (
+  | acceptTradeResponse500ApplicationJson
+  | acceptTradeResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getAcceptTradeUrl = (id: string) => {
+  return `/api/trades/${id}/accept`
+}
+
+export const acceptTrade = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<acceptTradeResponseSuccess> => {
+  return customInstance<acceptTradeResponseSuccess>(getAcceptTradeUrl(id), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getAcceptTradeMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof acceptTrade>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof acceptTrade>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["acceptTrade"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptTrade>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return acceptTrade(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type AcceptTradeMutationResult = NonNullable<Awaited<ReturnType<typeof acceptTrade>>>
+
+export type AcceptTradeMutationError = ProblemDetails
+
+export const useAcceptTrade = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof acceptTrade>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<Awaited<ReturnType<typeof acceptTrade>>, TError, { id: string }, TContext> => {
+  return useMutation(getAcceptTradeMutationOptions(options), queryClient)
+}
+
+export type cancelTradeResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type cancelTradeResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type cancelTradeResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type cancelTradeResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type cancelTradeResponseSuccess = (
+  | cancelTradeResponse200ApplicationJson
+  | cancelTradeResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type cancelTradeResponseError = (
+  | cancelTradeResponse500ApplicationJson
+  | cancelTradeResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getCancelTradeUrl = (id: string) => {
+  return `/api/trades/${id}/cancel`
+}
+
+export const cancelTrade = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<cancelTradeResponseSuccess> => {
+  return customInstance<cancelTradeResponseSuccess>(getCancelTradeUrl(id), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getCancelTradeMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof cancelTrade>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof cancelTrade>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["cancelTrade"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelTrade>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return cancelTrade(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CancelTradeMutationResult = NonNullable<Awaited<ReturnType<typeof cancelTrade>>>
+
+export type CancelTradeMutationError = ProblemDetails
+
+export const useCancelTrade = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof cancelTrade>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<Awaited<ReturnType<typeof cancelTrade>>, TError, { id: string }, TContext> => {
+  return useMutation(getCancelTradeMutationOptions(options), queryClient)
+}
+
+export type completeTradeResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type completeTradeResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type completeTradeResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type completeTradeResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type completeTradeResponseSuccess = (
+  | completeTradeResponse200ApplicationJson
+  | completeTradeResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type completeTradeResponseError = (
+  | completeTradeResponse500ApplicationJson
+  | completeTradeResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getCompleteTradeUrl = (id: string) => {
+  return `/api/trades/${id}/complete`
+}
+
+export const completeTrade = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<completeTradeResponseSuccess> => {
+  return customInstance<completeTradeResponseSuccess>(getCompleteTradeUrl(id), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getCompleteTradeMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof completeTrade>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof completeTrade>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["completeTrade"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof completeTrade>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return completeTrade(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type CompleteTradeMutationResult = NonNullable<Awaited<ReturnType<typeof completeTrade>>>
+
+export type CompleteTradeMutationError = ProblemDetails
+
+export const useCompleteTrade = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof completeTrade>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof completeTrade>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getCompleteTradeMutationOptions(options), queryClient)
+}
+
+export type setTradeLocationModeResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type setTradeLocationModeResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type setTradeLocationModeResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type setTradeLocationModeResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type setTradeLocationModeResponseSuccess = (
+  | setTradeLocationModeResponse200ApplicationJson
+  | setTradeLocationModeResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type setTradeLocationModeResponseError = (
+  | setTradeLocationModeResponse500ApplicationJson
+  | setTradeLocationModeResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getSetTradeLocationModeUrl = (id: string) => {
+  return `/api/trades/${id}/location-mode`
+}
+
+export const setTradeLocationMode = async (
+  id: string,
+  setLocationModeRequest?: SetLocationModeRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<setTradeLocationModeResponseSuccess> => {
+  return customInstance<setTradeLocationModeResponseSuccess>(getSetTradeLocationModeUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(setLocationModeRequest),
+  })
+}
+
+export const getSetTradeLocationModeMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setTradeLocationMode>>,
+    TError,
+    { id: string; data?: BodyType<SetLocationModeRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setTradeLocationMode>>,
+  TError,
+  { id: string; data?: BodyType<SetLocationModeRequest> },
+  TContext
+> => {
+  const mutationKey = ["setTradeLocationMode"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setTradeLocationMode>>,
+    { id: string; data?: BodyType<SetLocationModeRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return setTradeLocationMode(id, data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SetTradeLocationModeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setTradeLocationMode>>
+>
+export type SetTradeLocationModeMutationBody = BodyType<SetLocationModeRequest> | undefined
+export type SetTradeLocationModeMutationError = ProblemDetails
+
+export const useSetTradeLocationMode = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setTradeLocationMode>>,
+      TError,
+      { id: string; data?: BodyType<SetLocationModeRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof setTradeLocationMode>>,
+  TError,
+  { id: string; data?: BodyType<SetLocationModeRequest> },
+  TContext
+> => {
+  return useMutation(getSetTradeLocationModeMutationOptions(options), queryClient)
+}
+
+export type setTradeFulfillmentPlaceResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type setTradeFulfillmentPlaceResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type setTradeFulfillmentPlaceResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type setTradeFulfillmentPlaceResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type setTradeFulfillmentPlaceResponseSuccess = (
+  | setTradeFulfillmentPlaceResponse200ApplicationJson
+  | setTradeFulfillmentPlaceResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type setTradeFulfillmentPlaceResponseError = (
+  | setTradeFulfillmentPlaceResponse500ApplicationJson
+  | setTradeFulfillmentPlaceResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getSetTradeFulfillmentPlaceUrl = (id: string) => {
+  return `/api/trades/${id}/fulfillment-place`
+}
+
+export const setTradeFulfillmentPlace = async (
+  id: string,
+  setFulfillmentPlaceRequest?: SetFulfillmentPlaceRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<setTradeFulfillmentPlaceResponseSuccess> => {
+  return customInstance<setTradeFulfillmentPlaceResponseSuccess>(
+    getSetTradeFulfillmentPlaceUrl(id),
+    {
+      ...options,
+      method: "PUT",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(setFulfillmentPlaceRequest),
+    }
+  )
+}
+
+export const getSetTradeFulfillmentPlaceMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setTradeFulfillmentPlace>>,
+    TError,
+    { id: string; data?: BodyType<SetFulfillmentPlaceRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setTradeFulfillmentPlace>>,
+  TError,
+  { id: string; data?: BodyType<SetFulfillmentPlaceRequest> },
+  TContext
+> => {
+  const mutationKey = ["setTradeFulfillmentPlace"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setTradeFulfillmentPlace>>,
+    { id: string; data?: BodyType<SetFulfillmentPlaceRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return setTradeFulfillmentPlace(id, data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SetTradeFulfillmentPlaceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setTradeFulfillmentPlace>>
+>
+export type SetTradeFulfillmentPlaceMutationBody = BodyType<SetFulfillmentPlaceRequest> | undefined
+export type SetTradeFulfillmentPlaceMutationError = ProblemDetails
+
+export const useSetTradeFulfillmentPlace = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setTradeFulfillmentPlace>>,
+      TError,
+      { id: string; data?: BodyType<SetFulfillmentPlaceRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof setTradeFulfillmentPlace>>,
+  TError,
+  { id: string; data?: BodyType<SetFulfillmentPlaceRequest> },
+  TContext
+> => {
+  return useMutation(getSetTradeFulfillmentPlaceMutationOptions(options), queryClient)
+}
+
+export type proposeMeetupResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type proposeMeetupResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type proposeMeetupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type proposeMeetupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type proposeMeetupResponseSuccess = (
+  | proposeMeetupResponse200ApplicationJson
+  | proposeMeetupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type proposeMeetupResponseError = (
+  | proposeMeetupResponse500ApplicationJson
+  | proposeMeetupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getProposeMeetupUrl = (id: string) => {
+  return `/api/trades/${id}/meetup/propose`
+}
+
+export const proposeMeetup = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<proposeMeetupResponseSuccess> => {
+  return customInstance<proposeMeetupResponseSuccess>(getProposeMeetupUrl(id), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getProposeMeetupMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof proposeMeetup>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof proposeMeetup>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["proposeMeetup"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof proposeMeetup>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return proposeMeetup(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type ProposeMeetupMutationResult = NonNullable<Awaited<ReturnType<typeof proposeMeetup>>>
+
+export type ProposeMeetupMutationError = ProblemDetails
+
+export const useProposeMeetup = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof proposeMeetup>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof proposeMeetup>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getProposeMeetupMutationOptions(options), queryClient)
+}
+
+export type confirmMeetupResponse200ApplicationJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type confirmMeetupResponse200ApplicationProblemJson = {
+  data: TradeResponse
+  status: 200
+}
+
+export type confirmMeetupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type confirmMeetupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type confirmMeetupResponseSuccess = (
+  | confirmMeetupResponse200ApplicationJson
+  | confirmMeetupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type confirmMeetupResponseError = (
+  | confirmMeetupResponse500ApplicationJson
+  | confirmMeetupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getConfirmMeetupUrl = (id: string) => {
+  return `/api/trades/${id}/meetup/confirm`
+}
+
+export const confirmMeetup = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<confirmMeetupResponseSuccess> => {
+  return customInstance<confirmMeetupResponseSuccess>(getConfirmMeetupUrl(id), {
+    ...options,
+    method: "POST",
+  })
+}
+
+export const getConfirmMeetupMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof confirmMeetup>>,
+    TError,
+    { id: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof confirmMeetup>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["confirmMeetup"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmMeetup>>, { id: string }> = (
+    props
+  ) => {
+    const { id } = props ?? {}
+
+    return confirmMeetup(id, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type ConfirmMeetupMutationResult = NonNullable<Awaited<ReturnType<typeof confirmMeetup>>>
+
+export type ConfirmMeetupMutationError = ProblemDetails
+
+export const useConfirmMeetup = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof confirmMeetup>>,
+      TError,
+      { id: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof confirmMeetup>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getConfirmMeetupMutationOptions(options), queryClient)
+}
+
+export type getApiEventsStreamResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getApiEventsStreamResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+export type getApiEventsStreamResponseError = (
+  | getApiEventsStreamResponse500ApplicationJson
+  | getApiEventsStreamResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export type getApiEventsStreamResponse = getApiEventsStreamResponseError
+
+export const getGetApiEventsStreamUrl = () => {
+  return `/api/events/stream`
+}
+
+export const getApiEventsStream = async (
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getApiEventsStreamResponse> => {
+  return customInstance<getApiEventsStreamResponse>(getGetApiEventsStreamUrl(), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetApiEventsStreamQueryKey = () => {
+  return [`/api/events/stream`] as const
+}
+
+export const getGetApiEventsStreamQueryOptions = <
+  TData = Awaited<ReturnType<typeof getApiEventsStream>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEventsStream>>, TError, TData>>
+  request?: SecondParameter<typeof customInstance>
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetApiEventsStreamQueryKey()
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiEventsStream>>> = ({ signal }) =>
+    getApiEventsStream({ signal, ...requestOptions })
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getApiEventsStream>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiEventsStreamQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getApiEventsStream>>
+>
+export type GetApiEventsStreamQueryError = ProblemDetails
+
+export function useGetApiEventsStream<
+  TData = Awaited<ReturnType<typeof getApiEventsStream>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEventsStream>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiEventsStream>>,
+          TError,
+          Awaited<ReturnType<typeof getApiEventsStream>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiEventsStream<
+  TData = Awaited<ReturnType<typeof getApiEventsStream>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getApiEventsStream>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiEventsStream>>,
+          TError,
+          Awaited<ReturnType<typeof getApiEventsStream>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiEventsStream<
+  TData = Awaited<ReturnType<typeof getApiEventsStream>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEventsStream>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetApiEventsStream<
+  TData = Awaited<ReturnType<typeof getApiEventsStream>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiEventsStream>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetApiEventsStreamQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getChatRoomResponse200ApplicationJson = {
+  data: ChatRoomResponse
+  status: 200
+}
+
+export type getChatRoomResponse200ApplicationProblemJson = {
+  data: ChatRoomResponse
+  status: 200
+}
+
+export type getChatRoomResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getChatRoomResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getChatRoomResponseSuccess = (
+  | getChatRoomResponse200ApplicationJson
+  | getChatRoomResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getChatRoomResponseError = (
+  | getChatRoomResponse500ApplicationJson
+  | getChatRoomResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetChatRoomUrl = (id: string) => {
+  return `/api/chat/rooms/${id}`
+}
+
+export const getChatRoom = async (
+  id: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getChatRoomResponseSuccess> => {
+  return customInstance<getChatRoomResponseSuccess>(getGetChatRoomUrl(id), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetChatRoomQueryKey = (id: string) => {
+  return [`/api/chat/rooms/${id}`] as const
+}
+
+export const getGetChatRoomQueryOptions = <
+  TData = Awaited<ReturnType<typeof getChatRoom>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoom>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetChatRoomQueryKey(id)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatRoom>>> = ({ signal }) =>
+    getChatRoom(id, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getChatRoom>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetChatRoomQueryResult = NonNullable<Awaited<ReturnType<typeof getChatRoom>>>
+export type GetChatRoomQueryError = ProblemDetails
+
+export function useGetChatRoom<
+  TData = Awaited<ReturnType<typeof getChatRoom>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoom>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatRoom>>,
+          TError,
+          Awaited<ReturnType<typeof getChatRoom>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatRoom<
+  TData = Awaited<ReturnType<typeof getChatRoom>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoom>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatRoom>>,
+          TError,
+          Awaited<ReturnType<typeof getChatRoom>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatRoom<
+  TData = Awaited<ReturnType<typeof getChatRoom>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoom>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetChatRoom<
+  TData = Awaited<ReturnType<typeof getChatRoom>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoom>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetChatRoomQueryOptions(id, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type sendChatMessageResponse200ApplicationJson = {
+  data: ChatMessageResponse
+  status: 200
+}
+
+export type sendChatMessageResponse200ApplicationProblemJson = {
+  data: ChatMessageResponse
+  status: 200
+}
+
+export type sendChatMessageResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type sendChatMessageResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type sendChatMessageResponseSuccess = (
+  | sendChatMessageResponse200ApplicationJson
+  | sendChatMessageResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type sendChatMessageResponseError = (
+  | sendChatMessageResponse500ApplicationJson
+  | sendChatMessageResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getSendChatMessageUrl = (id: string) => {
+  return `/api/chat/rooms/${id}/messages`
+}
+
+export const sendChatMessage = async (
+  id: string,
+  sendMessageRequest?: SendMessageRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<sendChatMessageResponseSuccess> => {
+  return customInstance<sendChatMessageResponseSuccess>(getSendChatMessageUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(sendMessageRequest),
+  })
+}
+
+export const getSendChatMessageMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendChatMessage>>,
+    TError,
+    { id: string; data?: BodyType<SendMessageRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendChatMessage>>,
+  TError,
+  { id: string; data?: BodyType<SendMessageRequest> },
+  TContext
+> => {
+  const mutationKey = ["sendChatMessage"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendChatMessage>>,
+    { id: string; data?: BodyType<SendMessageRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {}
+
+    return sendChatMessage(id, data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type SendChatMessageMutationResult = NonNullable<Awaited<ReturnType<typeof sendChatMessage>>>
+export type SendChatMessageMutationBody = BodyType<SendMessageRequest> | undefined
+export type SendChatMessageMutationError = ProblemDetails
+
+export const useSendChatMessage = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sendChatMessage>>,
+      TError,
+      { id: string; data?: BodyType<SendMessageRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof sendChatMessage>>,
+  TError,
+  { id: string; data?: BodyType<SendMessageRequest> },
+  TContext
+> => {
+  return useMutation(getSendChatMessageMutationOptions(options), queryClient)
+}
+
+export type listChatMessagesResponse200ApplicationJson = {
+  data: ListMessagesResponse
+  status: 200
+}
+
+export type listChatMessagesResponse200ApplicationProblemJson = {
+  data: ListMessagesResponse
+  status: 200
+}
+
+export type listChatMessagesResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listChatMessagesResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listChatMessagesResponseSuccess = (
+  | listChatMessagesResponse200ApplicationJson
+  | listChatMessagesResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listChatMessagesResponseError = (
+  | listChatMessagesResponse500ApplicationJson
+  | listChatMessagesResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListChatMessagesUrl = (id: string, params?: ListChatMessagesParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/chat/rooms/${id}/messages?${stringifiedParams}`
+    : `/api/chat/rooms/${id}/messages`
+}
+
+export const listChatMessages = async (
+  id: string,
+  params?: ListChatMessagesParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listChatMessagesResponseSuccess> => {
+  return customInstance<listChatMessagesResponseSuccess>(getListChatMessagesUrl(id, params), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListChatMessagesQueryKey = (id: string, params?: ListChatMessagesParams) => {
+  return [`/api/chat/rooms/${id}/messages`, ...(params ? [params] : [])] as const
+}
+
+export const getListChatMessagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listChatMessages>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListChatMessagesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listChatMessages>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListChatMessagesQueryKey(id, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listChatMessages>>> = ({ signal }) =>
+    listChatMessages(id, params, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listChatMessages>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListChatMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listChatMessages>>>
+export type ListChatMessagesQueryError = ProblemDetails
+
+export function useListChatMessages<
+  TData = Awaited<ReturnType<typeof listChatMessages>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params: undefined | ListChatMessagesParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listChatMessages>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listChatMessages>>,
+          TError,
+          Awaited<ReturnType<typeof listChatMessages>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListChatMessages<
+  TData = Awaited<ReturnType<typeof listChatMessages>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListChatMessagesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listChatMessages>>, TError, TData>> &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listChatMessages>>,
+          TError,
+          Awaited<ReturnType<typeof listChatMessages>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListChatMessages<
+  TData = Awaited<ReturnType<typeof listChatMessages>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListChatMessagesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listChatMessages>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListChatMessages<
+  TData = Awaited<ReturnType<typeof listChatMessages>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  params?: ListChatMessagesParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listChatMessages>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListChatMessagesQueryOptions(id, params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getChatRoomByTradeResponse200ApplicationJson = {
+  data: ChatRoomResponse
+  status: 200
+}
+
+export type getChatRoomByTradeResponse200ApplicationProblemJson = {
+  data: ChatRoomResponse
+  status: 200
+}
+
+export type getChatRoomByTradeResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getChatRoomByTradeResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getChatRoomByTradeResponseSuccess = (
+  | getChatRoomByTradeResponse200ApplicationJson
+  | getChatRoomByTradeResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getChatRoomByTradeResponseError = (
+  | getChatRoomByTradeResponse500ApplicationJson
+  | getChatRoomByTradeResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetChatRoomByTradeUrl = (tradeId: string) => {
+  return `/api/chat/rooms/by-trade/${tradeId}`
+}
+
+export const getChatRoomByTrade = async (
+  tradeId: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getChatRoomByTradeResponseSuccess> => {
+  return customInstance<getChatRoomByTradeResponseSuccess>(getGetChatRoomByTradeUrl(tradeId), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetChatRoomByTradeQueryKey = (tradeId: string) => {
+  return [`/api/chat/rooms/by-trade/${tradeId}`] as const
+}
+
+export const getGetChatRoomByTradeQueryOptions = <
+  TData = Awaited<ReturnType<typeof getChatRoomByTrade>>,
+  TError = ProblemDetails,
+>(
+  tradeId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByTrade>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetChatRoomByTradeQueryKey(tradeId)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatRoomByTrade>>> = ({ signal }) =>
+    getChatRoomByTrade(tradeId, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: tradeId !== null && tradeId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByTrade>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetChatRoomByTradeQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getChatRoomByTrade>>
+>
+export type GetChatRoomByTradeQueryError = ProblemDetails
+
+export function useGetChatRoomByTrade<
+  TData = Awaited<ReturnType<typeof getChatRoomByTrade>>,
+  TError = ProblemDetails,
+>(
+  tradeId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByTrade>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatRoomByTrade>>,
+          TError,
+          Awaited<ReturnType<typeof getChatRoomByTrade>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatRoomByTrade<
+  TData = Awaited<ReturnType<typeof getChatRoomByTrade>>,
+  TError = ProblemDetails,
+>(
+  tradeId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByTrade>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatRoomByTrade>>,
+          TError,
+          Awaited<ReturnType<typeof getChatRoomByTrade>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatRoomByTrade<
+  TData = Awaited<ReturnType<typeof getChatRoomByTrade>>,
+  TError = ProblemDetails,
+>(
+  tradeId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByTrade>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetChatRoomByTrade<
+  TData = Awaited<ReturnType<typeof getChatRoomByTrade>>,
+  TError = ProblemDetails,
+>(
+  tradeId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByTrade>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetChatRoomByTradeQueryOptions(tradeId, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type getChatRoomByGroupResponse200ApplicationJson = {
+  data: ChatRoomResponse
+  status: 200
+}
+
+export type getChatRoomByGroupResponse200ApplicationProblemJson = {
+  data: ChatRoomResponse
+  status: 200
+}
+
+export type getChatRoomByGroupResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getChatRoomByGroupResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type getChatRoomByGroupResponseSuccess = (
+  | getChatRoomByGroupResponse200ApplicationJson
+  | getChatRoomByGroupResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type getChatRoomByGroupResponseError = (
+  | getChatRoomByGroupResponse500ApplicationJson
+  | getChatRoomByGroupResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getGetChatRoomByGroupUrl = (groupId: string) => {
+  return `/api/chat/rooms/by-group/${groupId}`
+}
+
+export const getChatRoomByGroup = async (
+  groupId: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<getChatRoomByGroupResponseSuccess> => {
+  return customInstance<getChatRoomByGroupResponseSuccess>(getGetChatRoomByGroupUrl(groupId), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getGetChatRoomByGroupQueryKey = (groupId: string) => {
+  return [`/api/chat/rooms/by-group/${groupId}`] as const
+}
+
+export const getGetChatRoomByGroupQueryOptions = <
+  TData = Awaited<ReturnType<typeof getChatRoomByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getGetChatRoomByGroupQueryKey(groupId)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getChatRoomByGroup>>> = ({ signal }) =>
+    getChatRoomByGroup(groupId, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: groupId !== null && groupId !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByGroup>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type GetChatRoomByGroupQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getChatRoomByGroup>>
+>
+export type GetChatRoomByGroupQueryError = ProblemDetails
+
+export function useGetChatRoomByGroup<
+  TData = Awaited<ReturnType<typeof getChatRoomByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByGroup>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatRoomByGroup>>,
+          TError,
+          Awaited<ReturnType<typeof getChatRoomByGroup>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatRoomByGroup<
+  TData = Awaited<ReturnType<typeof getChatRoomByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByGroup>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getChatRoomByGroup>>,
+          TError,
+          Awaited<ReturnType<typeof getChatRoomByGroup>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetChatRoomByGroup<
+  TData = Awaited<ReturnType<typeof getChatRoomByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetChatRoomByGroup<
+  TData = Awaited<ReturnType<typeof getChatRoomByGroup>>,
+  TError = ProblemDetails,
+>(
+  groupId: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getChatRoomByGroup>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetChatRoomByGroupQueryOptions(groupId, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
 }

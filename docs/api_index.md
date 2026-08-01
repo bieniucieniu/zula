@@ -55,21 +55,22 @@ OAuth-only login (Google, Apple `idToken`). No email OTP challenge flow.
 `kind=offer` portfolio items rejected until feed ships. `feed_item_id` / `trade_id` columns exist without FKs.
 ---
 
-## FeedService 🔜
+## FeedService ✅
 
-| RPC | Auth |
-|-----|------|
-| `CreateFeedItem` | Auth |
-| `GetFeedItem` | Public |
-| `ListForYouFeed` | Auth |
-| `ListFeed` | Public |
-| `ListFeedByAuthor` | Public |
-| `ListFeedByTrait` | Public |
-| `LikeFeedItem` / `UnlikeFeedItem` | Auth | like = bump |
-| `ListComments` / `AddComment` | Public list / Auth write |
-| `BookmarkFeedItem` / `UnbookmarkFeedItem` | Auth |
-| `ListBookmarks` | Auth |
-| `FollowTrait` / `UnfollowTrait` | Auth |
+| RPC | Auth | HTTP |
+|-----|------|------|
+| `ListTraits` | Public | `GET /api/feed/traits` |
+| `CreateFeedItem` | Auth | `POST /api/feed/items` |
+| `GetFeedItem` | Public | `GET /api/feed/items/{id}` |
+| `ListForYouFeed` | Optional | `GET /api/feed/for-you` |
+| `ListFeed` | Optional | `GET /api/feed` |
+| `ListFeedByAuthor` | Optional | `GET /api/feed/by-author/{userId}` |
+| `ListFeedByTrait` | Optional | `GET /api/feed/by-trait/{traitId}` |
+| `ListFeedByGroup` | Optional | `GET /api/feed/by-group/{groupId}` |
+| `LikeFeedItem` / `UnlikeFeedItem` | Auth | `POST` / `DELETE /api/feed/items/{id}/likes` |
+| `ListComments` / `AddComment` | Optional / Auth | `GET` / `POST /api/feed/items/{id}/comments` |
+| `BookmarkFeedItem` / `UnbookmarkFeedItem` | Auth | `POST` / `DELETE /api/feed/items/{id}/bookmarks` |
+| `ListBookmarks` | Auth | `GET /api/feed/bookmarks` |
 
 Doc: [feed_module.md](./feed_module.md)
 
@@ -80,7 +81,7 @@ Doc: [feed_module.md](./feed_module.md)
 | RPC | Auth | HTTP |
 |-----|------|------|
 | `UploadMedia` | Auth | `POST /api/media/uploads` (raw image body) |
-| `GetMediaObject` | Public | `GET /api/media/objects/{key…}` |
+| `GetMediaObject` | Public | `GET /api/media/objects?key=` |
 | `RequestAvatarUpload` | Auth | 🔜 |
 
 Doc: [media_module.md](./media_module.md)
@@ -97,15 +98,15 @@ Doc: [geolocation_module.md](./geolocation_module.md)
 
 ---
 
-## TradeService 🔜
+## TradeService ✅
 
-| RPC | Auth |
-|-----|------|
-| `CreateTrade` | Auth |
-| `AcceptTrade` / `CancelTrade` | Auth |
-| `GetTrade` | Auth |
-| `SetLocationMode` / `SetFulfillmentPlace` | Auth |
-| `ProposeMeetup` / `ConfirmMeetup` | Auth |
+| RPC | Auth | HTTP |
+|-----|------|------|
+| `CreateTrade` | Auth | `POST /api/trades` |
+| `GetTrade` | Auth | `GET /api/trades/{id}` |
+| `AcceptTrade` / `CancelTrade` / `CompleteTrade` | Auth | `POST /api/trades/{id}/accept\|cancel\|complete` |
+| `SetLocationMode` / `SetFulfillmentPlace` | Auth | `PUT …/location-mode`, `…/fulfillment-place` |
+| `ProposeMeetup` / `ConfirmMeetup` | Auth | `POST …/propose-meetup`, `…/confirm-meetup` |
 
 Doc: [trade_module.md](./trade_module.md)
 
@@ -122,27 +123,28 @@ Doc: [validation_module.md](./validation_module.md)
 
 ---
 
-## ChatService 🔜
+## ChatService ✅
 
-| RPC | Auth |
-|-----|------|
-| `GetRoom` | Auth |
-| `ListMessages` | Auth |
-| `SendMessage` | Auth (`clientMessageId` idempotency) |
+| RPC | Auth | HTTP |
+|-----|------|------|
+| `GetRoom` | Auth | `GET /api/chat/rooms/{id}` |
+| `GetRoomByTrade` / `GetRoomByGroup` | Auth | `GET /api/chat/rooms/by-trade\|by-group/{id}` |
+| `ListMessages` | Auth | `GET /api/chat/rooms/{id}/messages` |
+| `SendMessage` | Auth | `POST /api/chat/rooms/{id}/messages` (`clientMessageId`) |
 
 SSE: `GET /api/events/stream` (`text/event-stream`, JWT; `Last-Event-ID` catch-up). Doc: [chat_module.md](./chat_module.md)
 
 ---
 
-## GroupService 🔜
+## GroupService ✅
 
-| RPC | Auth |
-|-----|------|
-| `CreateGroup` | Auth |
-| `GetGroup` | Public / member |
-| `UpdateGroup` | Owner/admin |
-| `JoinGroup` / `LeaveGroup` | Auth |
-| `ListGroupMembers` | Member |
+| RPC | Auth | HTTP |
+|-----|------|------|
+| `CreateGroup` | Auth | `POST /api/groups` |
+| `GetGroup` | Public / member | `GET /api/groups/{idOrSlug}` |
+| `UpdateGroup` | Owner/admin | `PATCH /api/groups/{id}` |
+| `JoinGroup` / `LeaveGroup` | Auth | `POST …/join`, `DELETE …/members/me` |
+| `ListGroupMembers` | Member | `GET /api/groups/{id}/members` |
 
 Group feed: `ListFeedByGroup` on FeedService. Doc: [groups_module.md](./groups_module.md)
 

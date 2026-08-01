@@ -1,0 +1,19 @@
+insertTrait:
+INSERT INTO traits (parent_id, slug, label, sort_order)
+VALUES (?, ?, ?, ?)
+RETURNING *;
+
+getTraitBySlug:
+SELECT * FROM traits WHERE slug = ? LIMIT 1;
+
+getTraitById:
+SELECT * FROM traits WHERE id = ? LIMIT 1;
+
+listAllTraits:
+SELECT * FROM traits ORDER BY sort_order ASC, slug ASC;
+
+listChildTraits:
+SELECT * FROM traits WHERE parent_id = ? ORDER BY sort_order ASC, slug ASC;
+
+countTraits:
+SELECT COUNT(*) FROM traits;

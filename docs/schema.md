@@ -2,10 +2,10 @@
 
 **Canonical DDL** lives in SQLDelight migrations under `server/src/main/sqldelight/com/zula/` (init: `0.sqm`). Query files (`.sq`) hold statements only — `deriveSchemaFromMigrations = true`. This document is the index by module — update it when adding tables or migrations.
 
-**Shipped schema:** `0.sqm` (users, profiles, identities, sessions, stats, blocks, ratings, seller_activity_stats, documents, portfolio, media_objects)  
+**Shipped schema:** `0.sqm` (users, profiles, portfolio, media_objects, traits, feed, groups, trades, chat)  
 **Version bookkeeping:** `zula_schema_version` created in Kotlin (`Database.kt`), not in `.sqm`.  
 **Removed:** `auth_challenges` (email OTP leftover) — dropped on migrate if present.  
-**Next planned:** feed/traits as `1.sqm` / `000002_feed` (see [implementation_plan.md](./implementation_plan.md))
+**Next:** geolocation / validation / moderation as further `0.sqm` appends (pre-prod) or `1.sqm+` post-prod.
 
 **PostgreSQL:** 18+ required (`uuidv7()` is built-in). The server checks `server_version_num >= 180000` at startup.
 
@@ -68,9 +68,9 @@ Create endpoints return persisted ids in the response (e.g. `AuthTokensResponse.
 
 ---
 
-## Traits module *(planned — Wave 1)*
+## Traits module
 
-*Doc: [traits_module.md](./traits_module.md)* · migration: `000002_feed.sql`
+*Doc: [traits_module.md](./traits_module.md)* · DDL in `0.sqm`
 
 | Table | Purpose |
 |-------|---------|
@@ -79,29 +79,27 @@ Create endpoints return persisted ids in the response (e.g. `AuthTokensResponse.
 
 ---
 
-## Feed module *(planned — Wave 1)*
+## Feed module
 
-*Doc: [feed_module.md](./feed_module.md)*
+*Doc: [feed_module.md](./feed_module.md)* · DDL in `0.sqm`
 
 | Table | Purpose |
 |-------|---------|
-| `feed_items` | Posts: kind, status, author, embedding, `body_document_id`, like/comment counts, `last_bumped_at`, optional `default_location_mode` |
-| `feed_item_media` | Object keys + optional `vector` embedding |
-| `feed_item_likes` | Like = bump (user ↔ item) |
-| `feed_item_comments` | Public comments on items |
+| `feed_items` | Posts: kind, status, author, `group_id`, like/comment counts, `last_bumped_at`, optional `default_location_mode` |
+| `feed_item_media` | Object keys + sort order |
+| `feed_item_likes` | Like = bump |
+| `feed_item_comments` | Public comments |
 | `feed_item_bookmarks` | Private saves |
 | `user_trait_follows` | User follows trait |
-| `user_interest_profiles` | Interest vector for ranking |
-| `feed_item_cards` | Optional denormalized projection (Phase F) |
+| `user_interest_profiles` | Interest profile marker (ranking deferred) |
 
 ---
 
-## Media module *(planned — Wave 2)*
+## Media module
 
-*Doc: [media_module.md](./media_module.md)* · migration: `000003_media.sql` (or merged into `000002_feed.sql`)
+*Doc: [media_module.md](./media_module.md)* · DDL in `0.sqm`
 
-`features:media` owns the **registry** and MinIO lifecycle. Other modules store key strings and call `MediaService.commitKeys` / `releaseKey`.
-
+`features:media` owns the **registry** and MinIO lifecycle (Ktor proxy upload/download + JobRunr GC).
 ### Registry
 
 | Table | Purpose |
@@ -166,16 +164,16 @@ Defined in feed migration (`000002_feed.sql`). See [feed_module.md](./feed_modul
 
 ---
 
-## Groups module *(planned — Wave 1 MVP)*
+## Groups module
 
-*Doc: [groups_module.md](./groups_module.md)* · migration: `000003_groups.sql`
+*Doc: [groups_module.md](./groups_module.md)* · DDL in `0.sqm`
 
 | Table | Purpose |
 |-------|---------|
 | `groups` | Community: slug, title, visibility, owner |
 | `group_members` | Membership + role (`owner` / `admin` / `member`) |
 
-Feed/chat FKs: nullable `feed_items.group_id`, `chat_rooms.group_id`.
+Feed/chat FKs: `feed_items.group_id`, `chat_rooms.group_id`.
 
 ---
 
@@ -193,9 +191,9 @@ Trade **location modes** (`provider` / `client` / `negotiated`) live under [trad
 
 ---
 
-## Trade module *(planned — Wave 3)*
+## Trade module
 
-*Doc: [trade_module.md](./trade_module.md)* · migration: `000005_trades.sql`
+*Doc: [trade_module.md](./trade_module.md)* · DDL in `0.sqm`
 
 | Table | Purpose |
 |-------|---------|
@@ -203,9 +201,8 @@ Trade **location modes** (`provider` / `client` / `negotiated`) live under [trad
 | `trade_participants` | Initiator + counterparty |
 | `trade_items` | Linked feed items / sides |
 | `trade_locations` | Fulfillment place (post-accept for `client` mode) |
-| `trade_public_disclosures` | Opt-in public summaries |
 
-Payment columns / intent ids: **defer** until payment wave; MVP keeps `PaymentGateway` port only.
+Payment columns / intent ids: **deferred**; MVP keeps `PaymentGateway` port only.
 
 ---
 
@@ -219,16 +216,16 @@ Payment columns / intent ids: **defer** until payment wave; MVP keeps `PaymentGa
 
 ---
 
-## Chat module *(planned — Wave 3)*
+## Chat module
 
-*Doc: [chat_module.md](./chat_module.md)* · migration: `000006_chat.sql`
+*Doc: [chat_module.md](./chat_module.md)* · DDL in `0.sqm`
 
 | Table | Purpose |
 |-------|---------|
-| `chat_rooms` | One per trade (MVP); later also group-scoped |
+| `chat_rooms` | Trade- or group-scoped |
 | `chat_participants` | Membership |
 | `chat_messages` | Persisted messages + `client_message_id` |
-| `sse_event_log` | Optional durable SSE replay for `Last-Event-ID` |
+| `sse_event_log` | Durable SSE replay for `Last-Event-ID` |
 
 ---
 

@@ -5,8 +5,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface RequestUploadRequest {
-  contentType: string
-  /** @nullable */
-  contentLength?: number | null
+export type ListBookmarksParams = {
+  cursor?: string
+  limit?: string
 }

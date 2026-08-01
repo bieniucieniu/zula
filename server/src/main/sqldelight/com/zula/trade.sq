@@ -1,0 +1,50 @@
+insertTrade:
+INSERT INTO trades (
+    template, status, location_mode, initiator_id, counterparty_id,
+    feed_item_id, created_at, updated_at
+) VALUES (?, 'proposed', ?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+getTrade:
+SELECT * FROM trades WHERE id = ? LIMIT 1;
+
+updateTradeStatus:
+UPDATE trades SET status = ?, updated_at = ? WHERE id = ?
+RETURNING *;
+
+updateTradeLocationMode:
+UPDATE trades SET location_mode = ?, updated_at = ? WHERE id = ?
+RETURNING *;
+
+updateTradeMeetupProposed:
+UPDATE trades SET status = 'scheduled', meetup_proposed_at = ?, updated_at = ? WHERE id = ?
+RETURNING *;
+
+updateTradeMeetupConfirmed:
+UPDATE trades SET meetup_confirmed_at = ?, updated_at = ? WHERE id = ?
+RETURNING *;
+
+insertTradeParticipant:
+INSERT INTO trade_participants (trade_id, user_id, role) VALUES (?, ?, ?);
+
+insertTradeItem:
+INSERT INTO trade_items (trade_id, feed_item_id, side, label)
+VALUES (?, ?, ?, ?)
+RETURNING *;
+
+upsertTradeLocation:
+INSERT INTO trade_locations (trade_id, place_note, place_ciphertext, updated_at)
+VALUES (?, ?, ?, ?)
+ON CONFLICT(trade_id) DO UPDATE SET
+    place_note = excluded.place_note,
+    place_ciphertext = excluded.place_ciphertext,
+    updated_at = excluded.updated_at;
+
+getTradeLocation:
+SELECT * FROM trade_locations WHERE trade_id = ? LIMIT 1;
+
+listTradeItems:
+SELECT * FROM trade_items WHERE trade_id = ?;
+
+isTradeParticipant:
+SELECT COUNT(*) FROM trade_participants WHERE trade_id = ? AND user_id = ?;

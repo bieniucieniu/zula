@@ -72,7 +72,8 @@ class MediaService(
 
     fun publicUrl(objectKey: String?): String? {
         val key = objectKey?.trim()?.ifEmpty { null } ?: return null
-        return "/api/media/objects/$key"
+        val encoded = java.net.URLEncoder.encode(key, Charsets.UTF_8).replace("+", "%20")
+        return "/api/media/objects?key=$encoded"
     }
 
     fun requireOwnedUploadKey(ownerUserId: Uuid, objectKey: String): String {
@@ -110,6 +111,27 @@ class MediaService(
         repository.release(key, deleteAfter)
     }
 
+    /**
+     * One GC pass: purge stale pending uploads and deleted objects past grace.
+     * @return number of rows removed
+     */
+    fun gcOnce(batchSize: Long = GC_BATCH_SIZE): Int {
+        val now = Instant.now().epochSecond
+        var deleted = 0
+        val pendingCutoff = now - PENDING_ORPHAN_AGE_SECONDS
+        repository.listGcPending(pendingCutoff, batchSize).forEach { row ->
+            runCatching { storage.deleteObject(row.object_key) }
+            repository.deleteRow(row.object_key)
+            deleted++
+        }
+        repository.listGcDeleted(now, batchSize).forEach { row ->
+            runCatching { storage.deleteObject(row.object_key) }
+            repository.deleteRow(row.object_key)
+            deleted++
+        }
+        return deleted
+    }
+
     private fun normalizeKey(objectKey: String): String {
         val key = objectKey.trim().trimStart('/')
         if (key.isEmpty() || key.contains("..") || !key.startsWith("uploads/")) {
@@ -130,5 +152,7 @@ class MediaService(
 
     companion object {
         const val DELETE_GRACE_SECONDS = 7L * 24 * 60 * 60
+        const val PENDING_ORPHAN_AGE_SECONDS = 24L * 60 * 60
+        const val GC_BATCH_SIZE = 100L
     }
 }

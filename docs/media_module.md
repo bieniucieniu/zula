@@ -2,7 +2,7 @@
 
 **MinIO/S3 uploads**, object key validation, and **async AI tagging** (vector embeddings on images/video).
 
-**Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:media`
+**Status:** Doc complete · **Backend:** ✅ MVP (Ktor upload/download + registry GC; embeddings deferred) · **Feature:** `features:media`
 
 **Depends on:** [feed_module.md](./feed_module.md) feed-A · **Unblocks:** feed-E, [seller_profile](./seller_profile_module.md) seller-D, portfolio covers
 
@@ -32,9 +32,9 @@
 Client                    MediaService              MinIO
   │ POST /media/uploads ────► INSERT media_objects (pending)
   │   (raw bytes)             PUT object ───────────► object
-  │                           ← objectKey + /api/media/objects/…
+  │                           ← objectKey + /api/media/objects?key=…
   │ UpsertPortfolio(keys[]) ─► commitKeys() → active, ref_count++
-  │ GET /media/objects/… ────► GET object ◄─────────── stream
+  │ GET /media/objects?key= ─► GET object ◄─────────── stream
 ```
 
 **Ownership:** `features:media` owns the registry, upload/download proxy, commit/release, GC, and MinIO deletes. Feed/user features **store key strings** in their tables and call `MediaService.commitKeys` / `releaseKey` inside the same transaction.

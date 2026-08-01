@@ -32,8 +32,10 @@ fun Route.configureMediaRouting() {
     val storage: ObjectStorage by inject()
 
     route("/media") {
-        get("/objects/{key...}") {
-            val key = call.parameters.getAll("key")?.joinToString("/").orEmpty()
+        // Query `key` (not path tailcard) — OpenAPI/Orval reject `{key...}` / `{**}`.
+        get("/objects") {
+            val key = call.request.queryParameters["key"]?.trim().orEmpty()
+            if (key.isEmpty()) badRequest("key query parameter required")
             val (contentType, stored) = mediaService.openObject(key)
             // UUID object keys are immutable; long-lived public cache + ETag for 304.
             call.response.headers.append(

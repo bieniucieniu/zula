@@ -2,6 +2,7 @@ package com.zula.features.media
 
 import com.zula.Database
 import com.zula.Media_objects
+import com.zula.SelectGcDeletedReady
 import kotlin.uuid.Uuid
 
 class MediaRepository(
@@ -30,4 +31,14 @@ class MediaRepository(
 
     fun release(objectKey: String, deleteAfter: Long): Media_objects? =
         queries.releaseMediaObject(deleteAfter, objectKey).executeAsOneOrNull()
+
+    fun listGcPending(createdBefore: Long, limit: Long): List<Media_objects> =
+        queries.selectGcPendingOrphans(createdBefore, limit).executeAsList()
+
+    fun listGcDeleted(deleteAfterBefore: Long, limit: Long): List<SelectGcDeletedReady> =
+        queries.selectGcDeletedReady(deleteAfterBefore, limit).executeAsList()
+
+    fun deleteRow(objectKey: String) {
+        queries.deleteMediaObjectRow(objectKey)
+    }
 }

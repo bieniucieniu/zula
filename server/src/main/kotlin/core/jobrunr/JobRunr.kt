@@ -2,6 +2,7 @@ package com.zula.core.jobrunr
 
 import com.zaxxer.hikari.HikariDataSource
 import com.zula.core.security.AuthProviderNames
+import com.zula.features.media.MediaGcJobs
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -14,11 +15,13 @@ import org.jobrunr.storage.sql.common.SqlStorageProviderFactory
 import org.koin.ktor.ext.getKoin
 import org.slf4j.LoggerFactory
 
+private val log = LoggerFactory.getLogger("com.zula.core.jobrunr.JobRunr")
+
 object JobRunrSmokeJobs {
-    private val log = LoggerFactory.getLogger(JobRunrSmokeJobs::class.java)
+    private val smokeLog = LoggerFactory.getLogger(JobRunrSmokeJobs::class.java)
 
     fun ping() {
-        log.info("JobRunr ping job executed")
+        smokeLog.info("JobRunr ping job executed")
     }
 }
 
@@ -43,6 +46,9 @@ fun Application.configureJobRunr() {
             .useBackgroundJobServer()
             .useDashboardIf(dashboardEnabled, dashboardPort)
             .initialize()
+
+        // Recurring media GC (JobRunr 8 scheduleRecurrently + Koin IoC).
+        MediaGcJobs.scheduleRecurring()
 
         log.info(
             "JobRunr started (background server on, dashboard={})",

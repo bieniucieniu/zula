@@ -38,3 +38,16 @@ SET ref_count = CASE WHEN ref_count > 0 THEN ref_count - 1 ELSE 0 END,
     END
 WHERE object_key = ?
 RETURNING *;
+
+selectGcPendingOrphans:
+SELECT * FROM media_objects
+WHERE status = 'pending' AND created_at < ?
+LIMIT ?;
+
+selectGcDeletedReady:
+SELECT * FROM media_objects
+WHERE status = 'deleted' AND ref_count = 0 AND delete_after IS NOT NULL AND delete_after < ?
+LIMIT ?;
+
+deleteMediaObjectRow:
+DELETE FROM media_objects WHERE object_key = ?;

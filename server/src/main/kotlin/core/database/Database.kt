@@ -120,12 +120,127 @@ private fun writeSchemaVersion(driver: SqlDriver, version: Long) {
 fun createDatabase(driver: SqlDriver): Database =
     Database(
         driver = driver,
+        chat_messagesAdapter = Chat_messages.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            room_idAdapter = KotlinUuidAdapter,
+            sender_idAdapter = KotlinUuidAdapter,
+        ),
+        chat_participantsAdapter = Chat_participants.Adapter(
+            room_idAdapter = KotlinUuidAdapter,
+            user_idAdapter = KotlinUuidAdapter,
+        ),
+        chat_roomsAdapter = Chat_rooms.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            trade_idAdapter = KotlinUuidAdapter,
+            group_idAdapter = KotlinUuidAdapter,
+        ),
+        document_revisionsAdapter = Document_revisions.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            document_idAdapter = KotlinUuidAdapter,
+        ),
+        documentsAdapter = Documents.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            owner_user_idAdapter = KotlinUuidAdapter,
+        ),
+        feed_item_bookmarksAdapter = Feed_item_bookmarks.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
+            feed_item_idAdapter = KotlinUuidAdapter,
+        ),
+        feed_item_commentsAdapter = Feed_item_comments.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            feed_item_idAdapter = KotlinUuidAdapter,
+            author_idAdapter = KotlinUuidAdapter,
+        ),
+        feed_item_likesAdapter = Feed_item_likes.Adapter(
+            feed_item_idAdapter = KotlinUuidAdapter,
+            user_idAdapter = KotlinUuidAdapter,
+        ),
+        feed_item_mediaAdapter = Feed_item_media.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            feed_item_idAdapter = KotlinUuidAdapter,
+        ),
+        feed_item_traitsAdapter = Feed_item_traits.Adapter(
+            feed_item_idAdapter = KotlinUuidAdapter,
+            trait_idAdapter = KotlinUuidAdapter,
+        ),
+        feed_itemsAdapter = Feed_items.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            author_idAdapter = KotlinUuidAdapter,
+            group_idAdapter = KotlinUuidAdapter,
+        ),
+        group_membersAdapter = Group_members.Adapter(
+            group_idAdapter = KotlinUuidAdapter,
+            user_idAdapter = KotlinUuidAdapter,
+        ),
+        groupsAdapter = Groups.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            created_byAdapter = KotlinUuidAdapter,
+        ),
+        media_objectsAdapter = Media_objects.Adapter(
+            owner_user_idAdapter = KotlinUuidAdapter,
+        ),
+        seller_activity_statsAdapter = Seller_activity_stats.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
+        ),
+        sse_event_logAdapter = Sse_event_log.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            user_idAdapter = KotlinUuidAdapter,
+        ),
+        trade_itemsAdapter = Trade_items.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            trade_idAdapter = KotlinUuidAdapter,
+            feed_item_idAdapter = KotlinUuidAdapter,
+        ),
+        trade_locationsAdapter = Trade_locations.Adapter(
+            trade_idAdapter = KotlinUuidAdapter,
+        ),
+        trade_participantsAdapter = Trade_participants.Adapter(
+            trade_idAdapter = KotlinUuidAdapter,
+            user_idAdapter = KotlinUuidAdapter,
+        ),
+        tradesAdapter = Trades.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            initiator_idAdapter = KotlinUuidAdapter,
+            counterparty_idAdapter = KotlinUuidAdapter,
+            feed_item_idAdapter = KotlinUuidAdapter,
+        ),
+        traitsAdapter = Traits.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            parent_idAdapter = KotlinUuidAdapter,
+        ),
+        user_blocksAdapter = User_blocks.Adapter(
+            blocker_idAdapter = KotlinUuidAdapter,
+            blocked_idAdapter = KotlinUuidAdapter,
+        ),
         user_identitiesAdapter = User_identities.Adapter(
             idAdapter = KotlinUuidAdapter,
             user_idAdapter = KotlinUuidAdapter,
         ),
+        user_interest_profilesAdapter = User_interest_profiles.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
+        ),
+        user_portfolio_itemsAdapter = User_portfolio_items.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            user_idAdapter = KotlinUuidAdapter,
+            body_document_idAdapter = KotlinUuidAdapter,
+            feed_item_idAdapter = KotlinUuidAdapter,
+            trade_idAdapter = KotlinUuidAdapter,
+        ),
+        user_profile_bioAdapter = User_profile_bio.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
+            document_idAdapter = KotlinUuidAdapter,
+        ),
+        user_profile_pinsAdapter = User_profile_pins.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
+            portfolio_item_idAdapter = KotlinUuidAdapter,
+        ),
         user_profilesAdapter = User_profiles.Adapter(
             user_idAdapter = KotlinUuidAdapter
+        ),
+        user_ratingsAdapter = User_ratings.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            reviewer_idAdapter = KotlinUuidAdapter,
+            reviewee_idAdapter = KotlinUuidAdapter,
         ),
         user_sessionsAdapter = User_sessions.Adapter(
             idAdapter = KotlinUuidAdapter,
@@ -136,46 +251,12 @@ fun createDatabase(driver: SqlDriver): Database =
         user_statsAdapter = User_stats.Adapter(
             user_idAdapter = KotlinUuidAdapter
         ),
+        user_trait_followsAdapter = User_trait_follows.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
+            trait_idAdapter = KotlinUuidAdapter,
+        ),
         usersAdapter = Users.Adapter(
             idAdapter = KotlinUuidAdapter
-        ),
-        user_blocksAdapter = User_blocks.Adapter(
-            blocker_idAdapter = KotlinUuidAdapter,
-            blocked_idAdapter = KotlinUuidAdapter,
-        ),
-        user_ratingsAdapter = User_ratings.Adapter(
-            idAdapter = KotlinUuidAdapter,
-            reviewer_idAdapter = KotlinUuidAdapter,
-            reviewee_idAdapter = KotlinUuidAdapter,
-        ),
-        seller_activity_statsAdapter = Seller_activity_stats.Adapter(
-            user_idAdapter = KotlinUuidAdapter,
-        ),
-        documentsAdapter = Documents.Adapter(
-            idAdapter = KotlinUuidAdapter,
-            owner_user_idAdapter = KotlinUuidAdapter,
-        ),
-        document_revisionsAdapter = Document_revisions.Adapter(
-            idAdapter = KotlinUuidAdapter,
-            document_idAdapter = KotlinUuidAdapter,
-        ),
-        user_profile_bioAdapter = User_profile_bio.Adapter(
-            user_idAdapter = KotlinUuidAdapter,
-            document_idAdapter = KotlinUuidAdapter,
-        ),
-        user_portfolio_itemsAdapter = User_portfolio_items.Adapter(
-            idAdapter = KotlinUuidAdapter,
-            user_idAdapter = KotlinUuidAdapter,
-            body_document_idAdapter = KotlinUuidAdapter,
-            feed_item_idAdapter = KotlinUuidAdapter,
-            trade_idAdapter = KotlinUuidAdapter,
-        ),
-        user_profile_pinsAdapter = User_profile_pins.Adapter(
-            user_idAdapter = KotlinUuidAdapter,
-            portfolio_item_idAdapter = KotlinUuidAdapter,
-        ),
-        media_objectsAdapter = Media_objects.Adapter(
-            owner_user_idAdapter = KotlinUuidAdapter,
         ),
     )
 

@@ -1,0 +1,173 @@
+insertFeedItem:
+INSERT INTO feed_items (
+    author_id, group_id, kind, title, body, status, visibility,
+    origin_tag, dest_tag, available_from, available_until,
+    like_count, comment_count, last_bumped_at, default_location_mode, updated_at
+) VALUES (?, ?, ?, ?, ?, 'active', ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)
+RETURNING *;
+
+getFeedItem:
+SELECT * FROM feed_items WHERE id = ? LIMIT 1;
+
+updateFeedItemStatus:
+UPDATE feed_items SET status = ?, updated_at = ? WHERE id = ?
+RETURNING *;
+
+insertFeedItemTrait:
+INSERT INTO feed_item_traits (feed_item_id, trait_id) VALUES (?, ?);
+
+insertFeedItemMedia:
+INSERT INTO feed_item_media (feed_item_id, object_key, sort_order)
+VALUES (?, ?, ?)
+RETURNING *;
+
+listFeedItemTraits:
+SELECT trait_id FROM feed_item_traits WHERE feed_item_id = ?;
+
+listFeedItemMedia:
+SELECT * FROM feed_item_media WHERE feed_item_id = ? ORDER BY sort_order ASC, id ASC;
+
+listPublicFeedFirst:
+SELECT * FROM feed_items
+WHERE status = 'active' AND visibility = 'public'
+ORDER BY id DESC
+LIMIT ?;
+
+listPublicFeedPage:
+SELECT * FROM feed_items
+WHERE status = 'active' AND visibility = 'public' AND id < ?
+ORDER BY id DESC
+LIMIT ?;
+
+listAuthorFeedFirst:
+SELECT * FROM feed_items
+WHERE author_id = ? AND status IN ('active', 'fulfilled', 'in_trade')
+ORDER BY id DESC
+LIMIT ?;
+
+listAuthorFeedPage:
+SELECT * FROM feed_items
+WHERE author_id = ? AND status IN ('active', 'fulfilled', 'in_trade') AND id < ?
+ORDER BY id DESC
+LIMIT ?;
+
+listTraitFeedFirst:
+SELECT fi.* FROM feed_items fi
+INNER JOIN feed_item_traits fit ON fit.feed_item_id = fi.id
+WHERE fit.trait_id = ? AND fi.status = 'active' AND fi.visibility = 'public'
+ORDER BY fi.id DESC
+LIMIT ?;
+
+listTraitFeedPage:
+SELECT fi.* FROM feed_items fi
+INNER JOIN feed_item_traits fit ON fit.feed_item_id = fi.id
+WHERE fit.trait_id = ? AND fi.status = 'active' AND fi.visibility = 'public' AND fi.id < ?
+ORDER BY fi.id DESC
+LIMIT ?;
+
+listGroupFeedFirst:
+SELECT * FROM feed_items
+WHERE group_id = ? AND status = 'active'
+ORDER BY id DESC
+LIMIT ?;
+
+listGroupFeedPage:
+SELECT * FROM feed_items
+WHERE group_id = ? AND status = 'active' AND id < ?
+ORDER BY id DESC
+LIMIT ?;
+
+insertLike:
+INSERT INTO feed_item_likes (feed_item_id, user_id, created_at)
+VALUES (?, ?, ?)
+ON CONFLICT DO NOTHING;
+
+deleteLike:
+DELETE FROM feed_item_likes WHERE feed_item_id = ? AND user_id = ?;
+
+getLike:
+SELECT * FROM feed_item_likes WHERE feed_item_id = ? AND user_id = ? LIMIT 1;
+
+bumpOnLike:
+UPDATE feed_items
+SET like_count = like_count + 1,
+    last_bumped_at = ?,
+    updated_at = ?
+WHERE id = ?
+RETURNING *;
+
+decrementLikeCount:
+UPDATE feed_items
+SET like_count = CASE WHEN like_count > 0 THEN like_count - 1 ELSE 0 END,
+    updated_at = ?
+WHERE id = ?
+RETURNING *;
+
+insertComment:
+INSERT INTO feed_item_comments (feed_item_id, author_id, body)
+VALUES (?, ?, ?)
+RETURNING *;
+
+incrementCommentCount:
+UPDATE feed_items
+SET comment_count = comment_count + 1, updated_at = ?
+WHERE id = ?
+RETURNING *;
+
+listCommentsFirst:
+SELECT * FROM feed_item_comments
+WHERE feed_item_id = ?
+ORDER BY id DESC
+LIMIT ?;
+
+listCommentsPage:
+SELECT * FROM feed_item_comments
+WHERE feed_item_id = ? AND id < ?
+ORDER BY id DESC
+LIMIT ?;
+
+insertBookmark:
+INSERT INTO feed_item_bookmarks (user_id, feed_item_id, created_at)
+VALUES (?, ?, ?)
+ON CONFLICT DO NOTHING;
+
+deleteBookmark:
+DELETE FROM feed_item_bookmarks WHERE user_id = ? AND feed_item_id = ?;
+
+getBookmark:
+SELECT * FROM feed_item_bookmarks WHERE user_id = ? AND feed_item_id = ? LIMIT 1;
+
+listBookmarksFirst:
+SELECT fi.* FROM feed_items fi
+INNER JOIN feed_item_bookmarks b ON b.feed_item_id = fi.id
+WHERE b.user_id = ?
+ORDER BY fi.id DESC
+LIMIT ?;
+
+listBookmarksPage:
+SELECT fi.* FROM feed_items fi
+INNER JOIN feed_item_bookmarks b ON b.feed_item_id = fi.id
+WHERE b.user_id = ? AND fi.id < ?
+ORDER BY fi.id DESC
+LIMIT ?;
+
+isBlockedEitherWay:
+SELECT COUNT(*) FROM user_blocks
+WHERE (blocker_id = ? AND blocked_id = ?)
+   OR (blocker_id = ? AND blocked_id = ?);
+
+insertTraitFollow:
+INSERT INTO user_trait_follows (user_id, trait_id, created_at)
+VALUES (?, ?, ?)
+ON CONFLICT DO NOTHING;
+
+deleteTraitFollow:
+DELETE FROM user_trait_follows WHERE user_id = ? AND trait_id = ?;
+
+hasInterestProfile:
+SELECT COUNT(*) FROM user_interest_profiles WHERE user_id = ?;
+
+upsertInterestProfile:
+INSERT INTO user_interest_profiles (user_id, source, updated_at)
+VALUES (?, ?, ?)
+ON CONFLICT(user_id) DO UPDATE SET source = excluded.source, updated_at = excluded.updated_at;
