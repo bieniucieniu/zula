@@ -9,15 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ProfileRouteRouteImport } from './routes/profile/route'
 import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
+import { Route as ProfileIndexRouteImport } from './routes/profile/index'
+import { Route as ProfileEditRouteImport } from './routes/profile/edit'
+import { Route as ProfilePortfolioRouteImport } from './routes/profile/portfolio'
 import { Route as SellersIdOrUsernameRouteImport } from './routes/sellers/$idOrUsername'
 
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -25,15 +28,30 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ProfileRouteRoute = ProfileRouteRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OauthCompleteRoute = OauthCompleteRouteImport.update({
   id: '/oauth/complete',
   path: '/oauth/complete',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileIndexRoute = ProfileIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProfileRouteRoute,
+} as any)
+const ProfileEditRoute = ProfileEditRouteImport.update({
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => ProfileRouteRoute,
+} as any)
+const ProfilePortfolioRoute = ProfilePortfolioRouteImport.update({
+  id: '/portfolio',
+  path: '/portfolio',
+  getParentRoute: () => ProfileRouteRoute,
 } as any)
 const SellersIdOrUsernameRoute = SellersIdOrUsernameRouteImport.update({
   id: '/sellers/$idOrUsername',
@@ -43,38 +61,70 @@ const SellersIdOrUsernameRoute = SellersIdOrUsernameRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/profile': typeof ProfileRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/oauth/complete': typeof OauthCompleteRoute
+  '/profile/edit': typeof ProfileEditRoute
+  '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/profile/': typeof ProfileIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/oauth/complete': typeof OauthCompleteRoute
+  '/profile/edit': typeof ProfileEditRoute
+  '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/profile': typeof ProfileIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/profile': typeof ProfileRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
   '/oauth/complete': typeof OauthCompleteRoute
+  '/profile/edit': typeof ProfileEditRoute
+  '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/profile/': typeof ProfileIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/profile' | '/oauth/complete' | '/sellers/$idOrUsername'
+  fullPaths:
+    | '/'
+    | '/profile'
+    | '/login'
+    | '/oauth/complete'
+    | '/profile/edit'
+    | '/profile/portfolio'
+    | '/sellers/$idOrUsername'
+    | '/profile/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/profile' | '/oauth/complete' | '/sellers/$idOrUsername'
-  id: '__root__' | '/' | '/login' | '/profile' | '/oauth/complete' | '/sellers/$idOrUsername'
+  to:
+    | '/'
+    | '/login'
+    | '/oauth/complete'
+    | '/profile/edit'
+    | '/profile/portfolio'
+    | '/sellers/$idOrUsername'
+    | '/profile'
+  id:
+    | '__root__'
+    | '/'
+    | '/profile'
+    | '/login'
+    | '/oauth/complete'
+    | '/profile/edit'
+    | '/profile/portfolio'
+    | '/sellers/$idOrUsername'
+    | '/profile/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ProfileRouteRoute: typeof ProfileRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
-  ProfileRoute: typeof ProfileRoute
   OauthCompleteRoute: typeof OauthCompleteRoute
   SellersIdOrUsernameRoute: typeof SellersIdOrUsernameRoute
 }
@@ -99,7 +149,7 @@ declare module '@tanstack/react-router' {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
+      preLoaderRoute: typeof ProfileRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oauth/complete': {
@@ -108,6 +158,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/oauth/complete'
       preLoaderRoute: typeof OauthCompleteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/profile/': {
+      id: '/profile/'
+      path: '/'
+      fullPath: '/profile/'
+      preLoaderRoute: typeof ProfileIndexRouteImport
+      parentRoute: typeof ProfileRouteRoute
+    }
+    '/profile/edit': {
+      id: '/profile/edit'
+      path: '/edit'
+      fullPath: '/profile/edit'
+      preLoaderRoute: typeof ProfileEditRouteImport
+      parentRoute: typeof ProfileRouteRoute
+    }
+    '/profile/portfolio': {
+      id: '/profile/portfolio'
+      path: '/portfolio'
+      fullPath: '/profile/portfolio'
+      preLoaderRoute: typeof ProfilePortfolioRouteImport
+      parentRoute: typeof ProfileRouteRoute
     }
     '/sellers/$idOrUsername': {
       id: '/sellers/$idOrUsername'
@@ -119,10 +190,26 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ProfileRouteRouteChildren {
+  ProfileEditRoute: typeof ProfileEditRoute
+  ProfilePortfolioRoute: typeof ProfilePortfolioRoute
+  ProfileIndexRoute: typeof ProfileIndexRoute
+}
+
+const ProfileRouteRouteChildren: ProfileRouteRouteChildren = {
+  ProfileEditRoute: ProfileEditRoute,
+  ProfilePortfolioRoute: ProfilePortfolioRoute,
+  ProfileIndexRoute: ProfileIndexRoute,
+}
+
+const ProfileRouteRouteWithChildren = ProfileRouteRoute._addFileChildren(
+  ProfileRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ProfileRouteRoute: ProfileRouteRouteWithChildren,
   LoginRoute: LoginRoute,
-  ProfileRoute: ProfileRoute,
   OauthCompleteRoute: OauthCompleteRoute,
   SellersIdOrUsernameRoute: SellersIdOrUsernameRoute,
 }

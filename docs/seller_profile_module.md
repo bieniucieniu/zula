@@ -42,6 +42,7 @@ Conventions: [conventions.md](./conventions.md) (thin clients, keyset pagination
 | Profile row on signup | ✅ Shipped (`features:auth` signup flow) |
 | `seller_activity_stats` table | ✅ Schema only — counts empty until feed |
 | `GET /api/feed/by-author/{id}` on seller page | ⬜ Blocked on feed module (seller-C) |
+| Seller response embeds readme + pins | ✅ Shipped (portfolio-A/B) |
 | Avatar presigned upload | ⬜ seller-D / [media_module.md](./media_module.md) |
 | `completed_trade_count` | ⬜ Blocked on trade module |
 

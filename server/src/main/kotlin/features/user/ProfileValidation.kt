@@ -15,7 +15,7 @@ object ProfileValidation {
             }
         }
         req.bio?.let {
-            if (it.length > 2000) badRequest("bio must be at most 2000 characters")
+            PortfolioValidation.validateMarkdownLength(it, PortfolioValidation.BIO_MAX_BYTES)
         }
         req.sellerHeadline?.let {
             if (it.trim().length > 160) badRequest("sellerHeadline must be at most 160 characters")

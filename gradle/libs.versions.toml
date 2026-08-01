@@ -9,6 +9,7 @@ hikari = "7.1.0"
 postgres = "42.7.3"
 
 kubernetesClient = "27.0.0"
+awsSdk = "2.31.78"
 
 [libraries]
 jobrunr = { module = "org.jobrunr:jobrunr", version.ref = "jobrunr" }
@@ -22,6 +23,7 @@ sqlDelight-jdbcDrver = { module = "app.cash.sqldelight:jdbc-driver", version.ref
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }
 kubernetes-client = { module = "io.kubernetes:client-java", version.ref = "kubernetesClient" }
+aws-s3 = { module = "software.amazon.awssdk:s3", version.ref = "awsSdk" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

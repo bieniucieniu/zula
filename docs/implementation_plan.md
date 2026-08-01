@@ -10,13 +10,13 @@ Empty feature packages (`chat`/`feed`/… Module+Service+Publisher+Consumer+Rout
 
 ---
 
-## Current state (2026-06)
+## Current state (2026-08)
 
 | Module | Doc | Backend | Notes |
 |--------|-----|---------|-------|
 | [user](./user_module.md) | Full | ✅ MVP | Auth, trust, blocks, profiles |
-| [seller_profile](./seller_profile_module.md) | Full | ✅ A–B | Listings tab blocked on feed |
-| [profile_portfolio](./profile_portfolio_module.md) | Full | ✅ A–B | Activity/feed body blocked on feed |
+| [seller_profile](./seller_profile_module.md) | Full | ✅ A–B | Listings tab blocked on feed; seller embeds readme/pins |
+| [profile_portfolio](./profile_portfolio_module.md) | Full | ✅ A–B | Docs/readme/portfolio/pins in `0.sqm`; `offer` + activity blocked on feed |
 | [feed](./feed_module.md) | Full | ⬜ | **MVP critical** — offers / needs / trips + like/bump, comments, bookmarks |
 | [traits](./traits_module.md) | Plan | ⬜ | Can ship inside feed Phase A |
 | [groups](./groups_module.md) | Plan | ⬜ | **MVP critical** — communities + group feed (Wave 1) |
@@ -158,12 +158,13 @@ Execute in order. Within a wave, items marked **∥** can run in parallel.
 
 ## Migration numbering (next files)
 
-Shipped DDL: SQLDelight **`0.sqm`** (users, profiles, stats, blocks, ratings, seller_activity_stats).  
-**Next migration:** `000002_feed.sql` / `1.sqm` — **combine traits + feed** for Wave 1.
+Shipped DDL: SQLDelight **`0.sqm`** (users, profiles, stats, blocks, ratings, seller_activity_stats, documents, portfolio, pins).  
+**Next migration:** `1.sqm` — **combine traits + feed** for Wave 1.
 
 | File | Wave | Module(s) |
 |------|------|-----------|
-| `000002_feed.sql` | 1 | traits + feed (nullable `group_id` OK before groups table if deferred FK) |
+| `0.sqm` | — | user + seller + portfolio (init; mutate until prod) |
+| `1.sqm` / `000002_feed.sql` | 1 | traits + feed (nullable `group_id` OK before groups table if deferred FK) |
 | `000003_groups.sql` | 1 | groups + `group_members`; FK `feed_items.group_id` |
 | `000004_media.sql` | 2 | media (or merge into feed if tables already stubbed) |
 | `000005_geolocation.sql` | 2 | geolocation |

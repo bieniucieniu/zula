@@ -21,5 +21,45 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    restart: always
+    command: ["server", "/data", "--address", ":9000", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-zula}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-zulazula}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      set -eu;
+      mc alias set local http://minio:9000 $${S3_ACCESS_KEY:-zula} $${S3_SECRET_KEY:-zulazula};
+      mc mb -p local/$${S3_BUCKET:-zula} || true;
+      mc anonymous set download local/$${S3_BUCKET:-zula}/uploads || true;
+      printf '%s' '[{\"AllowedOrigins\":[\"*\"],\"AllowedMethods\":[\"GET\",\"PUT\",\"HEAD\"],\"AllowedHeaders\":[\"*\"],\"ExposeHeaders\":[\"ETag\"]}]' > /tmp/cors.json;
+      mc cors set local/$${S3_BUCKET:-zula} /tmp/cors.json || true;
+      echo minio-init done;
+      "
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-zula}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-zulazula}
+      S3_BUCKET: ${S3_BUCKET:-zula}
+    restart: "no"
+
 volumes:
   pg_data:
+  minio_data:

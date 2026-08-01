@@ -2,7 +2,7 @@
 
 **Canonical DDL** lives in SQLDelight migrations under `server/src/main/sqldelight/com/zula/` (init: `0.sqm`). Query files (`.sq`) hold statements only — `deriveSchemaFromMigrations = true`. This document is the index by module — update it when adding tables or migrations.
 
-**Shipped schema:** `0.sqm` (users, profiles, identities, sessions, stats, blocks, ratings, seller_activity_stats)  
+**Shipped schema:** `0.sqm` (users, profiles, identities, sessions, stats, blocks, ratings, seller_activity_stats, documents, portfolio, media_objects)  
 **Version bookkeeping:** `zula_schema_version` created in Kotlin (`Database.kt`), not in `.sqm`.  
 **Removed:** `auth_challenges` (email OTP leftover) — dropped on migrate if present.  
 **Next planned:** feed/traits as `1.sqm` / `000002_feed` (see [implementation_plan.md](./implementation_plan.md))
@@ -32,7 +32,7 @@ Create endpoints return persisted ids in the response (e.g. `AuthTokensResponse.
 | Table | Purpose |
 |-------|---------|
 | `users` | Identity: UUIDv7 `id`, `username` |
-| `user_profiles` | Display: `display_name`, `avatar_url`, `bio`, `timezone`, `preferred_language`, `location_tag`, `seller_headline` |
+| `user_profiles` | Display: `display_name`, `avatar_url`, `timezone`, `preferred_language`, `location_tag`, `seller_headline` |
 | `user_identities` | OAuth links (`google`, `apple`) |
 | `user_sessions` | JWT session hashes, revocation |
 | `user_stats` | Cached `explicit_rating_avg`, `implicit_trust_score` |
@@ -60,7 +60,7 @@ Create endpoints return persisted ids in the response (e.g. `AuthTokensResponse.
 |-------|---------|
 | `documents` | Canonical markdown (`source`, `format`, `revision`) |
 | `document_revisions` | Optional audit trail |
-| `user_profile_readme` | One readme document per user |
+| `user_profile_bio` | One markdown bio document per user |
 | `user_portfolio_items` | Curated portfolio entries |
 | `user_profile_pins` | Up to 6 pinned portfolio items |
 
@@ -256,12 +256,12 @@ erDiagram
     users ||--o{ user_trust_ledger : logs
     users ||--o{ user_blocks : blocks
     users ||--o| seller_activity_stats : counts
-    users ||--o| user_profile_readme : readme
+    users ||--o| user_profile_bio : bio
     users ||--o{ user_portfolio_items : portfolio
     users ||--o{ user_profile_pins : pins
     users ||--o{ media_objects : owns
     documents ||--o{ document_revisions : history
-    user_profile_readme }o--|| documents : points_to
+    user_profile_bio }o--|| documents : points_to
     user_portfolio_items }o--o| documents : body
 ```
 

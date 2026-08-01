@@ -1,12 +1,15 @@
 package com.zula.features.user.persistence
 
 import com.zula.Database
+import com.zula.Documents
 import com.zula.GetSellerProfileById
 import com.zula.GetSellerProfileByUsername
+import com.zula.ListProfilePins
 import com.zula.ListRecentSellerReviews
 import com.zula.ListSellerReviewsFirstPage
 import com.zula.ListSellerReviewsPage
 import com.zula.Seller_activity_stats
+import com.zula.User_portfolio_items
 import com.zula.User_profiles
 import com.zula.User_stats
 import com.zula.Users
@@ -16,6 +19,10 @@ class UserRepository(
     private val database: Database,
 ) {
     private val queries inline get() = database.userQueries
+    private val portfolio inline get() = database.portfolioQueries
+
+    fun <T> transaction(block: UserRepository.() -> T): T =
+        database.transactionWithResult { this@UserRepository.block() }
 
     fun getUserById(userId: Uuid): Users? =
         queries.getUserById(userId).executeAsOneOrNull()
@@ -34,7 +41,6 @@ class UserRepository(
         userId: Uuid,
         displayName: String?,
         avatarUrl: String?,
-        bio: String?,
         timezone: String?,
         preferredLanguage: String?,
         locationTag: String?,
@@ -44,7 +50,6 @@ class UserRepository(
         queries.updateUserProfile(
             display_name = displayName,
             avatar_url = avatarUrl,
-            bio = bio,
             timezone = timezone,
             preferred_language = preferredLanguage,
             location_tag = locationTag,
@@ -119,4 +124,141 @@ class UserRepository(
 
     fun insertUserRating(reviewerId: Uuid, revieweeId: Uuid, rating: Long, comment: String?): Uuid =
         queries.insertUserRating(reviewerId, revieweeId, rating, comment).executeAsOne()
+
+    fun createDocument(ownerUserId: Uuid, source: String, updatedAt: Long): Documents =
+        portfolio.createDocument(ownerUserId, source, updatedAt).executeAsOne()
+
+    fun getDocument(id: Uuid): Documents? =
+        portfolio.getDocument(id).executeAsOneOrNull()
+
+    fun updateDocument(
+        id: Uuid,
+        ownerUserId: Uuid,
+        source: String,
+        updatedAt: Long,
+        expectedRevision: Long?,
+    ): Documents? =
+        if (expectedRevision == null) {
+            portfolio.updateDocument(source, updatedAt, id, ownerUserId).executeAsOneOrNull()
+        } else {
+            portfolio.updateDocumentIfRevision(source, updatedAt, id, ownerUserId, expectedRevision)
+                .executeAsOneOrNull()
+        }
+
+    fun insertDocumentRevision(documentId: Uuid, revision: Long, source: String, createdAt: Long) {
+        portfolio.insertDocumentRevision(documentId, revision, source, createdAt)
+    }
+
+    fun getProfileBioDocument(userId: Uuid): Documents? =
+        portfolio.getProfileBioDocument(userId).executeAsOneOrNull()
+
+    fun upsertProfileBio(userId: Uuid, documentId: Uuid, updatedAt: Long) {
+        portfolio.upsertProfileBio(userId, documentId, updatedAt)
+    }
+
+    fun insertPortfolioItem(
+        userId: Uuid,
+        kind: String,
+        title: String,
+        summary: String?,
+        bodyDocumentId: Uuid?,
+        feedItemId: Uuid?,
+        tradeId: Uuid?,
+        externalUrl: String?,
+        coverObjectKey: String?,
+        sortOrder: Long,
+        visibility: String,
+        updatedAt: Long,
+    ): User_portfolio_items =
+        portfolio.insertPortfolioItem(
+            userId,
+            kind,
+            title,
+            summary,
+            bodyDocumentId,
+            feedItemId,
+            tradeId,
+            externalUrl,
+            coverObjectKey,
+            sortOrder,
+            visibility,
+            updatedAt,
+        ).executeAsOne()
+
+    fun updatePortfolioItem(
+        id: Uuid,
+        userId: Uuid,
+        kind: String,
+        title: String,
+        summary: String?,
+        bodyDocumentId: Uuid?,
+        feedItemId: Uuid?,
+        tradeId: Uuid?,
+        externalUrl: String?,
+        coverObjectKey: String?,
+        sortOrder: Long,
+        visibility: String,
+        updatedAt: Long,
+    ): User_portfolio_items? =
+        portfolio.updatePortfolioItem(
+            kind,
+            title,
+            summary,
+            bodyDocumentId,
+            feedItemId,
+            tradeId,
+            externalUrl,
+            coverObjectKey,
+            sortOrder,
+            visibility,
+            updatedAt,
+            id,
+            userId,
+        ).executeAsOneOrNull()
+
+    fun getPortfolioItem(id: Uuid): User_portfolio_items? =
+        portfolio.getPortfolioItem(id).executeAsOneOrNull()
+
+    fun deletePortfolioItem(id: Uuid, userId: Uuid): Uuid? =
+        portfolio.deletePortfolioItem(id, userId).executeAsOneOrNull()
+
+    fun listPortfolioItems(
+        userId: Uuid,
+        includeUnlisted: Boolean,
+        cursorId: Uuid?,
+        limit: Long,
+    ): List<User_portfolio_items> =
+        if (includeUnlisted) {
+            if (cursorId == null) {
+                portfolio.listPortfolioItemsOwnerFirstPage(userId, limit).executeAsList()
+            } else {
+                portfolio.listPortfolioItemsOwnerPage(userId, cursorId, limit).executeAsList()
+            }
+        } else {
+            if (cursorId == null) {
+                portfolio.listPortfolioItemsPublicFirstPage(userId, limit).executeAsList()
+            } else {
+                portfolio.listPortfolioItemsPublicPage(userId, cursorId, limit).executeAsList()
+            }
+        }
+
+    fun listProfilePins(userId: Uuid): List<ListProfilePins> =
+        portfolio.listProfilePins(userId).executeAsList()
+
+    fun countProfilePins(userId: Uuid): Long =
+        portfolio.countProfilePins(userId).executeAsOne()
+
+    fun insertProfilePin(userId: Uuid, portfolioItemId: Uuid, sortOrder: Long) {
+        portfolio.insertProfilePin(userId, portfolioItemId, sortOrder)
+    }
+
+    fun deleteProfilePin(userId: Uuid, portfolioItemId: Uuid): Uuid? =
+        portfolio.deleteProfilePin(userId, portfolioItemId).executeAsOneOrNull()
+
+    fun replaceProfilePins(userId: Uuid, portfolioItemIds: List<Uuid>) {
+        portfolio.deleteAllProfilePins(userId)
+        portfolioItemIds.forEachIndexed { index, itemId ->
+            portfolio.insertProfilePinOrdered(userId, itemId, index.toLong())
+        }
+    }
 }

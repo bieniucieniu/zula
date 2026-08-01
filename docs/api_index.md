@@ -35,25 +35,24 @@ OAuth-only login (Google, Apple `idToken`). No email OTP challenge flow.
 
 ## UserService ✅
 
-| RPC | Auth |
-|-----|------|
-| `GetUserProfile` | Public (legacy) |
-| `GetUserByUsername` | Public (legacy) |
-| `GetSellerProfile` | Public |
-| `GetMyProfile` | Auth |
-| `UpdateMyProfile` | Auth |
-| `ListSellerReviews` | Auth optional |
-| `BlockUser` / `UnblockUser` | Auth |
-| `GetProfileReadme` | Public |
-| `UpdateProfileReadme` | Auth |
-| `ListPortfolioItems` | Public |
-| `UpsertPortfolioItem` / `DeletePortfolioItem` | Auth |
-| `PinPortfolioItem` / `UnpinPortfolioItem` / `ReorderProfilePins` | Auth |
-| `ListPublicActivity` | Public (stub until feed) |
-| `UpdateImplicitTrust` | Admin |
+| RPC | Auth | HTTP |
+|-----|------|------|
+| `GetUserProfile` | Public (legacy) | `GET /api/users/{id}/profile` |
+| `GetUserByUsername` | Public (legacy) | `GET /api/users/{username}` |
+| `GetSellerProfile` | Public | `GET /api/sellers/{idOrUsername}` |
+| `GetMyProfile` | Auth | `GET /api/users/me/profile` |
+| `UpdateMyProfile` | Auth | `PATCH /api/users/me/profile` (markdown `bio` + optional `bioExpectedRevision`) |
+| `ListSellerReviews` | Auth optional | `GET /api/reviews/seller/{userId}` |
+| `BlockUser` / `UnblockUser` | Auth | `POST` / `DELETE /api/users/{userId}/block` |
+| `ListPortfolioItems` | Public | `GET /api/users/{idOrMe}/portfolio` |
+| `UpsertPortfolioItem` / `DeletePortfolioItem` | Auth | `POST` / `DELETE /api/users/me/portfolio/items…` |
+| `PinPortfolioItem` / `UnpinPortfolioItem` / `ReorderProfilePins` | Auth | `/api/users/me/portfolio/pins…` |
+| `ListPublicActivity` | Public | `GET /api/users/{idOrMe}/activity` (empty stub until feed) |
+| `UpdateImplicitTrust` | Admin | `PATCH /api/admin/users/{id}/trust` |
 
-**Internal (not gRPC):** `RecordPeerRating` — called by validation module.
+**Internal (not REST):** `RecordPeerRating` — called by validation module.
 
+`kind=offer` portfolio items rejected until feed ships. `feed_item_id` / `trade_id` columns exist without FKs.
 ---
 
 ## FeedService 🔜
@@ -76,12 +75,12 @@ Doc: [feed_module.md](./feed_module.md)
 
 ---
 
-## MediaService 🔜
+## MediaService ✅
 
-| RPC | Auth |
-|-----|------|
-| `RequestUpload` | Auth |
-| `RequestAvatarUpload` | Auth |
+| RPC | Auth | HTTP |
+|-----|------|------|
+| `RequestUpload` | Auth | `POST /api/media/uploads` |
+| `RequestAvatarUpload` | Auth | 🔜 |
 
 Doc: [media_module.md](./media_module.md)
 
@@ -166,8 +165,7 @@ Doc: [moderation_module.md](./moderation_module.md)
 | Message | File | Use |
 |---------|------|-----|
 | `RichDocument` | `document` | Markdown bodies |
-| `ProfileCursor` | `document` | Reviews, activity lists |
-| `PortfolioCursor` | `document` | Portfolio pagination |
+| `ProfileCursor` | `document` | Reviews, portfolio, public activity |
 | `FeedCursor` | `feed` *(planned)* | All feed list endpoints |
 
 Pagination rules: [conventions.md](./conventions.md)

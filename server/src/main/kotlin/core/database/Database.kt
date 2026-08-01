@@ -151,6 +151,32 @@ fun createDatabase(driver: SqlDriver): Database =
         seller_activity_statsAdapter = Seller_activity_stats.Adapter(
             user_idAdapter = KotlinUuidAdapter,
         ),
+        documentsAdapter = Documents.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            owner_user_idAdapter = KotlinUuidAdapter,
+        ),
+        document_revisionsAdapter = Document_revisions.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            document_idAdapter = KotlinUuidAdapter,
+        ),
+        user_profile_bioAdapter = User_profile_bio.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
+            document_idAdapter = KotlinUuidAdapter,
+        ),
+        user_portfolio_itemsAdapter = User_portfolio_items.Adapter(
+            idAdapter = KotlinUuidAdapter,
+            user_idAdapter = KotlinUuidAdapter,
+            body_document_idAdapter = KotlinUuidAdapter,
+            feed_item_idAdapter = KotlinUuidAdapter,
+            trade_idAdapter = KotlinUuidAdapter,
+        ),
+        user_profile_pinsAdapter = User_profile_pins.Adapter(
+            user_idAdapter = KotlinUuidAdapter,
+            portfolio_item_idAdapter = KotlinUuidAdapter,
+        ),
+        media_objectsAdapter = Media_objects.Adapter(
+            owner_user_idAdapter = KotlinUuidAdapter,
+        ),
     )
 
 fun databaseModule(builder: DatabaseConfigBuilder.() -> Unit): Module =

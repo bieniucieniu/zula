@@ -11,6 +11,8 @@ Shared packages: `@zula/api` (Orval client + mutator), `@zula/oauth` (authorize 
 
 Compose (`apps/android/`) and SwiftUI (`apps/ios/`) are not current shipping clients.
 
+**Project structure:** feature-first — domain UI under `src/features/{name}/`; shared primitives under `src/components/`. See [conventions.md — Client feature layout](./conventions.md#client-feature-layout-appsweb-appsnative).
+
 ---
 
 ## OpenAPI client generation
@@ -80,6 +82,6 @@ Never expect HTML from the API.
 ## Related
 
 - [api_index.md](./api_index.md) — route list
-- [conventions.md](./conventions.md) — pagination, markdown rules
+- [conventions.md](./conventions.md) — pagination, markdown rules, client `features/` layout
 - [architecture.md](./architecture.md) — Ktor feature layout
 - [auth_and_permissions.md](./auth_and_permissions.md) — auth matrix

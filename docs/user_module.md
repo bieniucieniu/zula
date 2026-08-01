@@ -65,7 +65,6 @@ CREATE TABLE user_profiles (
     user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     display_name TEXT,
     avatar_url TEXT,
-    bio TEXT,
     timezone TEXT,
     preferred_language TEXT,
     location_tag TEXT,

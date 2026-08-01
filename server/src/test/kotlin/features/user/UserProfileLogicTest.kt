@@ -24,7 +24,9 @@ class UserProfileLogicTest {
             ProfileValidation.validate(UpdateMyProfileRequest(displayName = " "))
         }
         assertFailsWith<HttpException.BadRequest> {
-            ProfileValidation.validate(UpdateMyProfileRequest(bio = "x".repeat(2001)))
+            ProfileValidation.validate(
+                UpdateMyProfileRequest(bio = "x".repeat(PortfolioValidation.BIO_MAX_BYTES + 1)),
+            )
         }
         assertFailsWith<HttpException.BadRequest> {
             ProfileValidation.validate(UpdateMyProfileRequest(timezone = "Not/AZone"))

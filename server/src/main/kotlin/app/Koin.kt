@@ -5,6 +5,8 @@ import com.zula.core.database.databaseModule
 import com.zula.core.openapi.openApiModule
 import com.zula.core.security.*
 import com.zula.core.serialization.serializationModule
+import com.zula.core.storage.ObjectStorageConfig
+import com.zula.core.storage.objectStorageModule
 import com.zula.features.auth.AuthSettings
 import com.zula.features.auth.authModule
 import com.zula.features.chat.chatModule
@@ -53,6 +55,9 @@ fun Application.configureKoin() {
             serializationModule(
                 environment.config.propertyOrNull("ktor.development")?.getString()?.toBooleanStrictOrNull() ?: false
             ),
+            objectStorageModule {
+                config = ObjectStorageConfig.from(environment.config.configOrNull("storage"))
+            },
             authModule,
             // unimplemented
             openApiModule,

@@ -1,0 +1,40 @@
+insertPendingMediaObject:
+INSERT INTO media_objects (
+    object_key, owner_user_id, status, content_type, byte_size, ref_count, created_at
+) VALUES (?, ?, 'pending', ?, ?, 0, ?);
+
+getMediaObject:
+SELECT * FROM media_objects WHERE object_key = ? LIMIT 1;
+
+commitMediaObject:
+UPDATE media_objects
+SET status = 'active',
+    committed_at = ?,
+    ref_count = ref_count + 1,
+    delete_after = NULL
+WHERE object_key = ?
+  AND owner_user_id = ?
+  AND status = 'pending'
+RETURNING *;
+
+incrementActiveMediaRef:
+UPDATE media_objects
+SET ref_count = ref_count + 1
+WHERE object_key = ?
+  AND owner_user_id = ?
+  AND status = 'active'
+RETURNING *;
+
+releaseMediaObject:
+UPDATE media_objects
+SET ref_count = CASE WHEN ref_count > 0 THEN ref_count - 1 ELSE 0 END,
+    status = CASE
+        WHEN ref_count <= 1 THEN 'deleted'
+        ELSE status
+    END,
+    delete_after = CASE
+        WHEN ref_count <= 1 THEN ?
+        ELSE delete_after
+    END
+WHERE object_key = ?
+RETURNING *;

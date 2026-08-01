@@ -82,4 +82,5 @@ dependencies {
     implementation(libs.hikari)
     implementation(libs.postgres)
     implementation(libs.kubernetes.client)
+    implementation(libs.aws.s3)
 }

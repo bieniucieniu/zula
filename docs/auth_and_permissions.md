@@ -57,7 +57,7 @@ WebSocket chat is **not** used — realtime is **SSE** (`GET /api/events/stream`
 | `ListPublicActivity` | Public | Stub until feed ships |
 | `GetMyProfile` | Auth | Own profile only; includes `is_admin` when caller’s linked Google ID matches `ADMIN_GOOGLE_ID` |
 | `UpdateMyProfile` | Auth | Own row only |
-| `UpdateProfileReadme` | Auth | Own readme |
+| `UpdateMyProfile` | Auth | Own profile (incl. markdown bio) |
 | `ListPortfolioItems` (owner view) | Auth | Includes unlisted when querying self |
 | `UpsertPortfolioItem` | Auth | Own portfolio |
 | `DeletePortfolioItem` | Auth | Own items |

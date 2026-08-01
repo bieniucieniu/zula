@@ -24,6 +24,7 @@ import type {
   AuthTokensResponse,
   AuthenticateRequest,
   BlockUserResponse,
+  DeletePortfolioItemResponse,
   GetHealth200One,
   GetHealth200Two,
   GetHealth503One,
@@ -35,18 +36,30 @@ import type {
   GoogleOAuthCallbackParams,
   JwksResponse,
   LinkedProvidersResponse,
+  ListPortfolioItemsParams,
+  ListPortfolioItemsResponse,
+  ListPublicActivityResponse,
   ListSellerReviewsParams,
   ListSellerReviewsResponse,
   MyProfileResponse,
   OAuthProvidersResponse,
+  PinPortfolioItemRequest,
+  PinPortfolioItemResponse,
+  PortfolioItem,
   ProblemDetails,
   RefreshRequest,
+  ReorderProfilePinsRequest,
+  ReorderProfilePinsResponse,
+  RequestUploadRequest,
+  RequestUploadResponse,
   SellerProfileResponse,
   SessionResponse,
   StartGoogleOAuthParams,
   UnblockUserResponse,
+  UnpinPortfolioItemResponse,
   UpdateMyProfileRequest,
   UpdateTrustRequest,
+  UpsertPortfolioItemRequest,
   UserResponse,
 } from "./model"
 
@@ -2106,6 +2119,340 @@ export function useGetUserProfile<
   return withQueryKey(query, queryOptions.queryKey)
 }
 
+export type listPortfolioItemsResponse200ApplicationJson = {
+  data: ListPortfolioItemsResponse
+  status: 200
+}
+
+export type listPortfolioItemsResponse200ApplicationProblemJson = {
+  data: ListPortfolioItemsResponse
+  status: 200
+}
+
+export type listPortfolioItemsResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listPortfolioItemsResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listPortfolioItemsResponseSuccess = (
+  | listPortfolioItemsResponse200ApplicationJson
+  | listPortfolioItemsResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listPortfolioItemsResponseError = (
+  | listPortfolioItemsResponse500ApplicationJson
+  | listPortfolioItemsResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListPortfolioItemsUrl = (idOrMe: string, params?: ListPortfolioItemsParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/users/${idOrMe}/portfolio?${stringifiedParams}`
+    : `/api/users/${idOrMe}/portfolio`
+}
+
+export const listPortfolioItems = async (
+  idOrMe: string,
+  params?: ListPortfolioItemsParams,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listPortfolioItemsResponseSuccess> => {
+  return customInstance<listPortfolioItemsResponseSuccess>(
+    getListPortfolioItemsUrl(idOrMe, params),
+    {
+      ...options,
+      method: "GET",
+    }
+  )
+}
+
+export const getListPortfolioItemsQueryKey = (
+  idOrMe: string,
+  params?: ListPortfolioItemsParams
+) => {
+  return [`/api/users/${idOrMe}/portfolio`, ...(params ? [params] : [])] as const
+}
+
+export const getListPortfolioItemsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPortfolioItems>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  params?: ListPortfolioItemsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListPortfolioItemsQueryKey(idOrMe, params)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPortfolioItems>>> = ({ signal }) =>
+    listPortfolioItems(idOrMe, params, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: idOrMe !== null && idOrMe !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListPortfolioItemsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPortfolioItems>>
+>
+export type ListPortfolioItemsQueryError = ProblemDetails
+
+export function useListPortfolioItems<
+  TData = Awaited<ReturnType<typeof listPortfolioItems>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  params: undefined | ListPortfolioItemsParams,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPortfolioItems>>,
+          TError,
+          Awaited<ReturnType<typeof listPortfolioItems>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPortfolioItems<
+  TData = Awaited<ReturnType<typeof listPortfolioItems>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  params?: ListPortfolioItemsParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPortfolioItems>>,
+          TError,
+          Awaited<ReturnType<typeof listPortfolioItems>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPortfolioItems<
+  TData = Awaited<ReturnType<typeof listPortfolioItems>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  params?: ListPortfolioItemsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListPortfolioItems<
+  TData = Awaited<ReturnType<typeof listPortfolioItems>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  params?: ListPortfolioItemsParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListPortfolioItemsQueryOptions(idOrMe, params, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type listPublicActivityResponse200ApplicationJson = {
+  data: ListPublicActivityResponse
+  status: 200
+}
+
+export type listPublicActivityResponse200ApplicationProblemJson = {
+  data: ListPublicActivityResponse
+  status: 200
+}
+
+export type listPublicActivityResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listPublicActivityResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type listPublicActivityResponseSuccess = (
+  | listPublicActivityResponse200ApplicationJson
+  | listPublicActivityResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type listPublicActivityResponseError = (
+  | listPublicActivityResponse500ApplicationJson
+  | listPublicActivityResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getListPublicActivityUrl = (idOrMe: string) => {
+  return `/api/users/${idOrMe}/activity`
+}
+
+export const listPublicActivity = async (
+  idOrMe: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<listPublicActivityResponseSuccess> => {
+  return customInstance<listPublicActivityResponseSuccess>(getListPublicActivityUrl(idOrMe), {
+    ...options,
+    method: "GET",
+  })
+}
+
+export const getListPublicActivityQueryKey = (idOrMe: string) => {
+  return [`/api/users/${idOrMe}/activity`] as const
+}
+
+export const getListPublicActivityQueryOptions = <
+  TData = Awaited<ReturnType<typeof listPublicActivity>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {}
+
+  const queryKey = queryOptions?.queryKey ?? getListPublicActivityQueryKey(idOrMe)
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicActivity>>> = ({ signal }) =>
+    listPublicActivity(idOrMe, { signal, ...requestOptions })
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: idOrMe !== null && idOrMe !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+}
+
+export type ListPublicActivityQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listPublicActivity>>
+>
+export type ListPublicActivityQueryError = ProblemDetails
+
+export function useListPublicActivity<
+  TData = Awaited<ReturnType<typeof listPublicActivity>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicActivity>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicActivity>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicActivity<
+  TData = Awaited<ReturnType<typeof listPublicActivity>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listPublicActivity>>,
+          TError,
+          Awaited<ReturnType<typeof listPublicActivity>>
+        >,
+        "initialData"
+      >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListPublicActivity<
+  TData = Awaited<ReturnType<typeof listPublicActivity>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListPublicActivity<
+  TData = Awaited<ReturnType<typeof listPublicActivity>>,
+  TError = ProblemDetails,
+>(
+  idOrMe: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>>
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getListPublicActivityQueryOptions(idOrMe, options)
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>
+  }
+
+  return withQueryKey(query, queryOptions.queryKey)
+}
+
 export type getMyProfileResponse200ApplicationJson = {
   data: MyProfileResponse
   status: 200
@@ -2353,6 +2700,557 @@ export const useUpdateMyProfile = <TError = ProblemDetails, TContext = unknown>(
   TContext
 > => {
   return useMutation(getUpdateMyProfileMutationOptions(options), queryClient)
+}
+
+export type upsertPortfolioItemResponse200ApplicationJson = {
+  data: PortfolioItem
+  status: 200
+}
+
+export type upsertPortfolioItemResponse200ApplicationProblemJson = {
+  data: PortfolioItem
+  status: 200
+}
+
+export type upsertPortfolioItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type upsertPortfolioItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type upsertPortfolioItemResponseSuccess = (
+  | upsertPortfolioItemResponse200ApplicationJson
+  | upsertPortfolioItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type upsertPortfolioItemResponseError = (
+  | upsertPortfolioItemResponse500ApplicationJson
+  | upsertPortfolioItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUpsertPortfolioItemUrl = () => {
+  return `/api/users/me/portfolio/items`
+}
+
+export const upsertPortfolioItem = async (
+  upsertPortfolioItemRequest?: UpsertPortfolioItemRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<upsertPortfolioItemResponseSuccess> => {
+  return customInstance<upsertPortfolioItemResponseSuccess>(getUpsertPortfolioItemUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(upsertPortfolioItemRequest),
+  })
+}
+
+export const getUpsertPortfolioItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof upsertPortfolioItem>>,
+    TError,
+    { data?: BodyType<UpsertPortfolioItemRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof upsertPortfolioItem>>,
+  TError,
+  { data?: BodyType<UpsertPortfolioItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["upsertPortfolioItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof upsertPortfolioItem>>,
+    { data?: BodyType<UpsertPortfolioItemRequest> }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return upsertPortfolioItem(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UpsertPortfolioItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof upsertPortfolioItem>>
+>
+export type UpsertPortfolioItemMutationBody = BodyType<UpsertPortfolioItemRequest> | undefined
+export type UpsertPortfolioItemMutationError = ProblemDetails
+
+export const useUpsertPortfolioItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof upsertPortfolioItem>>,
+      TError,
+      { data?: BodyType<UpsertPortfolioItemRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof upsertPortfolioItem>>,
+  TError,
+  { data?: BodyType<UpsertPortfolioItemRequest> },
+  TContext
+> => {
+  return useMutation(getUpsertPortfolioItemMutationOptions(options), queryClient)
+}
+
+export type deletePortfolioItemResponse200ApplicationJson = {
+  data: DeletePortfolioItemResponse
+  status: 200
+}
+
+export type deletePortfolioItemResponse200ApplicationProblemJson = {
+  data: DeletePortfolioItemResponse
+  status: 200
+}
+
+export type deletePortfolioItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type deletePortfolioItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type deletePortfolioItemResponseSuccess = (
+  | deletePortfolioItemResponse200ApplicationJson
+  | deletePortfolioItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type deletePortfolioItemResponseError = (
+  | deletePortfolioItemResponse500ApplicationJson
+  | deletePortfolioItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getDeletePortfolioItemUrl = (itemId: string) => {
+  return `/api/users/me/portfolio/items/${itemId}`
+}
+
+export const deletePortfolioItem = async (
+  itemId: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<deletePortfolioItemResponseSuccess> => {
+  return customInstance<deletePortfolioItemResponseSuccess>(getDeletePortfolioItemUrl(itemId), {
+    ...options,
+    method: "DELETE",
+  })
+}
+
+export const getDeletePortfolioItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deletePortfolioItem>>,
+    TError,
+    { itemId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deletePortfolioItem>>,
+  TError,
+  { itemId: string },
+  TContext
+> => {
+  const mutationKey = ["deletePortfolioItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deletePortfolioItem>>,
+    { itemId: string }
+  > = (props) => {
+    const { itemId } = props ?? {}
+
+    return deletePortfolioItem(itemId, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type DeletePortfolioItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deletePortfolioItem>>
+>
+
+export type DeletePortfolioItemMutationError = ProblemDetails
+
+export const useDeletePortfolioItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deletePortfolioItem>>,
+      TError,
+      { itemId: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof deletePortfolioItem>>,
+  TError,
+  { itemId: string },
+  TContext
+> => {
+  return useMutation(getDeletePortfolioItemMutationOptions(options), queryClient)
+}
+
+export type pinPortfolioItemResponse200ApplicationJson = {
+  data: PinPortfolioItemResponse
+  status: 200
+}
+
+export type pinPortfolioItemResponse200ApplicationProblemJson = {
+  data: PinPortfolioItemResponse
+  status: 200
+}
+
+export type pinPortfolioItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type pinPortfolioItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type pinPortfolioItemResponseSuccess = (
+  | pinPortfolioItemResponse200ApplicationJson
+  | pinPortfolioItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type pinPortfolioItemResponseError = (
+  | pinPortfolioItemResponse500ApplicationJson
+  | pinPortfolioItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getPinPortfolioItemUrl = () => {
+  return `/api/users/me/portfolio/pins`
+}
+
+export const pinPortfolioItem = async (
+  pinPortfolioItemRequest?: PinPortfolioItemRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<pinPortfolioItemResponseSuccess> => {
+  return customInstance<pinPortfolioItemResponseSuccess>(getPinPortfolioItemUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(pinPortfolioItemRequest),
+  })
+}
+
+export const getPinPortfolioItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof pinPortfolioItem>>,
+    TError,
+    { data?: BodyType<PinPortfolioItemRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof pinPortfolioItem>>,
+  TError,
+  { data?: BodyType<PinPortfolioItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["pinPortfolioItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof pinPortfolioItem>>,
+    { data?: BodyType<PinPortfolioItemRequest> }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return pinPortfolioItem(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type PinPortfolioItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof pinPortfolioItem>>
+>
+export type PinPortfolioItemMutationBody = BodyType<PinPortfolioItemRequest> | undefined
+export type PinPortfolioItemMutationError = ProblemDetails
+
+export const usePinPortfolioItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof pinPortfolioItem>>,
+      TError,
+      { data?: BodyType<PinPortfolioItemRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof pinPortfolioItem>>,
+  TError,
+  { data?: BodyType<PinPortfolioItemRequest> },
+  TContext
+> => {
+  return useMutation(getPinPortfolioItemMutationOptions(options), queryClient)
+}
+
+export type unpinPortfolioItemResponse200ApplicationJson = {
+  data: UnpinPortfolioItemResponse
+  status: 200
+}
+
+export type unpinPortfolioItemResponse200ApplicationProblemJson = {
+  data: UnpinPortfolioItemResponse
+  status: 200
+}
+
+export type unpinPortfolioItemResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type unpinPortfolioItemResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type unpinPortfolioItemResponseSuccess = (
+  | unpinPortfolioItemResponse200ApplicationJson
+  | unpinPortfolioItemResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type unpinPortfolioItemResponseError = (
+  | unpinPortfolioItemResponse500ApplicationJson
+  | unpinPortfolioItemResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getUnpinPortfolioItemUrl = (itemId: string) => {
+  return `/api/users/me/portfolio/pins/${itemId}`
+}
+
+export const unpinPortfolioItem = async (
+  itemId: string,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<unpinPortfolioItemResponseSuccess> => {
+  return customInstance<unpinPortfolioItemResponseSuccess>(getUnpinPortfolioItemUrl(itemId), {
+    ...options,
+    method: "DELETE",
+  })
+}
+
+export const getUnpinPortfolioItemMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unpinPortfolioItem>>,
+    TError,
+    { itemId: string },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unpinPortfolioItem>>,
+  TError,
+  { itemId: string },
+  TContext
+> => {
+  const mutationKey = ["unpinPortfolioItem"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unpinPortfolioItem>>,
+    { itemId: string }
+  > = (props) => {
+    const { itemId } = props ?? {}
+
+    return unpinPortfolioItem(itemId, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type UnpinPortfolioItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof unpinPortfolioItem>>
+>
+
+export type UnpinPortfolioItemMutationError = ProblemDetails
+
+export const useUnpinPortfolioItem = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unpinPortfolioItem>>,
+      TError,
+      { itemId: string },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof unpinPortfolioItem>>,
+  TError,
+  { itemId: string },
+  TContext
+> => {
+  return useMutation(getUnpinPortfolioItemMutationOptions(options), queryClient)
+}
+
+export type reorderProfilePinsResponse200ApplicationJson = {
+  data: ReorderProfilePinsResponse
+  status: 200
+}
+
+export type reorderProfilePinsResponse200ApplicationProblemJson = {
+  data: ReorderProfilePinsResponse
+  status: 200
+}
+
+export type reorderProfilePinsResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type reorderProfilePinsResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type reorderProfilePinsResponseSuccess = (
+  | reorderProfilePinsResponse200ApplicationJson
+  | reorderProfilePinsResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type reorderProfilePinsResponseError = (
+  | reorderProfilePinsResponse500ApplicationJson
+  | reorderProfilePinsResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getReorderProfilePinsUrl = () => {
+  return `/api/users/me/portfolio/pins/reorder`
+}
+
+export const reorderProfilePins = async (
+  reorderProfilePinsRequest?: ReorderProfilePinsRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<reorderProfilePinsResponseSuccess> => {
+  return customInstance<reorderProfilePinsResponseSuccess>(getReorderProfilePinsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reorderProfilePinsRequest),
+  })
+}
+
+export const getReorderProfilePinsMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reorderProfilePins>>,
+    TError,
+    { data?: BodyType<ReorderProfilePinsRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reorderProfilePins>>,
+  TError,
+  { data?: BodyType<ReorderProfilePinsRequest> },
+  TContext
+> => {
+  const mutationKey = ["reorderProfilePins"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reorderProfilePins>>,
+    { data?: BodyType<ReorderProfilePinsRequest> }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return reorderProfilePins(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type ReorderProfilePinsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reorderProfilePins>>
+>
+export type ReorderProfilePinsMutationBody = BodyType<ReorderProfilePinsRequest> | undefined
+export type ReorderProfilePinsMutationError = ProblemDetails
+
+export const useReorderProfilePins = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reorderProfilePins>>,
+      TError,
+      { data?: BodyType<ReorderProfilePinsRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof reorderProfilePins>>,
+  TError,
+  { data?: BodyType<ReorderProfilePinsRequest> },
+  TContext
+> => {
+  return useMutation(getReorderProfilePinsMutationOptions(options), queryClient)
 }
 
 export type blockUserResponse200ApplicationJson = {
@@ -2828,4 +3726,113 @@ export function useGetUserByUsername<
   }
 
   return withQueryKey(query, queryOptions.queryKey)
+}
+
+export type requestUploadResponse200ApplicationJson = {
+  data: RequestUploadResponse
+  status: 200
+}
+
+export type requestUploadResponse200ApplicationProblemJson = {
+  data: RequestUploadResponse
+  status: 200
+}
+
+export type requestUploadResponse500ApplicationJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type requestUploadResponse500ApplicationProblemJson = {
+  data: ProblemDetails
+  status: 500
+}
+
+export type requestUploadResponseSuccess = (
+  | requestUploadResponse200ApplicationJson
+  | requestUploadResponse200ApplicationProblemJson
+) & {
+  headers: Headers
+}
+export type requestUploadResponseError = (
+  | requestUploadResponse500ApplicationJson
+  | requestUploadResponse500ApplicationProblemJson
+) & {
+  headers: Headers
+}
+
+export const getRequestUploadUrl = () => {
+  return `/api/media/uploads`
+}
+
+export const requestUpload = async (
+  requestUploadRequest?: RequestUploadRequest,
+  options?: Parameters<typeof customInstance>[1]
+): Promise<requestUploadResponseSuccess> => {
+  return customInstance<requestUploadResponseSuccess>(getRequestUploadUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(requestUploadRequest),
+  })
+}
+
+export const getRequestUploadMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestUpload>>,
+    TError,
+    { data?: BodyType<RequestUploadRequest> },
+    TContext
+  >
+  request?: SecondParameter<typeof customInstance>
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestUpload>>,
+  TError,
+  { data?: BodyType<RequestUploadRequest> },
+  TContext
+> => {
+  const mutationKey = ["requestUpload"]
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined }
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestUpload>>,
+    { data?: BodyType<RequestUploadRequest> }
+  > = (props) => {
+    const { data } = props ?? {}
+
+    return requestUpload(data, requestOptions)
+  }
+
+  return { mutationFn, ...mutationOptions }
+}
+
+export type RequestUploadMutationResult = NonNullable<Awaited<ReturnType<typeof requestUpload>>>
+export type RequestUploadMutationBody = BodyType<RequestUploadRequest> | undefined
+export type RequestUploadMutationError = ProblemDetails
+
+export const useRequestUpload = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof requestUpload>>,
+      TError,
+      { data?: BodyType<RequestUploadRequest> },
+      TContext
+    >
+    request?: SecondParameter<typeof customInstance>
+  },
+  queryClient?: QueryClient
+): UseMutationResult<
+  Awaited<ReturnType<typeof requestUpload>>,
+  TError,
+  { data?: BodyType<RequestUploadRequest> },
+  TContext
+> => {
+  return useMutation(getRequestUploadMutationOptions(options), queryClient)
 }

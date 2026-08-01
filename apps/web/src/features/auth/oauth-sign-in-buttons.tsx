@@ -119,11 +119,7 @@ export function OAuthSignInButtons({ disabled, onSuccess }: OAuthSignInButtonsPr
         }
         if (provider.id === "google") {
           return (
-            <GoogleSignInButton
-              key={provider.id}
-              disabled={disabled}
-              onAuthenticated={onSuccess}
-            />
+            <GoogleSignInButton key={provider.id} disabled={disabled} onAuthenticated={onSuccess} />
           )
         }
         return null

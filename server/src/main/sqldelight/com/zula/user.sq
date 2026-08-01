@@ -118,7 +118,6 @@ updateUserProfile:
 UPDATE user_profiles SET
     display_name = COALESCE(:display_name, display_name),
     avatar_url = COALESCE(:avatar_url, avatar_url),
-    bio = COALESCE(:bio, bio),
     timezone = COALESCE(:timezone, timezone),
     preferred_language = COALESCE(:preferred_language, preferred_language),
     location_tag = COALESCE(:location_tag, location_tag),
@@ -132,7 +131,6 @@ SELECT
     u.username,
     up.display_name,
     up.avatar_url,
-    up.bio,
     up.seller_headline,
     up.location_tag,
     up.timezone,
@@ -152,7 +150,6 @@ SELECT
     u.username,
     up.display_name,
     up.avatar_url,
-    up.bio,
     up.seller_headline,
     up.location_tag,
     up.timezone,

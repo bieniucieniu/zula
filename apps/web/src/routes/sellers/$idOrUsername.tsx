@@ -6,13 +6,12 @@ import {
   useUnblockUser,
 } from "@zula/api/endpoints"
 import { useState } from "react"
+import { ProfileContentTabs } from "@/features/user/profile-tabs"
 import {
   ProfileShell,
-  RecentReviews,
-  SellerBio,
   SellerProfileHeader,
   SellerTrustRow,
-} from "@/components/profile/seller-profile-view"
+} from "@/features/user/seller-profile-view"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -89,7 +88,10 @@ function SellerPage() {
         profile={profile}
         actions={
           isSelf ? (
-            <Link to="/profile" className={cn(buttonVariants({ variant: "outline", size: "sm" }))}>
+            <Link
+              to="/profile/edit"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
               Edit profile
             </Link>
           ) : (
@@ -109,20 +111,11 @@ function SellerPage() {
 
       {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
 
-      <section className="space-y-6">
-        <div className="space-y-2">
-          <h2 className="font-heading text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            About
-          </h2>
-          <SellerBio profile={profile} />
-        </div>
-        <div className="space-y-2">
-          <h2 className="font-heading text-sm font-medium uppercase tracking-wide text-muted-foreground">
-            Recent reviews
-          </h2>
-          <RecentReviews profile={profile} />
-        </div>
-      </section>
+      <ProfileContentTabs
+        profile={profile}
+        portfolioIdOrMe={idOrUsername}
+        canManagePortfolio={isSelf}
+      />
     </ProfileShell>
   )
 }

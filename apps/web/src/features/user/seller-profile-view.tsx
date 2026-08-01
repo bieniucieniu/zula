@@ -103,10 +103,11 @@ export function SellerTrustRow({ profile }: { profile: SellerProfileResponse }) 
 }
 
 export function SellerBio({ profile }: { profile: SellerProfileResponse }) {
-  if (!profile.bio?.trim()) {
+  const markdown = profile.bio?.sourceMarkdown?.trim()
+  if (!markdown) {
     return <p className="text-sm text-muted-foreground">No bio yet.</p>
   }
-  return <p className="max-w-2xl whitespace-pre-wrap text-sm leading-relaxed">{profile.bio}</p>
+  return <div className="max-w-2xl whitespace-pre-wrap text-sm leading-relaxed">{markdown}</div>
 }
 
 export function RecentReviews({ profile }: { profile: SellerProfileResponse }) {

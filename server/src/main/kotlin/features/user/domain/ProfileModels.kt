@@ -31,7 +31,7 @@ data class SellerProfileResponse(
     val username: String,
     val displayName: String? = null,
     val avatarUrl: String? = null,
-    val bio: String? = null,
+    val bio: RichDocument? = null,
     val sellerHeadline: String? = null,
     val locationTag: String? = null,
     val memberSince: String,
@@ -40,6 +40,7 @@ data class SellerProfileResponse(
     val ratingCount: Int,
     val activity: SellerActivityCounts? = null,
     val recentReviews: List<SellerReviewPreview> = emptyList(),
+    val pins: List<PortfolioItem> = emptyList(),
     val viewerHasBlocked: Boolean? = null,
     val viewerIsBlocked: Boolean? = null,
 )
@@ -56,7 +57,9 @@ data class MyProfileResponse(
 @Serializable
 data class UpdateMyProfileRequest(
     val displayName: String? = null,
+    /** Markdown bio body. Null = leave unchanged. */
     val bio: String? = null,
+    val bioExpectedRevision: Int? = null,
     val avatarUrl: String? = null,
     val sellerHeadline: String? = null,
     val locationTag: String? = null,

@@ -1,19 +1,36 @@
 package com.zula.features.user
 
+import com.zula.Documents
 import com.zula.GetSellerProfileById
+import com.zula.ListProfilePins
+import com.zula.User_portfolio_items
 import com.zula.core.http.badRequest
+import com.zula.core.http.conflict
 import com.zula.core.http.forbidden
 import com.zula.core.http.notFound
+import com.zula.core.http.unauthorized
+import com.zula.features.media.MediaService
 import com.zula.features.user.domain.BlockUserResponse
+import com.zula.features.user.domain.DeletePortfolioItemResponse
+import com.zula.features.user.domain.ListPortfolioItemsResponse
+import com.zula.features.user.domain.ListPublicActivityResponse
 import com.zula.features.user.domain.ListSellerReviewsResponse
 import com.zula.features.user.domain.MyProfileResponse
+import com.zula.features.user.domain.PinPortfolioItemRequest
+import com.zula.features.user.domain.PinPortfolioItemResponse
+import com.zula.features.user.domain.PortfolioItem
 import com.zula.features.user.domain.ProfileCursor
+import com.zula.features.user.domain.ReorderProfilePinsRequest
+import com.zula.features.user.domain.ReorderProfilePinsResponse
+import com.zula.features.user.domain.RichDocument
 import com.zula.features.user.domain.SellerActivityCounts
 import com.zula.features.user.domain.SellerProfileResponse
 import com.zula.features.user.domain.SellerReviewPreview
 import com.zula.features.user.domain.UnblockUserResponse
+import com.zula.features.user.domain.UnpinPortfolioItemResponse
 import com.zula.features.user.domain.UpdateMyProfileRequest
 import com.zula.features.user.domain.UpdateTrustRequest
+import com.zula.features.user.domain.UpsertPortfolioItemRequest
 import com.zula.features.user.domain.UserResponse
 import com.zula.features.user.persistence.UserRepository
 import com.zula.lib.id.Ids
@@ -25,6 +42,7 @@ import kotlin.uuid.Uuid
  */
 class UserService(
     private val repository: UserRepository,
+    private val mediaService: MediaService,
     private val adminConfig: UserAdminConfig = UserAdminConfig(),
 ) : UserProfileWriter {
     fun getSellerProfile(idOrUsername: String, viewerId: Uuid?): SellerProfileResponse {
@@ -55,12 +73,14 @@ class UserService(
                 createdAt = Ids.createdAtInstant(review.id).toString(),
             )
         }
+        val bio = repository.getProfileBioDocument(row.id)?.toRichDocument()
+        val pins = repository.listProfilePins(row.id).map { it.toPortfolioItem() }
         val base = SellerProfileResponse(
             userId = row.id.toString(),
             username = row.username,
             displayName = row.display_name,
             avatarUrl = row.avatar_url,
-            bio = row.bio,
+            bio = bio,
             sellerHeadline = row.seller_headline,
             locationTag = row.location_tag,
             memberSince = Ids.createdAtInstant(row.id).toString(),
@@ -69,6 +89,7 @@ class UserService(
             ratingCount = ratingCount,
             activity = activity,
             recentReviews = previews,
+            pins = pins,
         )
         if (viewerId == null) return base
         return base.copy(
@@ -98,13 +119,20 @@ class UserService(
             userId = ownerId,
             displayName = req.displayName?.trim(),
             avatarUrl = req.avatarUrl?.trim(),
-            bio = req.bio,
             timezone = req.timezone?.trim(),
             preferredLanguage = req.preferredLanguage?.trim()?.lowercase(),
             locationTag = req.locationTag?.trim(),
             sellerHeadline = req.sellerHeadline?.trim(),
             updatedAt = now,
         )
+        if (req.bio != null) {
+            upsertProfileBioDocument(
+                ownerId = ownerId,
+                sourceMarkdown = req.bio,
+                expectedRevision = req.bioExpectedRevision?.toLong(),
+                now = now,
+            )
+        }
         return getMyProfile(ownerId)
     }
 
@@ -209,7 +237,6 @@ class UserService(
         if (rating !in 1..5) badRequest("rating must be 1–5")
         repository.getUserById(revieweeId) ?: notFound("User not found")
         val id = repository.insertUserRating(reviewerId, revieweeId, rating.toLong(), comment)
-        // Invalidate stats cache so next profile read refreshes avg.
         val now = Instant.now().epochSecond
         val stats = repository.getUserStats(revieweeId)
         repository.upsertUserStatsValues(
@@ -221,8 +248,237 @@ class UserService(
         return id
     }
 
+    fun listPortfolio(
+        idOrMe: String,
+        viewerId: Uuid?,
+        cursorId: Uuid?,
+        limit: Int,
+    ): ListPortfolioItemsResponse {
+        val targetId = resolveUserId(idOrMe, viewerId)
+        enforcePublicTargetAccess(viewerId, targetId)
+        repository.getUserById(targetId) ?: notFound("User not found")
+        val includeUnlisted = viewerId != null && viewerId == targetId
+        val pageSize = limit.coerceIn(1, 50)
+        val rows = repository.listPortfolioItems(targetId, includeUnlisted, cursorId, pageSize + 1L)
+        val hasMore = rows.size > pageSize
+        val page = if (hasMore) rows.take(pageSize) else rows
+        val items = page.map { it.toPortfolioItem(includeBody = false) }
+        return ListPortfolioItemsResponse(
+            items = items,
+            nextCursor = items.lastOrNull()?.takeIf { hasMore }?.let { ProfileCursor(it.id) },
+            hasMore = hasMore,
+        )
+    }
+
+    fun upsertPortfolioItem(actorId: Uuid, idOrMe: String, req: UpsertPortfolioItemRequest): PortfolioItem {
+        val targetId = resolveUserId(idOrMe, actorId)
+        requireOwnProfile(actorId, targetId)
+        PortfolioValidation.validateUpsert(req)
+        val now = Instant.now().epochSecond
+        val kind = req.kind.trim()
+        val title = req.title.trim()
+        val visibility = req.visibility.trim()
+        val summary = req.summary?.trim()?.ifEmpty { null }
+        val externalUrl = req.externalUrl?.trim()?.ifEmpty { null }
+        val cover = req.coverObjectKey?.trim()?.ifEmpty { null }?.let { key ->
+            mediaService.requireOwnedUploadKey(targetId, key)
+        }
+        val tradeId = req.tradeId?.let { Ids.parseOrNull(it) ?: badRequest("tradeId must be a UUID") }
+        return repository.transaction {
+            val existing = req.id?.let { raw ->
+                val itemId = Ids.parseOrNull(raw) ?: badRequest("id must be a UUID")
+                getPortfolioItem(itemId) ?: notFound("Portfolio item not found")
+            }
+            if (existing != null && existing.user_id != targetId) {
+                forbidden("Can only modify own portfolio items")
+            }
+            val previousCover = existing?.cover_object_key
+            if (cover != null) {
+                mediaService.commitKeys(targetId, listOf(cover))
+            }
+            val bodyId = upsertBodyDocument(
+                ownerId = targetId,
+                existingBodyId = existing?.body_document_id,
+                markdown = req.bodyMarkdown,
+                expectedRevision = req.bodyExpectedRevision?.toLong(),
+                now = now,
+            )
+            val resolvedCover = cover ?: previousCover
+            val item = if (existing == null) {
+                insertPortfolioItem(
+                    userId = targetId,
+                    kind = kind,
+                    title = title,
+                    summary = summary,
+                    bodyDocumentId = bodyId,
+                    feedItemId = null,
+                    tradeId = tradeId,
+                    externalUrl = externalUrl,
+                    coverObjectKey = resolvedCover,
+                    sortOrder = req.sortOrder.toLong(),
+                    visibility = visibility,
+                    updatedAt = now,
+                )
+            } else {
+                updatePortfolioItem(
+                    id = existing.id,
+                    userId = targetId,
+                    kind = kind,
+                    title = title,
+                    summary = summary,
+                    bodyDocumentId = bodyId ?: existing.body_document_id,
+                    feedItemId = null,
+                    tradeId = tradeId,
+                    externalUrl = externalUrl,
+                    coverObjectKey = if (req.coverObjectKey != null) cover else previousCover,
+                    sortOrder = req.sortOrder.toLong(),
+                    visibility = visibility,
+                    updatedAt = now,
+                ) ?: notFound("Portfolio item not found")
+            }
+            if (req.coverObjectKey != null && previousCover != null && previousCover != cover) {
+                mediaService.releaseKey(previousCover)
+            }
+            val resolvedBodyId = item.body_document_id
+            val body = resolvedBodyId?.let { getDocument(it)?.toRichDocument() }
+            item.toPortfolioItem(includeBody = true, body = body)
+        }
+    }
+
+    fun deletePortfolioItem(actorId: Uuid, idOrMe: String, itemId: Uuid): DeletePortfolioItemResponse {
+        val targetId = resolveUserId(idOrMe, actorId)
+        requireOwnProfile(actorId, targetId)
+        val existing = repository.getPortfolioItem(itemId) ?: notFound("Portfolio item not found")
+        if (existing.user_id != targetId) notFound("Portfolio item not found")
+        repository.deletePortfolioItem(itemId, targetId) ?: notFound("Portfolio item not found")
+        mediaService.releaseKey(existing.cover_object_key)
+        return DeletePortfolioItemResponse(id = itemId.toString())
+    }
+
+    fun pinPortfolioItem(actorId: Uuid, idOrMe: String, req: PinPortfolioItemRequest): PinPortfolioItemResponse {
+        val targetId = resolveUserId(idOrMe, actorId)
+        requireOwnProfile(actorId, targetId)
+        val itemId = Ids.parseOrNull(req.portfolioItemId) ?: badRequest("portfolioItemId must be a UUID")
+        val item = repository.getPortfolioItem(itemId) ?: notFound("Portfolio item not found")
+        if (item.user_id != targetId) forbidden("Can only pin own portfolio items")
+        if (item.visibility != "public") badRequest("Only public portfolio items can be pinned")
+        val count = repository.countProfilePins(targetId)
+        val alreadyPinned = repository.listProfilePins(targetId).any { it.id == itemId }
+        if (!alreadyPinned && count >= PortfolioValidation.MAX_PINS) {
+            badRequest("Maximum ${PortfolioValidation.MAX_PINS} pins allowed")
+        }
+        val sortOrder = count
+        repository.insertProfilePin(targetId, itemId, sortOrder)
+        return PinPortfolioItemResponse(portfolioItemId = itemId.toString(), sortOrder = sortOrder.toInt())
+    }
+
+    fun unpinPortfolioItem(actorId: Uuid, idOrMe: String, itemId: Uuid): UnpinPortfolioItemResponse {
+        val targetId = resolveUserId(idOrMe, actorId)
+        requireOwnProfile(actorId, targetId)
+        repository.deleteProfilePin(targetId, itemId) ?: notFound("Pin not found")
+        return UnpinPortfolioItemResponse(portfolioItemId = itemId.toString())
+    }
+
+    fun reorderProfilePins(
+        actorId: Uuid,
+        idOrMe: String,
+        req: ReorderProfilePinsRequest,
+    ): ReorderProfilePinsResponse {
+        val targetId = resolveUserId(idOrMe, actorId)
+        requireOwnProfile(actorId, targetId)
+        if (req.portfolioItemIds.size > PortfolioValidation.MAX_PINS) {
+            badRequest("Maximum ${PortfolioValidation.MAX_PINS} pins allowed")
+        }
+        val ids = req.portfolioItemIds.map { raw ->
+            Ids.parseOrNull(raw) ?: badRequest("portfolioItemIds must be UUIDs")
+        }
+        if (ids.toSet().size != ids.size) badRequest("portfolioItemIds must be unique")
+        ids.forEach { itemId ->
+            val item = repository.getPortfolioItem(itemId) ?: notFound("Portfolio item not found")
+            if (item.user_id != targetId) forbidden("Can only pin own portfolio items")
+            if (item.visibility != "public") badRequest("Only public portfolio items can be pinned")
+        }
+        repository.transaction {
+            replaceProfilePins(targetId, ids)
+        }
+        return ReorderProfilePinsResponse(portfolioItemIds = ids.map { it.toString() })
+    }
+
+    fun listPublicActivity(idOrMe: String, viewerId: Uuid?): ListPublicActivityResponse {
+        val targetId = resolveUserId(idOrMe, viewerId)
+        enforcePublicTargetAccess(viewerId, targetId)
+        repository.getUserById(targetId) ?: notFound("User not found")
+        return ListPublicActivityResponse()
+    }
+
     fun isAdmin(userId: Uuid): Boolean =
         adminConfig.isAdminGoogleSubject(repository.findGoogleProviderUserId(userId))
+
+    /**
+     * Resolve path `{idOrMe}`: `me` → caller UUID (auth required); UUID; or username.
+     */
+    fun resolveUserId(idOrMe: String, viewerId: Uuid?): Uuid {
+        if (idOrMe == "me") {
+            return viewerId ?: unauthorized("Authentication required")
+        }
+        Ids.parseOrNull(idOrMe)?.let { id ->
+            repository.getUserById(id) ?: notFound("User not found")
+            return id
+        }
+        return repository.findUserByUsername(idOrMe)?.id
+            ?: notFound("User not found")
+    }
+
+    private fun upsertProfileBioDocument(
+        ownerId: Uuid,
+        sourceMarkdown: String,
+        expectedRevision: Long?,
+        now: Long,
+    ) {
+        repository.transaction {
+            val existing = getProfileBioDocument(ownerId)
+            if (existing == null) {
+                val created = createDocument(ownerId, sourceMarkdown, now)
+                insertDocumentRevision(created.id, created.revision, created.source, now)
+                upsertProfileBio(ownerId, created.id, now)
+            } else {
+                val updated = updateDocument(
+                    id = existing.id,
+                    ownerUserId = ownerId,
+                    source = sourceMarkdown,
+                    updatedAt = now,
+                    expectedRevision = expectedRevision,
+                ) ?: conflict("Document revision conflict")
+                insertDocumentRevision(updated.id, updated.revision, updated.source, now)
+                upsertProfileBio(ownerId, updated.id, now)
+            }
+        }
+    }
+
+    private fun UserRepository.upsertBodyDocument(
+        ownerId: Uuid,
+        existingBodyId: Uuid?,
+        markdown: String?,
+        expectedRevision: Long?,
+        now: Long,
+    ): Uuid? {
+        if (markdown == null) return existingBodyId
+        return if (existingBodyId == null) {
+            val created = createDocument(ownerId, markdown, now)
+            insertDocumentRevision(created.id, created.revision, created.source, now)
+            created.id
+        } else {
+            val updated = updateDocument(
+                id = existingBodyId,
+                ownerUserId = ownerId,
+                source = markdown,
+                updatedAt = now,
+                expectedRevision = expectedRevision,
+            ) ?: conflict("Document revision conflict")
+            insertDocumentRevision(updated.id, updated.revision, updated.source, now)
+            updated.id
+        }
+    }
 
     private fun enforcePublicTargetAccess(viewerId: Uuid?, targetId: Uuid) {
         if (viewerId == null || viewerId == targetId) return
@@ -243,7 +499,6 @@ class UserService(
         val username: String,
         val display_name: String?,
         val avatar_url: String?,
-        val bio: String?,
         val seller_headline: String?,
         val location_tag: String?,
         val timezone: String?,
@@ -266,7 +521,6 @@ class UserService(
         username = username,
         display_name = display_name,
         avatar_url = avatar_url,
-        bio = bio,
         seller_headline = seller_headline,
         location_tag = location_tag,
         timezone = timezone,
@@ -281,7 +535,6 @@ class UserService(
         username = username,
         display_name = display_name,
         avatar_url = avatar_url,
-        bio = bio,
         seller_headline = seller_headline,
         location_tag = location_tag,
         timezone = timezone,
@@ -303,7 +556,6 @@ class UserService(
             return cachedExplicit to cachedImplicit.toInt()
         }
         val explicit = repository.calculateUserRatingAvg(userId)
-        // Trust ledger not shipped yet — keep cached implicit on refresh.
         val implicit = cachedImplicit
         repository.upsertUserStatsValues(userId, explicit, implicit, now)
         return explicit to implicit.toInt()
@@ -314,6 +566,47 @@ class UserService(
             forbidden("Can only modify own profile")
         }
     }
+
+    private fun Documents.toRichDocument() = RichDocument(
+        id = id.toString(),
+        format = format,
+        sourceMarkdown = source,
+        revision = revision.toInt(),
+        updatedAt = Instant.ofEpochSecond(updated_at).toString(),
+    )
+
+    private fun User_portfolio_items.toPortfolioItem(
+        includeBody: Boolean,
+        body: RichDocument? = null,
+    ) = PortfolioItem(
+        id = id.toString(),
+        kind = kind,
+        title = title,
+        summary = summary,
+        body = if (includeBody) body else null,
+        feedItemId = feed_item_id?.toString(),
+        tradeId = trade_id?.toString(),
+        externalUrl = external_url,
+        coverUrl = mediaService.publicUrl(cover_object_key),
+        visibility = visibility,
+        sortOrder = sort_order.toInt(),
+        createdAt = Ids.createdAtInstant(id).toString(),
+    )
+
+    private fun ListProfilePins.toPortfolioItem() = PortfolioItem(
+        id = id.toString(),
+        kind = kind,
+        title = title,
+        summary = summary,
+        body = null,
+        feedItemId = feed_item_id?.toString(),
+        tradeId = trade_id?.toString(),
+        externalUrl = external_url,
+        coverUrl = mediaService.publicUrl(cover_object_key),
+        visibility = visibility,
+        sortOrder = pin_sort_order.toInt(),
+        createdAt = Ids.createdAtInstant(id).toString(),
+    )
 
     companion object {
         private const val TRUST_STALE_SECONDS = 3600L

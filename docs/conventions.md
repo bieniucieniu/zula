@@ -22,6 +22,24 @@ Follow [architecture.md](./architecture.md#ktor-project-layout):
 
 ---
 
+## Client feature layout (`apps/web`, `apps/native`)
+
+Mirror backend feature silos. Domain UI lives under **`src/features/{name}/`**, not a flat `components/` dump.
+
+| Path | Owns |
+|------|------|
+| **`src/features/{name}/`** | Feature screens/widgets for that domain (`auth`, `user`, …) — align names with server `features:*` when practical |
+| **`src/components/`** | Shared UI only (`ui/`, layouts, action primitives) — no feature business screens |
+| **`src/routes/`** (web) / **app routes** (native) | Thin route shells: load data, compose feature components |
+| **`src/lib/`** | Cross-cutting helpers (auth session, API boot, utils) — not feature-specific screens |
+
+**Do:** `apps/web/src/features/user/portfolio-edit.tsx`, import as `@/features/user/portfolio-edit`.  
+**Don't:** park seller/profile/auth screens under `components/` next to shadcn primitives.
+
+Same rule for `apps/native/src` when adding screens. Shared packages stay in `packages/*` (`@zula/api`, `@zula/oauth`).
+
+---
+
 ## Keep `ApplicationCall` out of services
 
 Routing owns HTTP. Services take plain data.

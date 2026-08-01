@@ -4,6 +4,8 @@
  * Untitled API
  * OpenAPI spec version: 1.0.0
  */
+import type { PortfolioItem } from "./portfolioItem"
+import type { RichDocument } from "./richDocument"
 import type { SellerActivityCounts } from "./sellerActivityCounts"
 import type { SellerReviewPreview } from "./sellerReviewPreview"
 
@@ -14,8 +16,7 @@ export interface SellerProfileResponse {
   displayName?: string | null
   /** @nullable */
   avatarUrl?: string | null
-  /** @nullable */
-  bio?: string | null
+  bio?: RichDocument | null
   /** @nullable */
   sellerHeadline?: string | null
   /** @nullable */
@@ -26,6 +27,7 @@ export interface SellerProfileResponse {
   ratingCount: number
   activity?: SellerActivityCounts | null
   recentReviews?: SellerReviewPreview[]
+  pins?: PortfolioItem[]
   /** @nullable */
   viewerHasBlocked?: boolean | null
   /** @nullable */

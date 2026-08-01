@@ -1,0 +1,149 @@
+createDocument:
+INSERT INTO documents (owner_user_id, format, source, revision, updated_at)
+VALUES (?, 'markdown', ?, 1, ?)
+RETURNING *;
+
+getDocument:
+SELECT * FROM documents WHERE id = ? LIMIT 1;
+
+updateDocument:
+UPDATE documents
+SET source = ?,
+    revision = revision + 1,
+    updated_at = ?
+WHERE id = ? AND owner_user_id = ?
+RETURNING *;
+
+updateDocumentIfRevision:
+UPDATE documents
+SET source = ?,
+    revision = revision + 1,
+    updated_at = ?
+WHERE id = ? AND owner_user_id = ? AND revision = ?
+RETURNING *;
+
+insertDocumentRevision:
+INSERT INTO document_revisions (document_id, revision, source, created_at)
+VALUES (?, ?, ?, ?);
+
+getProfileBioDocument:
+SELECT d.id, d.owner_user_id, d.format, d.source, d.revision, d.updated_at
+FROM user_profile_bio upb
+JOIN documents d ON d.id = upb.document_id
+WHERE upb.user_id = ?
+LIMIT 1;
+
+getProfileBioRow:
+SELECT * FROM user_profile_bio WHERE user_id = ? LIMIT 1;
+
+upsertProfileBio:
+INSERT INTO user_profile_bio (user_id, document_id, updated_at)
+VALUES (?, ?, ?)
+ON CONFLICT(user_id) DO UPDATE SET
+    document_id = excluded.document_id,
+    updated_at = excluded.updated_at;
+
+insertPortfolioItem:
+INSERT INTO user_portfolio_items (
+    user_id, kind, title, summary, body_document_id, feed_item_id, trade_id,
+    external_url, cover_object_key, sort_order, visibility, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+RETURNING *;
+
+updatePortfolioItem:
+UPDATE user_portfolio_items SET
+    kind = ?,
+    title = ?,
+    summary = ?,
+    body_document_id = ?,
+    feed_item_id = ?,
+    trade_id = ?,
+    external_url = ?,
+    cover_object_key = ?,
+    sort_order = ?,
+    visibility = ?,
+    updated_at = ?
+WHERE id = ? AND user_id = ?
+RETURNING *;
+
+getPortfolioItem:
+SELECT * FROM user_portfolio_items WHERE id = ? LIMIT 1;
+
+deletePortfolioItem:
+DELETE FROM user_portfolio_items
+WHERE id = ? AND user_id = ?
+RETURNING id;
+
+listPortfolioItemsPublicFirstPage:
+SELECT *
+FROM user_portfolio_items
+WHERE user_id = ?
+  AND visibility = 'public'
+ORDER BY id DESC
+LIMIT ?;
+
+listPortfolioItemsPublicPage:
+SELECT *
+FROM user_portfolio_items
+WHERE user_id = ?
+  AND visibility = 'public'
+  AND id < ?
+ORDER BY id DESC
+LIMIT ?;
+
+listPortfolioItemsOwnerFirstPage:
+SELECT *
+FROM user_portfolio_items
+WHERE user_id = ?
+ORDER BY id DESC
+LIMIT ?;
+
+listPortfolioItemsOwnerPage:
+SELECT *
+FROM user_portfolio_items
+WHERE user_id = ?
+  AND id < ?
+ORDER BY id DESC
+LIMIT ?;
+
+listProfilePins:
+SELECT
+    pi.id,
+    pi.user_id,
+    pi.kind,
+    pi.title,
+    pi.summary,
+    pi.body_document_id,
+    pi.feed_item_id,
+    pi.trade_id,
+    pi.external_url,
+    pi.cover_object_key,
+    pi.sort_order AS item_sort_order,
+    pi.visibility,
+    pi.updated_at,
+    pin.sort_order AS pin_sort_order
+FROM user_profile_pins pin
+JOIN user_portfolio_items pi ON pi.id = pin.portfolio_item_id
+WHERE pin.user_id = ?
+ORDER BY pin.sort_order ASC, pi.id DESC
+LIMIT 6;
+
+countProfilePins:
+SELECT count(*) FROM user_profile_pins WHERE user_id = ?;
+
+insertProfilePin:
+INSERT INTO user_profile_pins (user_id, portfolio_item_id, sort_order)
+VALUES (?, ?, ?)
+ON CONFLICT DO NOTHING;
+
+deleteProfilePin:
+DELETE FROM user_profile_pins
+WHERE user_id = ? AND portfolio_item_id = ?
+RETURNING portfolio_item_id;
+
+deleteAllProfilePins:
+DELETE FROM user_profile_pins WHERE user_id = ?;
+
+insertProfilePinOrdered:
+INSERT INTO user_profile_pins (user_id, portfolio_item_id, sort_order)
+VALUES (?, ?, ?);

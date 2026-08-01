@@ -11,6 +11,8 @@ export interface UpdateMyProfileRequest {
   /** @nullable */
   bio?: string | null
   /** @nullable */
+  bioExpectedRevision?: number | null
+  /** @nullable */
   avatarUrl?: string | null
   /** @nullable */
   sellerHeadline?: string | null

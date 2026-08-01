@@ -20,3 +20,9 @@ export {
   toStoredOAuthSession,
   type StoredOAuthSession,
 } from "./oauth"
+export {
+  requestUpload,
+  uploadImageObject,
+  type RequestUploadRequest,
+  type RequestUploadResponse,
+} from "./media"

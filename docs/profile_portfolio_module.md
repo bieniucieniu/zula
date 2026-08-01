@@ -2,7 +2,7 @@
 
 GitHub-style profiles: README, pinned work, portfolio, public activity, and app-wide markdown documents.
 
-**Status:** Doc complete · **Backend:** 🔶 partial (portfolio-A, portfolio-B) · **Feature:** `features:user`
+**Status:** Doc complete · **Backend:** ✅ A–B (`offer` feed link + activity stub open) · **Feature:** `features:user`
 
 **Depends on:** [user_module.md](./user_module.md), [seller_profile_module.md](./seller_profile_module.md) · **Unblocks:** rich feed bodies (portfolio-C)
 
@@ -32,14 +32,15 @@ In Zula there is no separate seller account: any user can buy, sell, or barter. 
 
 | GitHub | Zula |
 |--------|------|
-| Profile README | `user_profile_readme` → `documents` |
+| Profile bio | `user_profile_bio` → `documents` |
 | Pinned repositories | `user_profile_pins` → `user_portfolio_items` |
 | Repository list | Portfolio grid + `GET /api/feed/by-author/{id}` (active listings) |
 | Contribution graph | `GET /api/activity/public` (fulfilled items, public deals) |
 | Stars / reputation | `user_stats` + `user_ratings` (existing) |
-| Short name / bio line | `seller_headline` + short `bio` on `user_profiles` |
+| Short name / headline | `seller_headline` on `user_profiles` |
+| Profile bio | `user_profile_bio` → `documents` (markdown) |
 
-**Principle:** keep **identity**, **readme**, **pins**, **portfolio**, and **activity timeline** as separate concepts. Do not overload `user_profiles.bio` with a full README.
+**Principle:** one markdown **bio** document per user (via `documents`). Do not keep a separate plain-text bio column.
 
 ---
 
@@ -144,7 +145,7 @@ One readme per user. Deleting a user cascades profile row; `documents` cascade f
 
 | Field | Table | Use |
 |-------|-------|-----|
-| `bio` | `user_profiles` | Plain text ~300 chars — feed cards, search snippets |
+| `bio` | `user_profiles` | Plain text ≤2000 chars — feed cards, search snippets |
 | `seller_headline` | `user_profiles` | One line under name |
 | README | `user_profile_readme` → `documents` | Full profile page body — markdown, images, lists |
 
@@ -278,15 +279,15 @@ Extend DTOs in `core/openapi/src/main/kotlin/dto/` (`document.kt`, `portfolio.kt
 | Method | Path | Request | Response | Auth |
 |--------|------|---------|----------|------|
 | `GET` | `/api/sellers/{idOrUsername}` | — | `SellerProfileResponse` (+ readme, pins) | Public |
-| `GET` | `/api/users/{userId}/readme` | — | `RichDocument` | Public |
+| `GET` | `/api/users/{idOrMe}/readme` | — | `RichDocument` | Public (`me` needs JWT) |
 | `PUT` | `/api/users/me/readme` | `UpdateProfileReadmeRequest` | `RichDocument` | Auth |
-| `GET` | `/api/portfolio` | `user_id`, `PortfolioCursor`, `limit` | `ListPortfolioItemsResponse` | Public |
-| `POST` | `/api/portfolio/items` | `UpsertPortfolioItemRequest` | `PortfolioItem` | Auth |
-| `DELETE` | `/api/portfolio/items/{id}` | — | `DeletePortfolioItemResponse` | Auth |
-| `POST` | `/api/portfolio/pins` | `PinPortfolioItemRequest` | `PinPortfolioItemResponse` | Auth |
-| `DELETE` | `/api/portfolio/pins/{id}` | — | `UnpinPortfolioItemResponse` | Auth |
-| `PUT` | `/api/portfolio/pins/reorder` | `ReorderProfilePinsRequest` | `ReorderProfilePinsResponse` | Auth |
-| `GET` | `/api/activity/public` | `user_id`, `ProfileCursor`, `limit` | `ListPublicActivityResponse` | Public |
+| `GET` | `/api/users/{idOrMe}/portfolio` | `ProfileCursor`, `limit` | `ListPortfolioItemsResponse` | Public |
+| `POST` | `/api/users/me/portfolio/items` | `UpsertPortfolioItemRequest` | `PortfolioItem` | Auth |
+| `DELETE` | `/api/users/me/portfolio/items/{id}` | — | `DeletePortfolioItemResponse` | Auth |
+| `POST` | `/api/users/me/portfolio/pins` | `PinPortfolioItemRequest` | `PinPortfolioItemResponse` | Auth |
+| `DELETE` | `/api/users/me/portfolio/pins/{id}` | — | `UnpinPortfolioItemResponse` | Auth |
+| `PUT` | `/api/users/me/portfolio/pins/reorder` | `ReorderProfilePinsRequest` | `ReorderProfilePinsResponse` | Auth |
+| `GET` | `/api/users/{idOrMe}/activity` | `ProfileCursor`, `limit` | `ListPublicActivityResponse` | Public (empty until feed) |
 
 ### 5.2 DTO summaries
 
@@ -576,19 +577,18 @@ Use `documents` for every long text field:
 
 ### Phase portfolio-A — Documents + profile README ✅
 
-- [x] `documents` + `document_revisions` in `000001_init.sql`
+- [x] `documents` + `document_revisions` in `0.sqm`
 - [x] Document helpers in `UserService`
-- [x] `user_profile_readme` + `PUT /api/users/me/readme` / `GET …/readme`
+- [x] `user_profile_readme` + `PUT /api/users/me/readme` / `GET /api/users/{idOrMe}/readme`
 - [x] `GET /api/sellers/{idOrUsername}` includes readme + pins
-- [x] Tests: length limits, source persistence
+- [x] Tests: length limits, validation
 
 ### Phase portfolio-B — Portfolio & pins ✅
 
-- [x] `user_portfolio_items` + `user_profile_pins`
-- [x] Portfolio CRUD + pin/unpin/reorder (max 6)
-- [x] `GET /api/portfolio` keyset pagination
-- [ ] Link `offer` items to `feed_items` (needs feed)
-
+- [x] `user_portfolio_items` + `user_profile_pins` in `0.sqm`
+- [x] Portfolio CRUD + pin/unpin/reorder (max 6) under `/api/users/me/portfolio/**`
+- [x] `GET /api/users/{idOrMe}/portfolio` keyset pagination (`ProfileCursor`)
+- [ ] Link `offer` items to `feed_items` (needs feed; creates rejected until then)
 ### Phase portfolio-C — Feed body migration
 
 - [ ] `feed_items.body_document_id` migration

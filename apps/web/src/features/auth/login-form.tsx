@@ -1,4 +1,4 @@
-import { OAuthSignInButtons } from "@/components/oauth-sign-in-buttons"
+import { OAuthSignInButtons } from "@/features/auth/oauth-sign-in-buttons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
