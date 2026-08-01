@@ -36,8 +36,8 @@ RUN ./gradlew :server:shadowJar --no-daemon -x test
 FROM ${JRE_IMAGE} AS runtime
 WORKDIR /app
 
-RUN groupadd --system --gid 10001 zula \
-  && useradd --system --uid 10001 --gid zula --home-dir /app --shell /usr/sbin/nologin zula
+RUN addgroup -S -g 10001 zula \
+  && adduser -S -u 10001 -G zula -h /app -s /sbin/nologin zula
 
 COPY --from=build --chown=zula:zula /workspace/server/build/libs/server-all.jar /app/server.jar
 
