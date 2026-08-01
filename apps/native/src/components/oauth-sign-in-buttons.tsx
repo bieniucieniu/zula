@@ -128,7 +128,7 @@ export function OAuthSignInButtons({ disabled, onSuccess }: OAuthSignInButtonsPr
             disabled={disabled}
             onAuthenticated={onSuccess}
           />
-        ),
+        )
       )}
     </View>
   )
