@@ -1,59 +1,27 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
-import { useLogout } from "@zula/api/endpoints"
-import { useEffect, useState } from "react"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useEffect } from "react"
 import { useAuth } from "@/lib/auth"
-import { cn } from "@/lib/utils"
 
-export const Route = createFileRoute("/")({ component: App })
+export const Route = createFileRoute("/")({
+  component: HomeRedirect,
+})
 
-function App() {
-  const { session, ready, refresh } = useAuth()
-  const logout = useLogout()
+function HomeRedirect() {
+  const { session, ready } = useAuth()
   const navigate = useNavigate()
-  const [pending, setPending] = useState(false)
 
   useEffect(() => {
-    if (ready && !session) {
+    if (!ready) return
+    if (session) {
+      void navigate({ to: "/feed" })
+    } else {
       void navigate({ to: "/login" })
     }
   }, [ready, session, navigate])
 
-  if (!ready || !session) {
-    return (
-      <div className="flex min-h-svh items-center justify-center p-6">
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      </div>
-    )
-  }
-
-  async function onLogout() {
-    setPending(true)
-    try {
-      await logout.mutateAsync({})
-    } catch {
-      // still clear local session query
-    } finally {
-      await refresh()
-      setPending(false)
-      await navigate({ to: "/login" })
-    }
-  }
-
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-4 p-6">
-      <div className="flex max-w-sm flex-col items-center gap-2 text-center">
-        <h1 className="font-heading text-lg font-medium">Signed in</h1>
-        <p className="text-sm text-muted-foreground">{session.email}</p>
-        <div className="flex gap-2 pt-2">
-          <Link to="/profile" className={cn(buttonVariants({ variant: "outline" }))}>
-            Profile
-          </Link>
-          <Button variant="outline" disabled={pending} onClick={() => void onLogout()}>
-            {pending ? "Logging out…" : "Logout"}
-          </Button>
-        </div>
-      </div>
+    <div className="flex min-h-svh items-center justify-center p-6">
+      <p className="text-sm text-muted-foreground">Loading…</p>
     </div>
   )
 }

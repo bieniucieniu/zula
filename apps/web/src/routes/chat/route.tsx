@@ -1,11 +1,11 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router"
 import { AppShell, RequireAuth } from "@/features/app/app-shell"
 
-export const Route = createFileRoute("/profile")({
-  component: ProfileLayout,
+export const Route = createFileRoute("/chat")({
+  component: ChatLayout,
 })
 
-function ProfileLayout() {
+function ChatLayout() {
   return (
     <RequireAuth>
       <AppShell>

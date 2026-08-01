@@ -10,17 +10,46 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChatRouteRouteImport } from './routes/chat/route'
+import { Route as FeedRouteRouteImport } from './routes/feed/route'
+import { Route as GroupsRouteRouteImport } from './routes/groups/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteRouteImport } from './routes/profile/route'
+import { Route as TradesRouteRouteImport } from './routes/trades/route'
+import { Route as FeedIndexRouteImport } from './routes/feed/index'
+import { Route as FeedBookmarksRouteImport } from './routes/feed/bookmarks'
+import { Route as FeedNewRouteImport } from './routes/feed/new'
+import { Route as GroupsIndexRouteImport } from './routes/groups/index'
+import { Route as GroupsIdOrSlugRouteImport } from './routes/groups/$idOrSlug'
+import { Route as GroupsNewRouteImport } from './routes/groups/new'
 import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as ProfileEditRouteImport } from './routes/profile/edit'
 import { Route as ProfilePortfolioRouteImport } from './routes/profile/portfolio'
 import { Route as SellersIdOrUsernameRouteImport } from './routes/sellers/$idOrUsername'
+import { Route as TradesIdRouteImport } from './routes/trades/$id'
+import { Route as TradesNewRouteImport } from './routes/trades/new'
+import { Route as ChatRoomsIdRouteImport } from './routes/chat/rooms/$id'
+import { Route as FeedItemsIdRouteImport } from './routes/feed/items/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRouteRoute = ChatRouteRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedRouteRoute = FeedRouteRouteImport.update({
+  id: '/feed',
+  path: '/feed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GroupsRouteRoute = GroupsRouteRouteImport.update({
+  id: '/groups',
+  path: '/groups',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -32,6 +61,41 @@ const ProfileRouteRoute = ProfileRouteRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => rootRouteImport,
+} as any)
+const TradesRouteRoute = TradesRouteRouteImport.update({
+  id: '/trades',
+  path: '/trades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FeedIndexRoute = FeedIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FeedRouteRoute,
+} as any)
+const FeedBookmarksRoute = FeedBookmarksRouteImport.update({
+  id: '/bookmarks',
+  path: '/bookmarks',
+  getParentRoute: () => FeedRouteRoute,
+} as any)
+const FeedNewRoute = FeedNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => FeedRouteRoute,
+} as any)
+const GroupsIndexRoute = GroupsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => GroupsRouteRoute,
+} as any)
+const GroupsIdOrSlugRoute = GroupsIdOrSlugRouteImport.update({
+  id: '/$idOrSlug',
+  path: '/$idOrSlug',
+  getParentRoute: () => GroupsRouteRoute,
+} as any)
+const GroupsNewRoute = GroupsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => GroupsRouteRoute,
 } as any)
 const OauthCompleteRoute = OauthCompleteRouteImport.update({
   id: '/oauth/complete',
@@ -58,72 +122,176 @@ const SellersIdOrUsernameRoute = SellersIdOrUsernameRouteImport.update({
   path: '/sellers/$idOrUsername',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TradesIdRoute = TradesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TradesRouteRoute,
+} as any)
+const TradesNewRoute = TradesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => TradesRouteRoute,
+} as any)
+const ChatRoomsIdRoute = ChatRoomsIdRouteImport.update({
+  id: '/rooms/$id',
+  path: '/rooms/$id',
+  getParentRoute: () => ChatRouteRoute,
+} as any)
+const FeedItemsIdRoute = FeedItemsIdRouteImport.update({
+  id: '/items/$id',
+  path: '/items/$id',
+  getParentRoute: () => FeedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRouteRouteWithChildren
+  '/feed': typeof FeedRouteRouteWithChildren
+  '/groups': typeof GroupsRouteRouteWithChildren
   '/profile': typeof ProfileRouteRouteWithChildren
+  '/trades': typeof TradesRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/feed/bookmarks': typeof FeedBookmarksRoute
+  '/feed/new': typeof FeedNewRoute
+  '/groups/$idOrSlug': typeof GroupsIdOrSlugRoute
+  '/groups/new': typeof GroupsNewRoute
   '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/trades/$id': typeof TradesIdRoute
+  '/trades/new': typeof TradesNewRoute
+  '/feed/': typeof FeedIndexRoute
+  '/groups/': typeof GroupsIndexRoute
   '/profile/': typeof ProfileIndexRoute
+  '/chat/rooms/$id': typeof ChatRoomsIdRoute
+  '/feed/items/$id': typeof FeedItemsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRouteRouteWithChildren
+  '/trades': typeof TradesRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/feed/bookmarks': typeof FeedBookmarksRoute
+  '/feed/new': typeof FeedNewRoute
+  '/groups/$idOrSlug': typeof GroupsIdOrSlugRoute
+  '/groups/new': typeof GroupsNewRoute
   '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/trades/$id': typeof TradesIdRoute
+  '/trades/new': typeof TradesNewRoute
+  '/feed': typeof FeedIndexRoute
+  '/groups': typeof GroupsIndexRoute
   '/profile': typeof ProfileIndexRoute
+  '/chat/rooms/$id': typeof ChatRoomsIdRoute
+  '/feed/items/$id': typeof FeedItemsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat': typeof ChatRouteRouteWithChildren
+  '/feed': typeof FeedRouteRouteWithChildren
+  '/groups': typeof GroupsRouteRouteWithChildren
   '/profile': typeof ProfileRouteRouteWithChildren
+  '/trades': typeof TradesRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/feed/bookmarks': typeof FeedBookmarksRoute
+  '/feed/new': typeof FeedNewRoute
+  '/groups/$idOrSlug': typeof GroupsIdOrSlugRoute
+  '/groups/new': typeof GroupsNewRoute
   '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/trades/$id': typeof TradesIdRoute
+  '/trades/new': typeof TradesNewRoute
+  '/feed/': typeof FeedIndexRoute
+  '/groups/': typeof GroupsIndexRoute
   '/profile/': typeof ProfileIndexRoute
+  '/chat/rooms/$id': typeof ChatRoomsIdRoute
+  '/feed/items/$id': typeof FeedItemsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/chat'
+    | '/feed'
+    | '/groups'
     | '/profile'
+    | '/trades'
     | '/login'
+    | '/feed/bookmarks'
+    | '/feed/new'
+    | '/groups/$idOrSlug'
+    | '/groups/new'
     | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
     | '/sellers/$idOrUsername'
+    | '/trades/$id'
+    | '/trades/new'
+    | '/feed/'
+    | '/groups/'
     | '/profile/'
+    | '/chat/rooms/$id'
+    | '/feed/items/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/chat'
+    | '/trades'
     | '/login'
+    | '/feed/bookmarks'
+    | '/feed/new'
+    | '/groups/$idOrSlug'
+    | '/groups/new'
     | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
     | '/sellers/$idOrUsername'
+    | '/trades/$id'
+    | '/trades/new'
+    | '/feed'
+    | '/groups'
     | '/profile'
+    | '/chat/rooms/$id'
+    | '/feed/items/$id'
   id:
     | '__root__'
     | '/'
+    | '/chat'
+    | '/feed'
+    | '/groups'
     | '/profile'
+    | '/trades'
     | '/login'
+    | '/feed/bookmarks'
+    | '/feed/new'
+    | '/groups/$idOrSlug'
+    | '/groups/new'
     | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
     | '/sellers/$idOrUsername'
+    | '/trades/$id'
+    | '/trades/new'
+    | '/feed/'
+    | '/groups/'
     | '/profile/'
+    | '/chat/rooms/$id'
+    | '/feed/items/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatRouteRoute: typeof ChatRouteRouteWithChildren
+  FeedRouteRoute: typeof FeedRouteRouteWithChildren
+  GroupsRouteRoute: typeof GroupsRouteRouteWithChildren
   ProfileRouteRoute: typeof ProfileRouteRouteWithChildren
+  TradesRouteRoute: typeof TradesRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   OauthCompleteRoute: typeof OauthCompleteRoute
   SellersIdOrUsernameRoute: typeof SellersIdOrUsernameRoute
@@ -136,6 +304,27 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feed': {
+      id: '/feed'
+      path: '/feed'
+      fullPath: '/feed'
+      preLoaderRoute: typeof FeedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/groups': {
+      id: '/groups'
+      path: '/groups'
+      fullPath: '/groups'
+      preLoaderRoute: typeof GroupsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -151,6 +340,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/trades': {
+      id: '/trades'
+      path: '/trades'
+      fullPath: '/trades'
+      preLoaderRoute: typeof TradesRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/feed/': {
+      id: '/feed/'
+      path: '/'
+      fullPath: '/feed/'
+      preLoaderRoute: typeof FeedIndexRouteImport
+      parentRoute: typeof FeedRouteRoute
+    }
+    '/feed/bookmarks': {
+      id: '/feed/bookmarks'
+      path: '/bookmarks'
+      fullPath: '/feed/bookmarks'
+      preLoaderRoute: typeof FeedBookmarksRouteImport
+      parentRoute: typeof FeedRouteRoute
+    }
+    '/feed/new': {
+      id: '/feed/new'
+      path: '/new'
+      fullPath: '/feed/new'
+      preLoaderRoute: typeof FeedNewRouteImport
+      parentRoute: typeof FeedRouteRoute
+    }
+    '/groups/': {
+      id: '/groups/'
+      path: '/'
+      fullPath: '/groups/'
+      preLoaderRoute: typeof GroupsIndexRouteImport
+      parentRoute: typeof GroupsRouteRoute
+    }
+    '/groups/$idOrSlug': {
+      id: '/groups/$idOrSlug'
+      path: '/$idOrSlug'
+      fullPath: '/groups/$idOrSlug'
+      preLoaderRoute: typeof GroupsIdOrSlugRouteImport
+      parentRoute: typeof GroupsRouteRoute
+    }
+    '/groups/new': {
+      id: '/groups/new'
+      path: '/new'
+      fullPath: '/groups/new'
+      preLoaderRoute: typeof GroupsNewRouteImport
+      parentRoute: typeof GroupsRouteRoute
     }
     '/oauth/complete': {
       id: '/oauth/complete'
@@ -187,8 +425,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SellersIdOrUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/trades/$id': {
+      id: '/trades/$id'
+      path: '/$id'
+      fullPath: '/trades/$id'
+      preLoaderRoute: typeof TradesIdRouteImport
+      parentRoute: typeof TradesRouteRoute
+    }
+    '/trades/new': {
+      id: '/trades/new'
+      path: '/new'
+      fullPath: '/trades/new'
+      preLoaderRoute: typeof TradesNewRouteImport
+      parentRoute: typeof TradesRouteRoute
+    }
+    '/chat/rooms/$id': {
+      id: '/chat/rooms/$id'
+      path: '/rooms/$id'
+      fullPath: '/chat/rooms/$id'
+      preLoaderRoute: typeof ChatRoomsIdRouteImport
+      parentRoute: typeof ChatRouteRoute
+    }
+    '/feed/items/$id': {
+      id: '/feed/items/$id'
+      path: '/items/$id'
+      fullPath: '/feed/items/$id'
+      preLoaderRoute: typeof FeedItemsIdRouteImport
+      parentRoute: typeof FeedRouteRoute
+    }
   }
 }
+
+interface ChatRouteRouteChildren {
+  ChatRoomsIdRoute: typeof ChatRoomsIdRoute
+}
+
+const ChatRouteRouteChildren: ChatRouteRouteChildren = {
+  ChatRoomsIdRoute: ChatRoomsIdRoute,
+}
+
+const ChatRouteRouteWithChildren = ChatRouteRoute._addFileChildren(
+  ChatRouteRouteChildren,
+)
+
+interface FeedRouteRouteChildren {
+  FeedBookmarksRoute: typeof FeedBookmarksRoute
+  FeedNewRoute: typeof FeedNewRoute
+  FeedIndexRoute: typeof FeedIndexRoute
+  FeedItemsIdRoute: typeof FeedItemsIdRoute
+}
+
+const FeedRouteRouteChildren: FeedRouteRouteChildren = {
+  FeedBookmarksRoute: FeedBookmarksRoute,
+  FeedNewRoute: FeedNewRoute,
+  FeedIndexRoute: FeedIndexRoute,
+  FeedItemsIdRoute: FeedItemsIdRoute,
+}
+
+const FeedRouteRouteWithChildren = FeedRouteRoute._addFileChildren(
+  FeedRouteRouteChildren,
+)
+
+interface GroupsRouteRouteChildren {
+  GroupsIdOrSlugRoute: typeof GroupsIdOrSlugRoute
+  GroupsNewRoute: typeof GroupsNewRoute
+  GroupsIndexRoute: typeof GroupsIndexRoute
+}
+
+const GroupsRouteRouteChildren: GroupsRouteRouteChildren = {
+  GroupsIdOrSlugRoute: GroupsIdOrSlugRoute,
+  GroupsNewRoute: GroupsNewRoute,
+  GroupsIndexRoute: GroupsIndexRoute,
+}
+
+const GroupsRouteRouteWithChildren = GroupsRouteRoute._addFileChildren(
+  GroupsRouteRouteChildren,
+)
 
 interface ProfileRouteRouteChildren {
   ProfileEditRoute: typeof ProfileEditRoute
@@ -206,9 +518,27 @@ const ProfileRouteRouteWithChildren = ProfileRouteRoute._addFileChildren(
   ProfileRouteRouteChildren,
 )
 
+interface TradesRouteRouteChildren {
+  TradesIdRoute: typeof TradesIdRoute
+  TradesNewRoute: typeof TradesNewRoute
+}
+
+const TradesRouteRouteChildren: TradesRouteRouteChildren = {
+  TradesIdRoute: TradesIdRoute,
+  TradesNewRoute: TradesNewRoute,
+}
+
+const TradesRouteRouteWithChildren = TradesRouteRoute._addFileChildren(
+  TradesRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatRouteRoute: ChatRouteRouteWithChildren,
+  FeedRouteRoute: FeedRouteRouteWithChildren,
+  GroupsRouteRoute: GroupsRouteRouteWithChildren,
   ProfileRouteRoute: ProfileRouteRouteWithChildren,
+  TradesRouteRoute: TradesRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   OauthCompleteRoute: OauthCompleteRoute,
   SellersIdOrUsernameRoute: SellersIdOrUsernameRoute,

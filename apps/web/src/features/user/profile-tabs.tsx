@@ -1,6 +1,7 @@
 import type { PortfolioItem, SellerProfileResponse } from "@zula/api"
-import { useListPortfolioItems } from "@zula/api/endpoints"
+import { useListFeedByAuthor, useListPortfolioItems } from "@zula/api/endpoints"
 import { Link } from "@tanstack/react-router"
+import { FeedItemCard } from "@/features/feed/feed-item-card"
 import { PortfolioGrid, SellerPins } from "@/features/user/portfolio-view"
 import { RecentReviews, SellerBio } from "@/features/user/seller-profile-view"
 import { buttonVariants } from "@/components/ui/button"
@@ -22,12 +23,15 @@ export function ProfileContentTabs({
 }: ProfileTabsProps) {
   const portfolioQuery = useListPortfolioItems(portfolioIdOrMe)
   const portfolioItems: PortfolioItem[] = portfolioQuery.data?.data.items ?? []
+  const listingsQuery = useListFeedByAuthor(profile.userId)
+  const listings = listingsQuery.data?.data.items ?? []
 
   return (
     <Tabs defaultValue="about" className="w-full gap-4">
       <TabsList variant="line" className="w-full justify-start">
         <TabsTrigger value="about">About</TabsTrigger>
         <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+        <TabsTrigger value="listings">Listings</TabsTrigger>
         <TabsTrigger value="reviews">Reviews</TabsTrigger>
       </TabsList>
 
@@ -71,6 +75,20 @@ export function ProfileContentTabs({
               </div>
             }
           />
+        )}
+      </TabsContent>
+
+      <TabsContent value="listings" className="space-y-4 text-sm">
+        {listingsQuery.isLoading ? (
+          <p className="text-muted-foreground">Loading listings…</p>
+        ) : listings.length === 0 ? (
+          <p className="text-muted-foreground">No listings yet.</p>
+        ) : (
+          <div className="divide-y rounded-md border px-3">
+            {listings.map((item) => (
+              <FeedItemCard key={item.id} item={item} />
+            ))}
+          </div>
         )}
       </TabsContent>
 

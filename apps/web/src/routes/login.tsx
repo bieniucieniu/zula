@@ -13,7 +13,7 @@ function LoginPage() {
 
   useEffect(() => {
     if (ready && session) {
-      void navigate({ to: "/" })
+      void navigate({ to: "/feed" })
     }
   }, [ready, session, navigate])
 

@@ -1,6 +1,5 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router"
 import { useGetMyProfile } from "@zula/api/endpoints"
-import { useEffect } from "react"
 import { ProfileContentTabs } from "@/features/user/profile-tabs"
 import {
   ProfileShell,
@@ -8,7 +7,6 @@ import {
   SellerTrustRow,
 } from "@/features/user/seller-profile-view"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
 export const Route = createFileRoute("/profile/")({
@@ -19,23 +17,7 @@ export const Route = createFileRoute("/profile/")({
 })
 
 function ProfilePage() {
-  const { session, ready } = useAuth()
-  const navigate = useNavigate()
-  const profileQuery = useGetMyProfile({ query: { enabled: ready && !!session } })
-
-  useEffect(() => {
-    if (ready && !session) {
-      void navigate({ to: "/login" })
-    }
-  }, [ready, session, navigate])
-
-  if (!ready || !session) {
-    return (
-      <div className="flex min-h-svh items-center justify-center p-6">
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      </div>
-    )
-  }
+  const profileQuery = useGetMyProfile()
 
   if (profileQuery.isLoading) {
     return (
