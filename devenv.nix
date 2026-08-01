@@ -82,7 +82,7 @@ in
         module = {
           languages.java = {
             enable = true;
-            jdk.package = pkgs.corretto21;
+            jdk.package = pkgs.zulu25;
           };
           processes.server = {
             after = [ "devenv:processes:postgres" ];

@@ -11,8 +11,8 @@
 #
 #   docker build -f docker/server/Dockerfile -t zula-server .
 
-ARG JRE_IMAGE=eclipse-temurin:21-jre-jammy
-ARG JDK_IMAGE=eclipse-temurin:21-jdk-jammy
+ARG JDK_IMAGE=azul/zulu-openjdk-alpine:25
+ARG JRE_IMAGE=azul/zulu-openjdk-alpine:25-jre
 
 FROM --platform=$BUILDPLATFORM ${JDK_IMAGE} AS build
 WORKDIR /workspace
