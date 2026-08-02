@@ -77,7 +77,7 @@ Canonical index: [schema.md](./schema.md#groups-module-planned).
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
 | `POST` | `/api/groups` | Auth | Create group (creator = owner) |
-| `GET` | `/api/groups/{idOrSlug}` | Public / auth | Group header; private → members only |
+| `GET` | `/api/groups/{id}` | Public / auth | Group header; private → members only |
 | `PATCH` | `/api/groups/{id}` | Owner/admin | Update metadata |
 | `POST` | `/api/groups/{id}/join` | Auth | Join open group / accept invite |
 | `DELETE` | `/api/groups/{id}/members/me` | Auth | Leave |

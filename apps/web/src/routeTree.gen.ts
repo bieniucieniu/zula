@@ -20,13 +20,13 @@ import { Route as FeedIndexRouteImport } from './routes/feed/index'
 import { Route as FeedBookmarksRouteImport } from './routes/feed/bookmarks'
 import { Route as FeedNewRouteImport } from './routes/feed/new'
 import { Route as GroupsIndexRouteImport } from './routes/groups/index'
-import { Route as GroupsIdOrSlugRouteImport } from './routes/groups/$idOrSlug'
+import { Route as GroupsIdRouteImport } from './routes/groups/$id'
 import { Route as GroupsNewRouteImport } from './routes/groups/new'
 import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as ProfileEditRouteImport } from './routes/profile/edit'
 import { Route as ProfilePortfolioRouteImport } from './routes/profile/portfolio'
-import { Route as SellersIdOrUsernameRouteImport } from './routes/sellers/$idOrUsername'
+import { Route as SellersIdRouteImport } from './routes/sellers/$id'
 import { Route as TradesIdRouteImport } from './routes/trades/$id'
 import { Route as TradesNewRouteImport } from './routes/trades/new'
 import { Route as ChatRoomsIdRouteImport } from './routes/chat/rooms/$id'
@@ -87,9 +87,9 @@ const GroupsIndexRoute = GroupsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => GroupsRouteRoute,
 } as any)
-const GroupsIdOrSlugRoute = GroupsIdOrSlugRouteImport.update({
-  id: '/$idOrSlug',
-  path: '/$idOrSlug',
+const GroupsIdRoute = GroupsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
   getParentRoute: () => GroupsRouteRoute,
 } as any)
 const GroupsNewRoute = GroupsNewRouteImport.update({
@@ -117,9 +117,9 @@ const ProfilePortfolioRoute = ProfilePortfolioRouteImport.update({
   path: '/portfolio',
   getParentRoute: () => ProfileRouteRoute,
 } as any)
-const SellersIdOrUsernameRoute = SellersIdOrUsernameRouteImport.update({
-  id: '/sellers/$idOrUsername',
-  path: '/sellers/$idOrUsername',
+const SellersIdRoute = SellersIdRouteImport.update({
+  id: '/sellers/$id',
+  path: '/sellers/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TradesIdRoute = TradesIdRouteImport.update({
@@ -153,12 +153,12 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/feed/bookmarks': typeof FeedBookmarksRoute
   '/feed/new': typeof FeedNewRoute
-  '/groups/$idOrSlug': typeof GroupsIdOrSlugRoute
+  '/groups/$id': typeof GroupsIdRoute
   '/groups/new': typeof GroupsNewRoute
   '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
-  '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/sellers/$id': typeof SellersIdRoute
   '/trades/$id': typeof TradesIdRoute
   '/trades/new': typeof TradesNewRoute
   '/feed/': typeof FeedIndexRoute
@@ -174,12 +174,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/feed/bookmarks': typeof FeedBookmarksRoute
   '/feed/new': typeof FeedNewRoute
-  '/groups/$idOrSlug': typeof GroupsIdOrSlugRoute
+  '/groups/$id': typeof GroupsIdRoute
   '/groups/new': typeof GroupsNewRoute
   '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
-  '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/sellers/$id': typeof SellersIdRoute
   '/trades/$id': typeof TradesIdRoute
   '/trades/new': typeof TradesNewRoute
   '/feed': typeof FeedIndexRoute
@@ -199,12 +199,12 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/feed/bookmarks': typeof FeedBookmarksRoute
   '/feed/new': typeof FeedNewRoute
-  '/groups/$idOrSlug': typeof GroupsIdOrSlugRoute
+  '/groups/$id': typeof GroupsIdRoute
   '/groups/new': typeof GroupsNewRoute
   '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
-  '/sellers/$idOrUsername': typeof SellersIdOrUsernameRoute
+  '/sellers/$id': typeof SellersIdRoute
   '/trades/$id': typeof TradesIdRoute
   '/trades/new': typeof TradesNewRoute
   '/feed/': typeof FeedIndexRoute
@@ -225,12 +225,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/feed/bookmarks'
     | '/feed/new'
-    | '/groups/$idOrSlug'
+    | '/groups/$id'
     | '/groups/new'
     | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
-    | '/sellers/$idOrUsername'
+    | '/sellers/$id'
     | '/trades/$id'
     | '/trades/new'
     | '/feed/'
@@ -246,12 +246,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/feed/bookmarks'
     | '/feed/new'
-    | '/groups/$idOrSlug'
+    | '/groups/$id'
     | '/groups/new'
     | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
-    | '/sellers/$idOrUsername'
+    | '/sellers/$id'
     | '/trades/$id'
     | '/trades/new'
     | '/feed'
@@ -270,12 +270,12 @@ export interface FileRouteTypes {
     | '/login'
     | '/feed/bookmarks'
     | '/feed/new'
-    | '/groups/$idOrSlug'
+    | '/groups/$id'
     | '/groups/new'
     | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
-    | '/sellers/$idOrUsername'
+    | '/sellers/$id'
     | '/trades/$id'
     | '/trades/new'
     | '/feed/'
@@ -294,7 +294,7 @@ export interface RootRouteChildren {
   TradesRouteRoute: typeof TradesRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   OauthCompleteRoute: typeof OauthCompleteRoute
-  SellersIdOrUsernameRoute: typeof SellersIdOrUsernameRoute
+  SellersIdRoute: typeof SellersIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -376,11 +376,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GroupsIndexRouteImport
       parentRoute: typeof GroupsRouteRoute
     }
-    '/groups/$idOrSlug': {
-      id: '/groups/$idOrSlug'
-      path: '/$idOrSlug'
-      fullPath: '/groups/$idOrSlug'
-      preLoaderRoute: typeof GroupsIdOrSlugRouteImport
+    '/groups/$id': {
+      id: '/groups/$id'
+      path: '/$id'
+      fullPath: '/groups/$id'
+      preLoaderRoute: typeof GroupsIdRouteImport
       parentRoute: typeof GroupsRouteRoute
     }
     '/groups/new': {
@@ -418,11 +418,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfilePortfolioRouteImport
       parentRoute: typeof ProfileRouteRoute
     }
-    '/sellers/$idOrUsername': {
-      id: '/sellers/$idOrUsername'
-      path: '/sellers/$idOrUsername'
-      fullPath: '/sellers/$idOrUsername'
-      preLoaderRoute: typeof SellersIdOrUsernameRouteImport
+    '/sellers/$id': {
+      id: '/sellers/$id'
+      path: '/sellers/$id'
+      fullPath: '/sellers/$id'
+      preLoaderRoute: typeof SellersIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trades/$id': {
@@ -487,13 +487,13 @@ const FeedRouteRouteWithChildren = FeedRouteRoute._addFileChildren(
 )
 
 interface GroupsRouteRouteChildren {
-  GroupsIdOrSlugRoute: typeof GroupsIdOrSlugRoute
+  GroupsIdRoute: typeof GroupsIdRoute
   GroupsNewRoute: typeof GroupsNewRoute
   GroupsIndexRoute: typeof GroupsIndexRoute
 }
 
 const GroupsRouteRouteChildren: GroupsRouteRouteChildren = {
-  GroupsIdOrSlugRoute: GroupsIdOrSlugRoute,
+  GroupsIdRoute: GroupsIdRoute,
   GroupsNewRoute: GroupsNewRoute,
   GroupsIndexRoute: GroupsIndexRoute,
 }
@@ -541,17 +541,8 @@ const rootRouteChildren: RootRouteChildren = {
   TradesRouteRoute: TradesRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   OauthCompleteRoute: OauthCompleteRoute,
-  SellersIdOrUsernameRoute: SellersIdOrUsernameRoute,
+  SellersIdRoute: SellersIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

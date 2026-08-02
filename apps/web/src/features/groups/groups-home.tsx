@@ -13,7 +13,7 @@ export function GroupsHome() {
     e.preventDefault()
     const value = slug.trim()
     if (!value) return
-    void navigate({ to: "/groups/$idOrSlug", params: { idOrSlug: value } })
+    void navigate({ to: "/groups/$id", params: { id: value } })
   }
 
   return (

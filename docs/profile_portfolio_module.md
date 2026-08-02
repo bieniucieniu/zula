@@ -49,7 +49,7 @@ In Zula there is no separate seller account: any user can buy, sell, or barter. 
 ```text
 Client (profile page)
    │
-   ├─ GET /api/sellers/{idOrUsername}
+   ├─ GET /api/sellers/{id}
    │     ├─ header: user_profiles + user_stats
    │     ├─ readme: documents (source markdown)
    │     └─ pins[]: user_profile_pins → user_portfolio_items
@@ -278,16 +278,16 @@ Extend DTOs in `core/openapi/src/main/kotlin/dto/` (`document.kt`, `portfolio.kt
 
 | Method | Path | Request | Response | Auth |
 |--------|------|---------|----------|------|
-| `GET` | `/api/sellers/{idOrUsername}` | — | `SellerProfileResponse` (+ readme, pins) | Public |
-| `GET` | `/api/users/{idOrMe}/readme` | — | `RichDocument` | Public (`me` needs JWT) |
+| `GET` | `/api/sellers/{id}` | — | `SellerProfileResponse` (+ readme, pins) | Public |
+| `GET` | `/api/users/{id}/readme` | — | `RichDocument` | Public (`me` needs JWT) |
 | `PUT` | `/api/users/me/readme` | `UpdateProfileReadmeRequest` | `RichDocument` | Auth |
-| `GET` | `/api/users/{idOrMe}/portfolio` | `ProfileCursor`, `limit` | `ListPortfolioItemsResponse` | Public |
+| `GET` | `/api/users/{id}/portfolio` | `ProfileCursor`, `limit` | `ListPortfolioItemsResponse` | Public |
 | `POST` | `/api/users/me/portfolio/items` | `UpsertPortfolioItemRequest` | `PortfolioItem` | Auth |
 | `DELETE` | `/api/users/me/portfolio/items/{id}` | — | `DeletePortfolioItemResponse` | Auth |
 | `POST` | `/api/users/me/portfolio/pins` | `PinPortfolioItemRequest` | `PinPortfolioItemResponse` | Auth |
 | `DELETE` | `/api/users/me/portfolio/pins/{id}` | — | `UnpinPortfolioItemResponse` | Auth |
 | `PUT` | `/api/users/me/portfolio/pins/reorder` | `ReorderProfilePinsRequest` | `ReorderProfilePinsResponse` | Auth |
-| `GET` | `/api/users/{idOrMe}/activity` | `ProfileCursor`, `limit` | `ListPublicActivityResponse` | Public (empty until feed) |
+| `GET` | `/api/users/{id}/activity` | `ProfileCursor`, `limit` | `ListPublicActivityResponse` | Public (empty until feed) |
 
 ### 5.2 DTO summaries
 
@@ -579,15 +579,15 @@ Use `documents` for every long text field:
 
 - [x] `documents` + `document_revisions` in `0.sqm`
 - [x] Document helpers in `UserService`
-- [x] `user_profile_readme` + `PUT /api/users/me/readme` / `GET /api/users/{idOrMe}/readme`
-- [x] `GET /api/sellers/{idOrUsername}` includes readme + pins
+- [x] `user_profile_readme` + `PUT /api/users/me/readme` / `GET /api/users/{id}/readme`
+- [x] `GET /api/sellers/{id}` includes readme + pins
 - [x] Tests: length limits, validation
 
 ### Phase portfolio-B — Portfolio & pins ✅
 
 - [x] `user_portfolio_items` + `user_profile_pins` in `0.sqm`
 - [x] Portfolio CRUD + pin/unpin/reorder (max 6) under `/api/users/me/portfolio/**`
-- [x] `GET /api/users/{idOrMe}/portfolio` keyset pagination (`ProfileCursor`)
+- [x] `GET /api/users/{id}/portfolio` keyset pagination (`ProfileCursor`)
 - [ ] Link `offer` items to `feed_items` (needs feed; creates rejected until then)
 ### Phase portfolio-C — Feed body migration
 

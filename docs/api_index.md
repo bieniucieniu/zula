@@ -39,15 +39,15 @@ OAuth-only login (Google, Apple `idToken`). No email OTP challenge flow.
 |-----|------|------|
 | `GetUserProfile` | Public (legacy) | `GET /api/users/{id}/profile` |
 | `GetUserByUsername` | Public (legacy) | `GET /api/users/{username}` |
-| `GetSellerProfile` | Public | `GET /api/sellers/{idOrUsername}` |
+| `GetSellerProfile` | Public | `GET /api/sellers/{id}` |
 | `GetMyProfile` | Auth | `GET /api/users/me/profile` |
 | `UpdateMyProfile` | Auth | `PATCH /api/users/me/profile` (markdown `bio` + optional `bioExpectedRevision`) |
 | `ListSellerReviews` | Auth optional | `GET /api/reviews/seller/{userId}` |
 | `BlockUser` / `UnblockUser` | Auth | `POST` / `DELETE /api/users/{userId}/block` |
-| `ListPortfolioItems` | Public | `GET /api/users/{idOrMe}/portfolio` |
+| `ListPortfolioItems` | Public | `GET /api/users/{id}/portfolio` |
 | `UpsertPortfolioItem` / `DeletePortfolioItem` | Auth | `POST` / `DELETE /api/users/me/portfolio/items…` |
 | `PinPortfolioItem` / `UnpinPortfolioItem` / `ReorderProfilePins` | Auth | `/api/users/me/portfolio/pins…` |
-| `ListPublicActivity` | Public | `GET /api/users/{idOrMe}/activity` (empty stub until feed) |
+| `ListPublicActivity` | Public | `GET /api/users/{id}/activity` (empty stub until feed) |
 | `UpdateImplicitTrust` | Admin | `PATCH /api/admin/users/{id}/trust` |
 
 **Internal (not REST):** `RecordPeerRating` — called by validation module.
@@ -141,7 +141,7 @@ SSE: `GET /api/events/stream` (`text/event-stream`, JWT; `Last-Event-ID` catch-u
 | RPC | Auth | HTTP |
 |-----|------|------|
 | `CreateGroup` | Auth | `POST /api/groups` |
-| `GetGroup` | Public / member | `GET /api/groups/{idOrSlug}` |
+| `GetGroup` | Public / member | `GET /api/groups/{id}` |
 | `UpdateGroup` | Owner/admin | `PATCH /api/groups/{id}` |
 | `JoinGroup` / `LeaveGroup` | Auth | `POST …/join`, `DELETE …/members/me` |
 | `ListGroupMembers` | Member | `GET /api/groups/{id}/members` |

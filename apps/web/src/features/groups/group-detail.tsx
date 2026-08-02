@@ -13,9 +13,9 @@ import { FeedList } from "@/features/feed/feed-list"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-export function GroupDetail({ idOrSlug }: { idOrSlug: string }) {
+export function GroupDetail({ id }: { id: string }) {
   const queryClient = useQueryClient()
-  const groupQuery = useGetGroup(idOrSlug)
+  const groupQuery = useGetGroup(id)
   const group = groupQuery.data?.data
   const membersQuery = useListGroupMembers(group?.id ?? "", undefined, {
     query: { enabled: !!group?.id },
@@ -29,7 +29,7 @@ export function GroupDetail({ idOrSlug }: { idOrSlug: string }) {
   const isMember = !!group?.viewerRole
 
   async function refresh() {
-    await queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(idOrSlug) })
+    await queryClient.invalidateQueries({ queryKey: getGetGroupQueryKey(id) })
     if (group?.id) {
       await queryClient.invalidateQueries({ queryKey: getListGroupMembersQueryKey(group.id) })
     }

@@ -53,8 +53,8 @@ function ProfilePage() {
               Edit
             </Link>
             <Link
-              to="/sellers/$idOrUsername"
-              params={{ idOrUsername: profile.username }}
+              to="/sellers/$id"
+              params={{ id: profile.userId }}
               className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
             >
               Public view
@@ -65,7 +65,7 @@ function ProfilePage() {
 
       <SellerTrustRow profile={profile} />
 
-      <ProfileContentTabs profile={profile} portfolioIdOrMe="me" canManagePortfolio />
+      <ProfileContentTabs profile={profile} id="me" canManagePortfolio />
     </ProfileShell>
   )
 }

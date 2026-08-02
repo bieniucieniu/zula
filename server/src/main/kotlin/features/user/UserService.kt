@@ -45,8 +45,8 @@ class UserService(
     private val mediaService: MediaService,
     private val adminConfig: UserAdminConfig = UserAdminConfig(),
 ) : UserProfileWriter {
-    fun getSellerProfile(idOrUsername: String, viewerId: Uuid?): SellerProfileResponse {
-        val row = resolveSellerRow(idOrUsername)
+    fun getSellerProfile(id: String, viewerId: Uuid?): SellerProfileResponse {
+        val row = resolveSellerRow(id)
         enforcePublicTargetAccess(viewerId, row.id)
         val (explicit, implicit) = resolveTrustScores(
             row.id,
@@ -157,8 +157,8 @@ class UserService(
         )
     }
 
-    fun getLegacyUserProfile(idOrUsername: String, viewerId: Uuid?): UserResponse {
-        val seller = getSellerProfile(idOrUsername, viewerId)
+    fun getLegacyUserProfile(id: String, viewerId: Uuid?): UserResponse {
+        val seller = getSellerProfile(id, viewerId)
         return UserResponse(
             userId = seller.userId,
             username = seller.username,
@@ -168,12 +168,12 @@ class UserService(
     }
 
     fun listSellerReviews(
-        sellerIdOrUsername: String,
+        id: String,
         viewerId: Uuid?,
         cursorId: Uuid?,
         limit: Int,
     ): ListSellerReviewsResponse {
-        val row = resolveSellerRow(sellerIdOrUsername)
+        val row = resolveSellerRow(id)
         enforcePublicTargetAccess(viewerId, row.id)
         val pageSize = limit.coerceIn(1, 50)
         val fetch = pageSize + 1L
@@ -249,12 +249,12 @@ class UserService(
     }
 
     fun listPortfolio(
-        idOrMe: String,
+        id: String,
         viewerId: Uuid?,
         cursorId: Uuid?,
         limit: Int,
     ): ListPortfolioItemsResponse {
-        val targetId = resolveUserId(idOrMe, viewerId)
+        val targetId = resolveUserId(id, viewerId)
         enforcePublicTargetAccess(viewerId, targetId)
         repository.getUserById(targetId) ?: notFound("User not found")
         val includeUnlisted = viewerId != null && viewerId == targetId
@@ -270,8 +270,8 @@ class UserService(
         )
     }
 
-    fun upsertPortfolioItem(actorId: Uuid, idOrMe: String, req: UpsertPortfolioItemRequest): PortfolioItem {
-        val targetId = resolveUserId(idOrMe, actorId)
+    fun upsertPortfolioItem(actorId: Uuid, id: String, req: UpsertPortfolioItemRequest): PortfolioItem {
+        val targetId = resolveUserId(id, actorId)
         requireOwnProfile(actorId, targetId)
         PortfolioValidation.validateUpsert(req)
         val now = Instant.now().epochSecond
@@ -345,8 +345,8 @@ class UserService(
         }
     }
 
-    fun deletePortfolioItem(actorId: Uuid, idOrMe: String, itemId: Uuid): DeletePortfolioItemResponse {
-        val targetId = resolveUserId(idOrMe, actorId)
+    fun deletePortfolioItem(actorId: Uuid, id: String, itemId: Uuid): DeletePortfolioItemResponse {
+        val targetId = resolveUserId(id, actorId)
         requireOwnProfile(actorId, targetId)
         val existing = repository.getPortfolioItem(itemId) ?: notFound("Portfolio item not found")
         if (existing.user_id != targetId) notFound("Portfolio item not found")
@@ -355,8 +355,8 @@ class UserService(
         return DeletePortfolioItemResponse(id = itemId.toString())
     }
 
-    fun pinPortfolioItem(actorId: Uuid, idOrMe: String, req: PinPortfolioItemRequest): PinPortfolioItemResponse {
-        val targetId = resolveUserId(idOrMe, actorId)
+    fun pinPortfolioItem(actorId: Uuid, id: String, req: PinPortfolioItemRequest): PinPortfolioItemResponse {
+        val targetId = resolveUserId(id, actorId)
         requireOwnProfile(actorId, targetId)
         val itemId = Ids.parseOrNull(req.portfolioItemId) ?: badRequest("portfolioItemId must be a UUID")
         val item = repository.getPortfolioItem(itemId) ?: notFound("Portfolio item not found")
@@ -372,8 +372,8 @@ class UserService(
         return PinPortfolioItemResponse(portfolioItemId = itemId.toString(), sortOrder = sortOrder.toInt())
     }
 
-    fun unpinPortfolioItem(actorId: Uuid, idOrMe: String, itemId: Uuid): UnpinPortfolioItemResponse {
-        val targetId = resolveUserId(idOrMe, actorId)
+    fun unpinPortfolioItem(actorId: Uuid, id: String, itemId: Uuid): UnpinPortfolioItemResponse {
+        val targetId = resolveUserId(id, actorId)
         requireOwnProfile(actorId, targetId)
         repository.deleteProfilePin(targetId, itemId) ?: notFound("Pin not found")
         return UnpinPortfolioItemResponse(portfolioItemId = itemId.toString())
@@ -381,10 +381,10 @@ class UserService(
 
     fun reorderProfilePins(
         actorId: Uuid,
-        idOrMe: String,
+        id: String,
         req: ReorderProfilePinsRequest,
     ): ReorderProfilePinsResponse {
-        val targetId = resolveUserId(idOrMe, actorId)
+        val targetId = resolveUserId(id, actorId)
         requireOwnProfile(actorId, targetId)
         if (req.portfolioItemIds.size > PortfolioValidation.MAX_PINS) {
             badRequest("Maximum ${PortfolioValidation.MAX_PINS} pins allowed")
@@ -404,8 +404,8 @@ class UserService(
         return ReorderProfilePinsResponse(portfolioItemIds = ids.map { it.toString() })
     }
 
-    fun listPublicActivity(idOrMe: String, viewerId: Uuid?): ListPublicActivityResponse {
-        val targetId = resolveUserId(idOrMe, viewerId)
+    fun listPublicActivity(id: String, viewerId: Uuid?): ListPublicActivityResponse {
+        val targetId = resolveUserId(id, viewerId)
         enforcePublicTargetAccess(viewerId, targetId)
         repository.getUserById(targetId) ?: notFound("User not found")
         return ListPublicActivityResponse()
@@ -415,17 +415,17 @@ class UserService(
         adminConfig.isAdminGoogleSubject(repository.findGoogleProviderUserId(userId))
 
     /**
-     * Resolve path `{idOrMe}`: `me` → caller UUID (auth required); UUID; or username.
+     * Resolve path `{id}`: `me` → caller UUID (auth required); UUID; or username.
      */
-    fun resolveUserId(idOrMe: String, viewerId: Uuid?): Uuid {
-        if (idOrMe == "me") {
+    fun resolveUserId(id: String, viewerId: Uuid?): Uuid {
+        if (id == "me") {
             return viewerId ?: unauthorized("Authentication required")
         }
-        Ids.parseOrNull(idOrMe)?.let { id ->
-            repository.getUserById(id) ?: notFound("User not found")
-            return id
+        Ids.parseOrNull(id)?.let { parsed ->
+            repository.getUserById(parsed) ?: notFound("User not found")
+            return parsed
         }
-        return repository.findUserByUsername(idOrMe)?.id
+        return repository.findUserByUsername(id)?.id
             ?: notFound("User not found")
     }
 
@@ -508,10 +508,10 @@ class UserService(
         val last_calculated_at: Long?,
     )
 
-    private fun resolveSellerRow(idOrUsername: String): SellerRow {
-        val byId = Ids.parseOrNull(idOrUsername)?.let { repository.getSellerProfileById(it) }
+    private fun resolveSellerRow(id: String): SellerRow {
+        val byId = Ids.parseOrNull(id)?.let { repository.getSellerProfileById(it) }
         if (byId != null) return byId.toSellerRow()
-        val byUsername = repository.getSellerProfileByUsername(idOrUsername)
+        val byUsername = repository.getSellerProfileByUsername(id)
             ?: notFound("User not found")
         return byUsername.toSellerRow()
     }

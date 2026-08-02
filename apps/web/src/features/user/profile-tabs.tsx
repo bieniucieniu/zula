@@ -10,18 +10,18 @@ import { cn } from "@/lib/utils"
 
 type ProfileTabsProps = {
   profile: SellerProfileResponse
-  /** Public seller list uses username/id; own profile uses "me". */
-  portfolioIdOrMe: string
+  /** Public seller list uses user id; own profile uses "me". */
+  id: string
   /** Show Add item on the portfolio tab (own profile). */
   canManagePortfolio?: boolean
 }
 
 export function ProfileContentTabs({
   profile,
-  portfolioIdOrMe,
+  id,
   canManagePortfolio = false,
 }: ProfileTabsProps) {
-  const portfolioQuery = useListPortfolioItems(portfolioIdOrMe)
+  const portfolioQuery = useListPortfolioItems(id)
   const portfolioItems: PortfolioItem[] = portfolioQuery.data?.data.items ?? []
   const listingsQuery = useListFeedByAuthor(profile.userId)
   const listings = listingsQuery.data?.data.items ?? []

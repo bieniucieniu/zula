@@ -43,8 +43,8 @@ class GroupService(
         return group.toResponse(viewerRole = "owner")
     }
 
-    fun get(idOrSlug: String, viewerId: Uuid?): GroupResponse {
-        val group = resolveGroup(idOrSlug)
+    fun get(id: String, viewerId: Uuid?): GroupResponse {
+        val group = resolveGroup(id)
         val member = viewerId?.let { repository.getMember(group.id, it) }
         if (group.visibility == "private" && member == null) {
             notFound("Group not found")
@@ -126,10 +126,10 @@ class GroupService(
     fun getGroupOrNotFound(groupId: Uuid): Groups =
         repository.getGroupById(groupId) ?: notFound("Group not found")
 
-    fun resolveGroup(idOrSlug: String): Groups {
-        val byId = Ids.parseOrNull(idOrSlug)?.let { repository.getGroupById(it) }
+    fun resolveGroup(id: String): Groups {
+        val byId = Ids.parseOrNull(id)?.let { repository.getGroupById(it) }
         if (byId != null) return byId
-        return repository.getGroupBySlug(idOrSlug) ?: notFound("Group not found")
+        return repository.getGroupBySlug(id) ?: notFound("Group not found")
     }
 
     private fun Groups.toResponse(viewerRole: String?) = GroupResponse(

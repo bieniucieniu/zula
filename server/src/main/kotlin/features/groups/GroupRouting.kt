@@ -34,9 +34,9 @@ fun Route.configureGroupRouting() {
         }
 
         authenticateJwtOptional {
-            get("/{idOrSlug}") {
-                val idOrSlug = call.parameters["idOrSlug"] ?: badRequest("idOrSlug required")
-                call.respond(groupService.get(idOrSlug, call.optionalUserId()))
+            get("/{id}") {
+                val id = call.parameters["id"] ?: badRequest("id required")
+                call.respond(groupService.get(id, call.optionalUserId()))
             }.describe {
                 operationId = "getGroup"
                 tag("groups")

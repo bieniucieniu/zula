@@ -20,7 +20,7 @@ Conventions: [conventions.md](./conventions.md) (thin clients, keyset pagination
 
 | Goal | Detail |
 |------|--------|
-| **Public seller page** | `GET /api/sellers/{idOrUsername}` — display, trust, counts, optional recent reviews |
+| **Public seller page** | `GET /api/sellers/{id}` — display, trust, counts, optional recent reviews |
 | **Owner profile** | `GET /api/users/me/profile` + `PATCH /api/users/me/profile` — edit bio, avatar, display name, locale |
 | **Seller listings tab** | Reuse `GET /api/feed/by-author/{id}` (no duplicate query logic) |
 | **Trust display** | Read `user_stats` cache; lazy recalc only on profile view (not on feed scroll) |
@@ -34,7 +34,7 @@ Conventions: [conventions.md](./conventions.md) (thin clients, keyset pagination
 | Piece | Status |
 |-------|--------|
 | `user_profiles` + `location_tag`, `seller_headline` | ✅ in `000001_init.sql` |
-| `GET /api/sellers/{idOrUsername}` | ✅ Shipped |
+| `GET /api/sellers/{id}` | ✅ Shipped |
 | `GET /api/users/me/profile`, `PATCH /api/users/me/profile` | ✅ Shipped |
 | `GET /api/users/{username}` (legacy trust-only) | ✅ Shipped |
 | `GET /api/reviews/seller/{userId}` (keyset, `ProfileCursor`) | ✅ Shipped |
@@ -46,7 +46,7 @@ Conventions: [conventions.md](./conventions.md) (thin clients, keyset pagination
 | Avatar presigned upload | ⬜ seller-D / [media_module.md](./media_module.md) |
 | `completed_trade_count` | ⬜ Blocked on trade module |
 
-Legacy `GET /api/users/{id}/profile` remains public for backward compatibility; new clients use `GET /api/sellers/{idOrUsername}`. Auth: [auth_and_permissions.md](./auth_and_permissions.md).
+Legacy `GET /api/users/{id}/profile` remains public for backward compatibility; new clients use `GET /api/sellers/{id}`. Auth: [auth_and_permissions.md](./auth_and_permissions.md).
 
 ---
 
@@ -55,7 +55,7 @@ Legacy `GET /api/users/{id}/profile` remains public for backward compatibility; 
 ```text
 Client
    │
-   ├─ GET /api/sellers/{idOrUsername}       [public]
+   ├─ GET /api/sellers/{id}       [public]
    │     └─ features:user → UserService
    │           ├─ Q1: user + profile + stats (single JOIN)
    │           ├─ optional Q2: seller_activity_counts (or JOIN subselect)
@@ -80,7 +80,7 @@ Feature layout:
 | Service | `features/user/.../UserService.kt` | Business logic, transactions, block policy |
 | DI | `features/user/.../UserModule.kt` | Koin module wiring |
 
-**Page composition (client):** header from `GET /api/sellers/{idOrUsername}` + infinite scroll from `GET /api/feed/by-author/{id}`. Two REST calls, no combined mega-endpoint — keeps features focused and avoids N+1 across listings.
+**Page composition (client):** header from `GET /api/sellers/{id}` + infinite scroll from `GET /api/feed/by-author/{id}`. Two REST calls, no combined mega-endpoint — keeps features focused and avoids N+1 across listings.
 
 ---
 
@@ -109,7 +109,7 @@ Extend DTOs in `core/openapi/src/main/kotlin/dto/` (or add `profile.kt` if the f
 
 | Method | Path | Request | Response | Notes |
 |--------|------|---------|----------|-------|
-| `GET` | `/api/sellers/{idOrUsername}` | — | `SellerProfileResponse` | Lookup by UUIDv7 id or username |
+| `GET` | `/api/sellers/{id}` | — | `SellerProfileResponse` | Lookup by UUIDv7 id or username |
 | `GET` | `/api/users/me/profile` | — | `MyProfileResponse` | Owner-only private fields |
 | `PATCH` | `/api/users/me/profile` | `UpdateMyProfileRequest` | `MyProfileResponse` | Partial update; all fields optional |
 | `GET` | `/api/reviews/seller/{userId}` | `ProfileCursor`, `limit` query | `ListSellerReviewsResponse` | Keyset pagination |
@@ -190,7 +190,7 @@ data class ListSellerReviewsResponse(
 
 | Route | Auth |
 |-------|------|
-| `GET /api/sellers/{idOrUsername}` | Public; optional JWT for block flags |
+| `GET /api/sellers/{id}` | Public; optional JWT for block flags |
 | `GET /api/feed/by-author/{id}` | Public (feed feature) |
 | `GET /api/reviews/seller/{userId}` | Public |
 | `GET /api/users/me/profile` | Required |
@@ -204,9 +204,9 @@ Public routes are mounted **outside** the `authenticate("auth-jwt")` block in `U
 fun Route.configureUserRouting(userService: UserService) {
     route("/api") {
         // Public — optional JWT enriches viewer-specific fields
-        get("/sellers/{idOrUsername}") {
+        get("/sellers/{id}") {
             val viewerId = call.optionalUserId()
-            call.respond(userService.getSellerProfile(call.parameters["idOrUsername"]!!, viewerId))
+            call.respond(userService.getSellerProfile(call.parameters["id"]!!, viewerId))
         }
         get("/reviews/seller/{userId}") {
             call.respond(userService.listSellerReviews(/* … */))
@@ -238,7 +238,7 @@ routing {
 
 ### Deprecation
 
-Keep legacy `GET /api/users/{id}/profile` returning trust + username for backward compatibility; implement as a thin wrapper over `getSellerProfile` internals. New clients use `GET /api/sellers/{idOrUsername}`.
+Keep legacy `GET /api/users/{id}/profile` returning trust + username for backward compatibility; implement as a thin wrapper over `getSellerProfile` internals. New clients use `GET /api/sellers/{id}`.
 
 ---
 
@@ -428,8 +428,8 @@ val userModule = module {
 ### 4.1 `getSellerProfile` flow
 
 ```kotlin
-suspend fun getSellerProfile(idOrUsername: String, viewerId: Long?): SellerProfileResponse {
-    val row = resolveSellerRow(idOrUsername)  // by id or username
+suspend fun getSellerProfile(id: String, viewerId: Long?): SellerProfileResponse {
+    val row = resolveSellerRow(id)  // by id or username
 
     if (viewerId != null) {
         if (queries.isBlockedEitherDirection(viewerId, row.id, row.id, viewerId).executeAsOne()) {
@@ -522,7 +522,7 @@ private suspend fun resolveTrustScores(
 
 Seller listings tab = client calls:
 
-1. `GET /api/sellers/{idOrUsername}` — header
+1. `GET /api/sellers/{id}` — header
 2. `GET /api/feed/by-author/{id}?kind=offer` — keyset grid (server-side filter preferred)
 
 Extend feed query param when feed ships (Phase C):
@@ -593,7 +593,7 @@ Add avatar upload route when implementing Phase D; until then accept HTTPS URLs 
 
 ### Phase seller-A — Expose profile data ✅
 
-- [x] `GET /api/sellers/{idOrUsername}` by id and username
+- [x] `GET /api/sellers/{id}` by id and username
 - [x] Return `user_profiles` fields + trust from `user_stats`
 - [x] `GET /api/users/me/profile`, `PATCH /api/users/me/profile`
 - [x] Profile row on user registration (`features:auth`)

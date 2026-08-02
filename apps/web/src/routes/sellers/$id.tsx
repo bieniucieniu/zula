@@ -16,18 +16,18 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth"
 import { cn } from "@/lib/utils"
 
-export const Route = createFileRoute("/sellers/$idOrUsername")({
+export const Route = createFileRoute("/sellers/$id")({
   component: SellerPage,
   head: ({ params }) => ({
-    meta: [{ title: `@${params.idOrUsername} · Zula` }],
+    meta: [{ title: `Seller ${params.id} · Zula` }],
   }),
 })
 
 function SellerPage() {
-  const { idOrUsername } = Route.useParams()
+  const { id } = Route.useParams()
   const { session, ready } = useAuth()
   const navigate = useNavigate()
-  const sellerQuery = useGetSellerProfile(idOrUsername)
+  const sellerQuery = useGetSellerProfile(id)
   const myProfileQuery = useGetMyProfile({
     query: {
       enabled: ready && !!session,
@@ -113,7 +113,7 @@ function SellerPage() {
 
       <ProfileContentTabs
         profile={profile}
-        portfolioIdOrMe={idOrUsername}
+        id={id}
         canManagePortfolio={isSelf}
       />
     </ProfileShell>

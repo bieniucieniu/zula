@@ -1712,29 +1712,29 @@ export type getSellerProfileResponseError = (
   headers: Headers
 }
 
-export const getGetSellerProfileUrl = (idOrUsername: string) => {
-  return `/api/sellers/${idOrUsername}`
+export const getGetSellerProfileUrl = (id: string) => {
+  return `/api/sellers/${id}`
 }
 
 export const getSellerProfile = async (
-  idOrUsername: string,
+  id: string,
   options?: Parameters<typeof customInstance>[1]
 ): Promise<getSellerProfileResponseSuccess> => {
-  return customInstance<getSellerProfileResponseSuccess>(getGetSellerProfileUrl(idOrUsername), {
+  return customInstance<getSellerProfileResponseSuccess>(getGetSellerProfileUrl(id), {
     ...options,
     method: "GET",
   })
 }
 
-export const getGetSellerProfileQueryKey = (idOrUsername: string) => {
-  return [`/api/sellers/${idOrUsername}`] as const
+export const getGetSellerProfileQueryKey = (id: string) => {
+  return [`/api/sellers/${id}`] as const
 }
 
 export const getGetSellerProfileQueryOptions = <
   TData = Awaited<ReturnType<typeof getSellerProfile>>,
   TError = ProblemDetails,
 >(
-  idOrUsername: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -1742,15 +1742,15 @@ export const getGetSellerProfileQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = queryOptions?.queryKey ?? getGetSellerProfileQueryKey(idOrUsername)
+  const queryKey = queryOptions?.queryKey ?? getGetSellerProfileQueryKey(id)
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getSellerProfile>>> = ({ signal }) =>
-    getSellerProfile(idOrUsername, { signal, ...requestOptions })
+    getSellerProfile(id, { signal, ...requestOptions })
 
   return {
     queryKey,
     queryFn,
-    enabled: idOrUsername !== null && idOrUsername !== undefined,
+    enabled: id !== null && id !== undefined,
     ...queryOptions,
   } as UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -1764,7 +1764,7 @@ export function useGetSellerProfile<
   TData = Awaited<ReturnType<typeof getSellerProfile>>,
   TError = ProblemDetails,
 >(
-  idOrUsername: string,
+  id: string,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>> &
       Pick<
@@ -1783,7 +1783,7 @@ export function useGetSellerProfile<
   TData = Awaited<ReturnType<typeof getSellerProfile>>,
   TError = ProblemDetails,
 >(
-  idOrUsername: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>> &
       Pick<
@@ -1802,7 +1802,7 @@ export function useGetSellerProfile<
   TData = Awaited<ReturnType<typeof getSellerProfile>>,
   TError = ProblemDetails,
 >(
-  idOrUsername: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -1814,14 +1814,14 @@ export function useGetSellerProfile<
   TData = Awaited<ReturnType<typeof getSellerProfile>>,
   TError = ProblemDetails,
 >(
-  idOrUsername: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSellerProfile>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetSellerProfileQueryOptions(idOrUsername, options)
+  const queryOptions = getGetSellerProfileQueryOptions(id, options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -2185,7 +2185,7 @@ export type listPortfolioItemsResponseError = (
   headers: Headers
 }
 
-export const getListPortfolioItemsUrl = (idOrMe: string, params?: ListPortfolioItemsParams) => {
+export const getListPortfolioItemsUrl = (id: string, params?: ListPortfolioItemsParams) => {
   const normalizedParams = new URLSearchParams()
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -2197,17 +2197,17 @@ export const getListPortfolioItemsUrl = (idOrMe: string, params?: ListPortfolioI
   const stringifiedParams = normalizedParams.toString()
 
   return stringifiedParams.length > 0
-    ? `/api/users/${idOrMe}/portfolio?${stringifiedParams}`
-    : `/api/users/${idOrMe}/portfolio`
+    ? `/api/users/${id}/portfolio?${stringifiedParams}`
+    : `/api/users/${id}/portfolio`
 }
 
 export const listPortfolioItems = async (
-  idOrMe: string,
+  id: string,
   params?: ListPortfolioItemsParams,
   options?: Parameters<typeof customInstance>[1]
 ): Promise<listPortfolioItemsResponseSuccess> => {
   return customInstance<listPortfolioItemsResponseSuccess>(
-    getListPortfolioItemsUrl(idOrMe, params),
+    getListPortfolioItemsUrl(id, params),
     {
       ...options,
       method: "GET",
@@ -2216,17 +2216,17 @@ export const listPortfolioItems = async (
 }
 
 export const getListPortfolioItemsQueryKey = (
-  idOrMe: string,
+  id: string,
   params?: ListPortfolioItemsParams
 ) => {
-  return [`/api/users/${idOrMe}/portfolio`, ...(params ? [params] : [])] as const
+  return [`/api/users/${id}/portfolio`, ...(params ? [params] : [])] as const
 }
 
 export const getListPortfolioItemsQueryOptions = <
   TData = Awaited<ReturnType<typeof listPortfolioItems>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   params?: ListPortfolioItemsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>>
@@ -2235,15 +2235,15 @@ export const getListPortfolioItemsQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = queryOptions?.queryKey ?? getListPortfolioItemsQueryKey(idOrMe, params)
+  const queryKey = queryOptions?.queryKey ?? getListPortfolioItemsQueryKey(id, params)
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof listPortfolioItems>>> = ({ signal }) =>
-    listPortfolioItems(idOrMe, params, { signal, ...requestOptions })
+    listPortfolioItems(id, params, { signal, ...requestOptions })
 
   return {
     queryKey,
     queryFn,
-    enabled: idOrMe !== null && idOrMe !== undefined,
+    enabled: id !== null && id !== undefined,
     ...queryOptions,
   } as UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -2259,7 +2259,7 @@ export function useListPortfolioItems<
   TData = Awaited<ReturnType<typeof listPortfolioItems>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   params: undefined | ListPortfolioItemsParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>> &
@@ -2279,7 +2279,7 @@ export function useListPortfolioItems<
   TData = Awaited<ReturnType<typeof listPortfolioItems>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   params?: ListPortfolioItemsParams,
   options?: {
     query?: Partial<
@@ -2301,7 +2301,7 @@ export function useListPortfolioItems<
   TData = Awaited<ReturnType<typeof listPortfolioItems>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   params?: ListPortfolioItemsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>>
@@ -2314,7 +2314,7 @@ export function useListPortfolioItems<
   TData = Awaited<ReturnType<typeof listPortfolioItems>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   params?: ListPortfolioItemsParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPortfolioItems>>, TError, TData>>
@@ -2322,7 +2322,7 @@ export function useListPortfolioItems<
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getListPortfolioItemsQueryOptions(idOrMe, params, options)
+  const queryOptions = getListPortfolioItemsQueryOptions(id, params, options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -2364,29 +2364,29 @@ export type listPublicActivityResponseError = (
   headers: Headers
 }
 
-export const getListPublicActivityUrl = (idOrMe: string) => {
-  return `/api/users/${idOrMe}/activity`
+export const getListPublicActivityUrl = (id: string) => {
+  return `/api/users/${id}/activity`
 }
 
 export const listPublicActivity = async (
-  idOrMe: string,
+  id: string,
   options?: Parameters<typeof customInstance>[1]
 ): Promise<listPublicActivityResponseSuccess> => {
-  return customInstance<listPublicActivityResponseSuccess>(getListPublicActivityUrl(idOrMe), {
+  return customInstance<listPublicActivityResponseSuccess>(getListPublicActivityUrl(id), {
     ...options,
     method: "GET",
   })
 }
 
-export const getListPublicActivityQueryKey = (idOrMe: string) => {
-  return [`/api/users/${idOrMe}/activity`] as const
+export const getListPublicActivityQueryKey = (id: string) => {
+  return [`/api/users/${id}/activity`] as const
 }
 
 export const getListPublicActivityQueryOptions = <
   TData = Awaited<ReturnType<typeof listPublicActivity>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -2394,15 +2394,15 @@ export const getListPublicActivityQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = queryOptions?.queryKey ?? getListPublicActivityQueryKey(idOrMe)
+  const queryKey = queryOptions?.queryKey ?? getListPublicActivityQueryKey(id)
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof listPublicActivity>>> = ({ signal }) =>
-    listPublicActivity(idOrMe, { signal, ...requestOptions })
+    listPublicActivity(id, { signal, ...requestOptions })
 
   return {
     queryKey,
     queryFn,
-    enabled: idOrMe !== null && idOrMe !== undefined,
+    enabled: id !== null && id !== undefined,
     ...queryOptions,
   } as UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -2418,7 +2418,7 @@ export function useListPublicActivity<
   TData = Awaited<ReturnType<typeof listPublicActivity>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>> &
       Pick<
@@ -2437,7 +2437,7 @@ export function useListPublicActivity<
   TData = Awaited<ReturnType<typeof listPublicActivity>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>
@@ -2458,7 +2458,7 @@ export function useListPublicActivity<
   TData = Awaited<ReturnType<typeof listPublicActivity>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -2470,14 +2470,14 @@ export function useListPublicActivity<
   TData = Awaited<ReturnType<typeof listPublicActivity>>,
   TError = ProblemDetails,
 >(
-  idOrMe: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof listPublicActivity>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getListPublicActivityQueryOptions(idOrMe, options)
+  const queryOptions = getListPublicActivityQueryOptions(id, options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -5985,29 +5985,29 @@ export type getGroupResponseError = (
   headers: Headers
 }
 
-export const getGetGroupUrl = (idOrSlug: string) => {
-  return `/api/groups/${idOrSlug}`
+export const getGetGroupUrl = (id: string) => {
+  return `/api/groups/${id}`
 }
 
 export const getGroup = async (
-  idOrSlug: string,
+  id: string,
   options?: Parameters<typeof customInstance>[1]
 ): Promise<getGroupResponseSuccess> => {
-  return customInstance<getGroupResponseSuccess>(getGetGroupUrl(idOrSlug), {
+  return customInstance<getGroupResponseSuccess>(getGetGroupUrl(id), {
     ...options,
     method: "GET",
   })
 }
 
-export const getGetGroupQueryKey = (idOrSlug: string) => {
-  return [`/api/groups/${idOrSlug}`] as const
+export const getGetGroupQueryKey = (id: string) => {
+  return [`/api/groups/${id}`] as const
 }
 
 export const getGetGroupQueryOptions = <
   TData = Awaited<ReturnType<typeof getGroup>>,
   TError = ProblemDetails,
 >(
-  idOrSlug: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -6015,15 +6015,15 @@ export const getGetGroupQueryOptions = <
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {}
 
-  const queryKey = queryOptions?.queryKey ?? getGetGroupQueryKey(idOrSlug)
+  const queryKey = queryOptions?.queryKey ?? getGetGroupQueryKey(id)
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getGroup>>> = ({ signal }) =>
-    getGroup(idOrSlug, { signal, ...requestOptions })
+    getGroup(id, { signal, ...requestOptions })
 
   return {
     queryKey,
     queryFn,
-    enabled: idOrSlug !== null && idOrSlug !== undefined,
+    enabled: id !== null && id !== undefined,
     ...queryOptions,
   } as UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData> & {
     queryKey: DataTag<QueryKey, TData, TError>
@@ -6034,7 +6034,7 @@ export type GetGroupQueryResult = NonNullable<Awaited<ReturnType<typeof getGroup
 export type GetGroupQueryError = ProblemDetails
 
 export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError = ProblemDetails>(
-  idOrSlug: string,
+  id: string,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>> &
       Pick<
@@ -6050,7 +6050,7 @@ export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError
   queryClient?: QueryClient
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError = ProblemDetails>(
-  idOrSlug: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>> &
       Pick<
@@ -6066,7 +6066,7 @@ export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError = ProblemDetails>(
-  idOrSlug: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
@@ -6075,14 +6075,14 @@ export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetGroup<TData = Awaited<ReturnType<typeof getGroup>>, TError = ProblemDetails>(
-  idOrSlug: string,
+  id: string,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGroup>>, TError, TData>>
     request?: SecondParameter<typeof customInstance>
   },
   queryClient?: QueryClient
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetGroupQueryOptions(idOrSlug, options)
+  const queryOptions = getGetGroupQueryOptions(id, options)
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>

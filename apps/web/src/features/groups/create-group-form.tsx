@@ -30,8 +30,8 @@ export function CreateGroupForm() {
           visibility,
         },
       })
-      const idOrSlug = res.data.slug || res.data.id
-      await navigate({ to: "/groups/$idOrSlug", params: { idOrSlug } })
+      const id = res.data.slug || res.data.id
+      await navigate({ to: "/groups/$id", params: { id } })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create group")
     } finally {

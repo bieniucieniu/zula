@@ -23,9 +23,9 @@ fun Route.configureUserRouting() {
     val userService: UserService by inject()
 
     authenticateJwtOptional {
-        get("/sellers/{idOrUsername}") {
-            val idOrUsername = call.parameters["idOrUsername"] ?: badRequest("idOrUsername required")
-            call.respond(userService.getSellerProfile(idOrUsername, call.optionalUserId()))
+        get("/sellers/{id}") {
+            val id = call.parameters["id"] ?: badRequest("id required")
+            call.respond(userService.getSellerProfile(id, call.optionalUserId()))
         }.describe {
             operationId = "getSellerProfile"
             tag("user")
@@ -38,7 +38,7 @@ fun Route.configureUserRouting() {
                 ?: call.request.queryParameters["id"]?.let { Ids.parseOrNull(it) }
             call.respond(
                 userService.listSellerReviews(
-                    sellerIdOrUsername = userId,
+                    id = userId,
                     viewerId = call.optionalUserId(),
                     cursorId = cursor,
                     limit = limit,
@@ -57,13 +57,13 @@ fun Route.configureUserRouting() {
             tag("user")
         }
 
-        get("/users/{idOrMe}/portfolio") {
-            val idOrMe = call.parameters["idOrMe"] ?: badRequest("idOrMe required")
+        get("/users/{id}/portfolio") {
+            val id = call.parameters["id"] ?: badRequest("id required")
             val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 20
             val cursor = call.request.queryParameters["cursor"]?.let { Ids.parseOrNull(it) }
             call.respond(
                 userService.listPortfolio(
-                    idOrMe = idOrMe,
+                    id = id,
                     viewerId = call.optionalUserId(),
                     cursorId = cursor,
                     limit = limit,
@@ -74,9 +74,9 @@ fun Route.configureUserRouting() {
             tag("user")
         }
 
-        get("/users/{idOrMe}/activity") {
-            val idOrMe = call.parameters["idOrMe"] ?: badRequest("idOrMe required")
-            call.respond(userService.listPublicActivity(idOrMe, call.optionalUserId()))
+        get("/users/{id}/activity") {
+            val id = call.parameters["id"] ?: badRequest("id required")
+            call.respond(userService.listPublicActivity(id, call.optionalUserId()))
         }.describe {
             operationId = "listPublicActivity"
             tag("user")
