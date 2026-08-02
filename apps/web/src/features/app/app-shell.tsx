@@ -1,13 +1,7 @@
 import { Link, Outlet, useMatchRoute, useNavigate } from "@tanstack/react-router"
 import { useLogout } from "@zula/api/endpoints"
-import {
-  ArrowLeftRightIcon,
-  LogOutIcon,
-  NewspaperIcon,
-  UserIcon,
-  UsersIcon,
-} from "lucide-react"
-import { useEffect, useState, type ReactNode } from "react"
+import { ArrowLeftRightIcon, LogOutIcon, NewspaperIcon, UserIcon, UsersIcon } from "lucide-react"
+import { type ReactNode, useEffect } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -28,32 +22,14 @@ import { useAuth } from "@/lib/auth"
 const navItems = [
   { to: "/feed" as const, label: "Feed", icon: NewspaperIcon, match: "feed" as const },
   { to: "/groups" as const, label: "Groups", icon: UsersIcon, match: "groups" as const },
-  { to: "/profile" as const, label: "Profile", icon: UserIcon, match: "profile" as const },
   { to: "/feed" as const, label: "Trades", icon: ArrowLeftRightIcon, match: "none" as const },
 ]
 
 export function AppShell({ children }: { children?: ReactNode }) {
-  const { session, refresh } = useAuth()
-  const logout = useLogout()
-  const navigate = useNavigate()
   const matchRoute = useMatchRoute()
-  const [pending, setPending] = useState(false)
-
-  async function onLogout() {
-    setPending(true)
-    try {
-      await logout.mutateAsync({})
-    } catch {
-      // still clear local session
-    } finally {
-      await refresh()
-      setPending(false)
-      await navigate({ to: "/login" })
-    }
-  }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="scrollbar-gutter-stable">
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <SidebarMenu>
@@ -61,10 +37,12 @@ export function AppShell({ children }: { children?: ReactNode }) {
               <SidebarMenuButton
                 size="lg"
                 tooltip="Zula"
-                render={<Link to="/feed" />}
-              >
-                <span className="font-heading text-sm font-semibold">Zula</span>
-              </SidebarMenuButton>
+                render={
+                  <Link to="/feed">
+                    <span className="font-heading text-sm font-semibold">Zula</span>
+                  </Link>
+                }
+              />
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
@@ -84,11 +62,13 @@ export function AppShell({ children }: { children?: ReactNode }) {
                       <SidebarMenuButton
                         isActive={isActive}
                         tooltip={item.label}
-                        render={<Link to={item.to} />}
-                      >
-                        <Icon />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
+                        render={
+                          <Link to={item.to}>
+                            <Icon />
+                            <span>{item.label}</span>
+                          </Link>
+                        }
+                      />
                     </SidebarMenuItem>
                   )
                 })}
@@ -98,37 +78,16 @@ export function AppShell({ children }: { children?: ReactNode }) {
         </SidebarContent>
 
         <SidebarFooter>
-          <SidebarMenu>
-            {session?.email ? (
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip={session.email} className="pointer-events-none">
-                  <UserIcon />
-                  <span className="truncate">{session.email}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ) : null}
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip="Logout"
-                disabled={pending}
-                onClick={() => void onLogout()}
-              >
-                <LogOutIcon />
-                <span>{pending ? "Logging out…" : "Logout"}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          <SessionSidebarMenu />
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
 
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-3 sticky top-0 bg-card">
           <SidebarTrigger />
         </header>
-        <div className="mx-auto w-full max-w-2xl space-y-4 px-4 py-6">
-          {children ?? <Outlet />}
-        </div>
+        <div className="mx-auto w-full max-w-2xl space-y-4 px-4 py-6">{children ?? <Outlet />}</div>
       </SidebarInset>
     </SidebarProvider>
   )
@@ -153,4 +112,43 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }
 
   return children
+}
+
+export function SessionSidebarMenu({ className }: { className?: string }) {
+  const matchRoute = useMatchRoute()
+  const navigate = useNavigate()
+  const { session, refresh } = useAuth()
+
+  const { mutateAsync: logout, isPending } = useLogout({
+    mutation: {
+      onSuccess: async () => {
+        await refresh()
+        await navigate({ to: "/login" })
+      },
+    },
+  })
+  return (
+    <SidebarMenu className={className}>
+      {session && (
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            tooltip={session.email}
+            isActive={!!matchRoute({ to: `/profile`, fuzzy: true })}
+            render={
+              <Link to="/profile">
+                <UserIcon />
+                <span className="truncate">{session.email}</span>
+              </Link>
+            }
+          />
+        </SidebarMenuItem>
+      )}
+      <SidebarMenuItem>
+        <SidebarMenuButton tooltip="Logout" disabled={isPending} onClick={() => logout({})}>
+          <LogOutIcon />
+          <span>{isPending ? "Logging out…" : "Logout"}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  )
 }
