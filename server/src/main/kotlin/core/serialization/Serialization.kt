@@ -8,6 +8,7 @@ fun serializationModule(
 ) = module {
     single {
         Json {
+            encodeDefaults = true
             isLenient = true
             ignoreUnknownKeys = true
             prettyPrint = isDev
