@@ -13,9 +13,9 @@ data class JwksResponse(
 
 @Serializable
 data class JwkKey(
-    val kty: String = "RSA",
-    val use: String = "sig",
-    val alg: String = "RS256",
+    val kty: String,
+    val use: String,
+    val alg: String,
     val kid: String,
     val n: String,
     val e: String,
@@ -32,6 +32,9 @@ class JwkSetProvider(
 private fun JwtKeyEntry.toJwk(): JwkKey {
     val publicKey = publicPem.decodePublicKey() as RSAPublicKey
     return JwkKey(
+        kty = "RSA",
+        use = "sig",
+        alg = "RS256",
         kid = kid,
         n = publicKey.modulus.toBase64Url(),
         e = publicKey.publicExponent.toBase64Url(),
