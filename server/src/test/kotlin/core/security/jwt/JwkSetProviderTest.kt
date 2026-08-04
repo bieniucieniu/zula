@@ -9,7 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class JwkSetProviderTest {
-    private val json = Json { encodeDefaults = false }
+    private val json = Json { encodeDefaults = true }
 
     @Test
     fun `jwks includes required kty per RFC 7517 section 4_1`() {
