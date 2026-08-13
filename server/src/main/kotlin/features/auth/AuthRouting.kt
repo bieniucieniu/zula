@@ -53,10 +53,9 @@ fun Route.configureAuthRouting() {
         }
 
         get("/oauth/google/start") {
-            val mode = call.request.queryParameters["mode"] ?: "redirect"
             val redirectUri = call.oauthCallbackUrl(OAuthPaths.GOOGLE_CALLBACK, config.appUrl)
-            val (authorizeUrl, state, nonce) = authService.startGoogleOAuth(mode, redirectUri)
-            call.setOAuthStateCookies(state, nonce, mode)
+            val (authorizeUrl, state, nonce) = authService.startGoogleOAuth(redirectUri)
+            call.setOAuthStateCookies(state, nonce)
             call.respondRedirect(authorizeUrl)
         }.describe {
             operationId = "startGoogleOAuth"
@@ -66,10 +65,8 @@ fun Route.configureAuthRouting() {
         get("/callback/google") {
             val error = call.request.queryParameters["error"]
             if (error != null) {
-                val mode = call.readOAuthModeCookie()
                 call.clearOAuthStateCookies()
-                if (mode == "popup") call.respondOAuthPopupResult(success = false, error = error)
-                else call.respondRedirect("/oauth/complete?success=0&error=${error.encodeURLParameter()}")
+                call.respondRedirect("/login")
                 return@get
             }
             if (!call.isOAuthStateMatch()) unauthorized("Invalid OAuth state")
@@ -83,10 +80,7 @@ fun Route.configureAuthRouting() {
 
             call.clearOAuthStateCookies()
             call.setAccessCookies(tokens)
-
-            val mode = call.readOAuthModeCookie()
-            if (mode == "popup") call.respondOAuthPopupResult(success = true)
-            else call.respondRedirect("/oauth/complete?success=1")
+            call.respondRedirect("/")
         }.describe {
             operationId = "googleOAuthCallback"
             tag("auth")
