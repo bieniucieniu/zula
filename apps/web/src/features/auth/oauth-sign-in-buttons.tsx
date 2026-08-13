@@ -3,8 +3,9 @@ import { useListProviders } from "@zula/api/endpoints"
 import type { OAuthProviderInfo } from "@zula/api/model"
 import { getProviderDefinition } from "@zula/oauth"
 import { Button } from "@/components/ui/button"
-import { signInWithBackendGooglePopup } from "@/lib/oauth/backend-popup-sign-in"
 import { useState } from "react"
+
+const GOOGLE_OAUTH_START_PATH = "/api/auth/oauth/google/start"
 
 type OAuthSignInButtonsProps = {
   disabled?: boolean
@@ -15,35 +16,20 @@ function isDevProvider(provider: OAuthProviderInfo) {
   return provider.id === "dev"
 }
 
-function GoogleSignInButton({
-  disabled,
-  onAuthenticated,
-}: {
-  disabled?: boolean
-  onAuthenticated: () => Promise<void> | void
-}) {
+function GoogleSignInButton({ disabled }: { disabled?: boolean }) {
   const definition = getProviderDefinition("google")
-  const [pending, setPending] = useState(false)
 
   return (
     <Button
       type="button"
       variant="outline"
       className="w-full"
-      disabled={disabled || pending}
+      disabled={disabled}
       onClick={() => {
-        setPending(true)
-        void signInWithBackendGooglePopup()
-          .then(() => onAuthenticated())
-          .catch((error: unknown) => {
-            console.error("google sign-in failed", error)
-          })
-          .finally(() => {
-            setPending(false)
-          })
+        window.location.assign(GOOGLE_OAUTH_START_PATH)
       }}
     >
-      {pending ? "Signing in…" : `Continue with ${definition?.label ?? "Google"}`}
+      {`Continue with ${definition?.label ?? "Google"}`}
     </Button>
   )
 }
@@ -118,9 +104,7 @@ export function OAuthSignInButtons({ disabled, onSuccess }: OAuthSignInButtonsPr
           )
         }
         if (provider.id === "google") {
-          return (
-            <GoogleSignInButton key={provider.id} disabled={disabled} onAuthenticated={onSuccess} />
-          )
+          return <GoogleSignInButton key={provider.id} disabled={disabled} />
         }
         return null
       })}

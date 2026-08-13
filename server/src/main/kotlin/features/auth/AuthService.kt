@@ -47,7 +47,7 @@ class AuthService(
     private fun requireGoogleOAuthClient(): GoogleOAuthClient =
         googleOAuthClient ?: badRequest("Google OAuth code flow is not configured")
 
-    fun startGoogleOAuth(mode: String, redirectUri: String): GoogleOAuthStart {
+    fun startGoogleOAuth(redirectUri: String): GoogleOAuthStart {
         val client = requireGoogleOAuthClient()
         val state = randomOAuthState()
         val nonce = randomOAuthState()

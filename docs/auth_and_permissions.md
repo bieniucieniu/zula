@@ -27,12 +27,12 @@ WebSocket chat is **not** used — realtime is **SSE** (`GET /api/events/stream`
 | `GetSession` | Public / Auth | Optional Bearer JWT; else refresh cookie → session probe (may rotate cookies) |
 | `Logout` | Auth | Revoke session by `sid` and/or refresh token |
 | `ListLinkedProviders` | Auth | Own linked identities only |
-| `StartGoogleOAuth` | Public | Browser redirect/popup start (`/auth/oauth/google/start`) |
-| `GoogleOAuthCallback` | Public | Server `/auth/callback/google` — sets cookies; popup `postMessage` or redirect `/oauth/complete` |
+| `StartGoogleOAuth` | Public | Same-window browser redirect start (`/auth/oauth/google/start`) |
+| `GoogleOAuthCallback` | Public | Server `/auth/callback/google` — sets cookies; redirects `/` |
 
 **Removed:** email OTP / magic-link login (`POST /auth/challenge` and `provider: email_otp`). Sign-in is OAuth-only (plus optional dev bypass when `AUTH_DEV_BYPASS_SECRET` is set). Leftover `auth_challenges` storage / `extendOAuthSession` helpers were also removed from the schema and repository.
 
-**Clients:** web uses backend Google popup → cookies; native uses PKCE/`authenticate` → bearer. See [clients.md](./clients.md).
+**Clients:** web uses same-window Google redirect → cookies; native uses PKCE/`authenticate` → bearer. See [clients.md](./clients.md).
 
 ---
 

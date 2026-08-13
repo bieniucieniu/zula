@@ -18,6 +18,17 @@ class AuthCookiesAndExceptionsTest {
     fun `cookie names are stable`() {
         assertEquals("zula_access", ACCESS_COOKIE_NAME)
         assertEquals("zula_refresh", REFRESH_COOKIE_NAME)
+        assertEquals("zula_oauth_state", OAUTH_STATE_COOKIE_NAME)
+        assertEquals("zula_oauth_nonce", OAUTH_NONCE_COOKIE_NAME)
+    }
+
+    @Test
+    fun `oauth state match requires equal non-null values`() {
+        assertEquals(true, oauthStateMatches("abc", "abc"))
+        assertEquals(false, oauthStateMatches("abc", "xyz"))
+        assertEquals(false, oauthStateMatches(null, "abc"))
+        assertEquals(false, oauthStateMatches("abc", null))
+        assertEquals(false, oauthStateMatches(null, null))
     }
 
     @Test

@@ -22,7 +22,6 @@ import { Route as FeedNewRouteImport } from './routes/feed/new'
 import { Route as GroupsIndexRouteImport } from './routes/groups/index'
 import { Route as GroupsIdRouteImport } from './routes/groups/$id'
 import { Route as GroupsNewRouteImport } from './routes/groups/new'
-import { Route as OauthCompleteRouteImport } from './routes/oauth/complete'
 import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as ProfileEditRouteImport } from './routes/profile/edit'
 import { Route as ProfilePortfolioRouteImport } from './routes/profile/portfolio'
@@ -97,11 +96,6 @@ const GroupsNewRoute = GroupsNewRouteImport.update({
   path: '/new',
   getParentRoute: () => GroupsRouteRoute,
 } as any)
-const OauthCompleteRoute = OauthCompleteRouteImport.update({
-  id: '/oauth/complete',
-  path: '/oauth/complete',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProfileIndexRoute = ProfileIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -155,7 +149,6 @@ export interface FileRoutesByFullPath {
   '/feed/new': typeof FeedNewRoute
   '/groups/$id': typeof GroupsIdRoute
   '/groups/new': typeof GroupsNewRoute
-  '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$id': typeof SellersIdRoute
@@ -176,7 +169,6 @@ export interface FileRoutesByTo {
   '/feed/new': typeof FeedNewRoute
   '/groups/$id': typeof GroupsIdRoute
   '/groups/new': typeof GroupsNewRoute
-  '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$id': typeof SellersIdRoute
@@ -201,7 +193,6 @@ export interface FileRoutesById {
   '/feed/new': typeof FeedNewRoute
   '/groups/$id': typeof GroupsIdRoute
   '/groups/new': typeof GroupsNewRoute
-  '/oauth/complete': typeof OauthCompleteRoute
   '/profile/edit': typeof ProfileEditRoute
   '/profile/portfolio': typeof ProfilePortfolioRoute
   '/sellers/$id': typeof SellersIdRoute
@@ -227,7 +218,6 @@ export interface FileRouteTypes {
     | '/feed/new'
     | '/groups/$id'
     | '/groups/new'
-    | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
     | '/sellers/$id'
@@ -248,7 +238,6 @@ export interface FileRouteTypes {
     | '/feed/new'
     | '/groups/$id'
     | '/groups/new'
-    | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
     | '/sellers/$id'
@@ -272,7 +261,6 @@ export interface FileRouteTypes {
     | '/feed/new'
     | '/groups/$id'
     | '/groups/new'
-    | '/oauth/complete'
     | '/profile/edit'
     | '/profile/portfolio'
     | '/sellers/$id'
@@ -293,7 +281,6 @@ export interface RootRouteChildren {
   ProfileRouteRoute: typeof ProfileRouteRouteWithChildren
   TradesRouteRoute: typeof TradesRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
-  OauthCompleteRoute: typeof OauthCompleteRoute
   SellersIdRoute: typeof SellersIdRoute
 }
 
@@ -389,13 +376,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/groups/new'
       preLoaderRoute: typeof GroupsNewRouteImport
       parentRoute: typeof GroupsRouteRoute
-    }
-    '/oauth/complete': {
-      id: '/oauth/complete'
-      path: '/oauth/complete'
-      fullPath: '/oauth/complete'
-      preLoaderRoute: typeof OauthCompleteRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/profile/': {
       id: '/profile/'
@@ -540,7 +520,6 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRouteRoute: ProfileRouteRouteWithChildren,
   TradesRouteRoute: TradesRouteRouteWithChildren,
   LoginRoute: LoginRoute,
-  OauthCompleteRoute: OauthCompleteRoute,
   SellersIdRoute: SellersIdRoute,
 }
 export const routeTree = rootRouteImport

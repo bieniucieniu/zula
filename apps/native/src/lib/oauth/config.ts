@@ -59,7 +59,7 @@ export function getNativeOAuthRedirectUriOptions() {
 
 /**
  * Resolve platform client IDs.
- * Prefer server `provider.clientId` (same Web client as web popup) unless Expo env overrides.
+ * Prefer server `provider.clientId` (same Web client as web redirect) unless Expo env overrides.
  */
 export function resolveNativeClientIds(
   provider: OAuthProviderInfo,
