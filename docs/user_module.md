@@ -233,17 +233,14 @@ and exposed via Ktor OpenAPI.
 
 ### 3. Trust scoring from other modules
 
-When the [trade](./trade_module.md) and [validation](./validation_module.md) modules complete a handoff, they call **
-`UserService` via a `TrustLedgerWriter` Koin contract** (add under `core/contracts` when those modules ship; not public
-REST) to:
+When [trade](./trade_module.md) completes, it calls **`UserService`** (not public REST) to:
 
 1. Insert `user_trust_ledger` with an `event_type` from [trust_events.md](./trust_events.md) (e.g. `TRADE_COMPLETED`).
 2. Bump `user_stats.implicit_trust_score` in the same transaction.
 
-`recordPeerRating` is internal today; optional public `POST /api/users/{id}/ratings` route is Wave 3.5
-in [implementation_plan.md](./implementation_plan.md).
+`recordPeerRating` is internal.
 
-Example pattern (implemented in validation/trade services, not a standalone file in `features/user`):
+Example pattern (trade service, not a standalone file in `features/user`):
 
 ```kotlin
 database.transaction {
@@ -260,12 +257,7 @@ database.transaction {
 }
 ```
 
-Register the cross-feature contract in Koin:
-
-```kotlin
-// when validation/trade ship:
-// single<TrustLedgerWriter> { get<UserService>() }
-```
+Trade calls `UserService` directly. Add a Koin port only when a second caller needs the same write.
 
 ---
 
@@ -283,11 +275,10 @@ Register the cross-feature contract in Koin:
 - [x] `user_blocks` + `POST /api/users/{id}/block` / `DELETE .../block`
 - [x] `UpdateImplicitTrust` (admin allowlist)
 
-### user-C — Peer ratings (partial) 🔶
+### user-C — Peer ratings ✅
 
 - [x] `user_ratings` table + SQLDelight
 - [x] Internal `recordPeerRating`
-- [ ] Public `POST /api/users/{id}/ratings` (Wave 3.5)
 
 ---
 

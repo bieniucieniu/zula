@@ -1,6 +1,6 @@
 # Zula — Product vision
 
-Canonical product framing for docs and implementation. Module guides implement this vision; if they diverge, update **this file** or the module doc in the same PR.
+Canonical product framing for docs and implementation. Module guides follow this vision.
 
 **Related:** [docs index](./README.md) · [implementation_plan.md](./implementation_plan.md) · [architecture.md](./architecture.md)
 
@@ -8,109 +8,54 @@ Canonical product framing for docs and implementation. Module guides implement t
 
 ## 1. Vision & goal
 
-Zula is a **social marketplace**: a personalized feed plus tools to match **suppliers and consumers**, negotiate, and close deals safely.
+Zula is a **starter kit** for small companies: a simple base app they can extend.
 
-Closest analogs: **Booksy** (services) × **OLX / Facebook sales groups** (offers, local demand, import/resell communities) — without classifieds chaos and unsafe off-platform DMs.
-
-**Primary goal:** simplify and protect the path from discovery → negotiation → location/schedule → handoff (payments later), for both sides.
+**Primary goal:** sign-in, a public company profile, and web + mobile clients on one API — ready to build on.
 
 ---
 
-## 2. Target audience
+## 2. Who it is for
 
-| Side | Who |
+Small companies that need their own app, not a hosted social network.
+
+| Piece | Who uses it |
+|-------|-------------|
+| **Kit** | The company building on Zula |
+| **Profile** | The company’s public page |
+| **Clients** | Staff and customers of that company |
+
+---
+
+## 3. What is in the kit
+
+| Piece | Meaning | Doc |
+|-------|---------|-----|
+| **Auth** | Google, Apple, web session, native bearer, local dev bypass | [user_module.md](./user_module.md) |
+| **Profile** | Public page, bio, portfolio, pins | [seller_profile_module.md](./seller_profile_module.md), [profile_portfolio_module.md](./profile_portfolio_module.md) |
+| **Media** | Image upload and download | [media_module.md](./media_module.md) |
+| **Web** | React app shell | [clients.md](./clients.md) |
+| **Native** | Expo app; sign-in shipped | [clients.md](./clients.md) |
+| **API client** | `@zula/api`, `@zula/oauth` | [clients.md](./clients.md) |
+
+---
+
+## 4. Out of scope
+
+Not a social network, community feed, or classifieds marketplace.
+
+No likes, comments, bumps, bookmarks, or for-you ranking as product. No groups, deal negotiation, or meetup coordination as product.
+
+Code and module notes for those areas may still sit in the repo. They are **not** the starter kit. Do not extend them as the product.
+
+---
+
+## 5. Map
+
+| Idea | Doc |
 |------|-----|
-| **Sellers** | Small service businesses, local specialists, craft / hobby makers selling **series and batches**, resellers and importers |
-| **Buyers** | People looking for services or repeatable / distinctive products from independent suppliers |
-| **Communities** | Groups analogous to FB import/resell/local-sourcing groups — shared space for posts, needs, and multi-party chat |
+| Identity | [user_module.md](./user_module.md) |
+| Public profile | [seller_profile_module.md](./seller_profile_module.md), [profile_portfolio_module.md](./profile_portfolio_module.md) |
+| Uploads | [media_module.md](./media_module.md) |
+| Web + native | [clients.md](./clients.md) |
 
-### Out of scope (product rule)
-
-**Not** a general second-hand classifieds board. Reject / discourage one-off personal sales of single used items (e.g. “selling my old bike”). Listings should represent **ongoing activity**: services, batches, series, or clear supply-side offers — or buyer **needs** aimed at such suppliers.
-
----
-
-## 3. Core model
-
-### Bidirectional marketplace
-
-| Surface | Actor | Meaning |
-|---------|-------|---------|
-| **Offers** (`feed` kind `offer`) | Seller | Services and **product batches** (not one-off junk drawer items) |
-| **Needs** (`feed` kind `need`) | Buyer | Published demand; suppliers respond with offers / trade starts |
-| **Trips** (`feed` kind `trip`) | Either | Travel/availability with coarse location — import runs, meetups on the road |
-| **Either side initiates** | Both | Post offer **or** find clients; post need **or** find suppliers |
-
-### Groups (communities)
-
-Named communities (import, resell, craft, local services, …) where members:
-
-- share group-scoped offers/needs,
-- discuss in **multi-party** rooms (2+),
-- discover suppliers/consumers in a trusted circle (FB-group job, without FB).
-
-See [groups_module.md](./groups_module.md).
-
-### Communication & deals
-
-- **Chat** — rooms with **2+** participants: trade-scoped (MVP) and later group-scoped. Delivery via **SSE** (`GET /api/events/stream`), not WebSockets. [chat_module.md](./chat_module.md).
-- **Negotiation** — price and terms inside chat + trade state machine (thin clients; rules on backend).
-- **Trade templates** — including **barter / swap** and **cash meetup** coordination ([trade_module.md](./trade_module.md)). Platform **coordinates** the deal and **verifies handoff**.
-- **Payments** — **not in MVP**. Keep a **payment-ready seam**: trade states / events that can later emit `PAYMENT_*` and a `PaymentGateway` port (Stripe / PayU / BLIK). No card rails, InPost labels, or recurring billing until a dedicated post-MVP wave.
-- **Safety** — blocks, moderation, dual trust scores, meetup **PIN/QR validation**, optional public disclosures — protect buyer **and** seller time/reputation (not escrow unless product later decides).
-
-### Personalized feed & social layer
-
-- Shared for-you surface for offers, needs, and trips.
-- **Social actions (MVP):** `like` / **bump** (like also boosts ranking), public **comments**, private **bookmarks** (save for later). [feed_module.md](./feed_module.md).
-- Ranking: interest / search / activity / bumps first; later optional external signals (Meta, Google, cookies) if privacy policy allows.
-- Trait taxonomy + embeddings: [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md).
-
-### Location — decision matrix + fingerprints
-
-Two complementary layers:
-
-1. **Location decision matrix (trade / offer logistics)** — when creating an offer or negotiating in chat, parties set who picks the place:
-   - **Provider** — service at supplier site (workshop, salon, tutor’s place).
-   - **Client** — mobile service; exact address shared **after** accept.
-   - **Negotiated / mutual** — neutral meetup, trip pickup, swap point.
-2. **Network fingerprints (discovery)** — coarse **location tags** from fingerprints — no continuous GPS on the server. Profile `location_tag`, trip posts, local matching. [geolocation_module.md](./geolocation_module.md).
-
-### Public seller presence
-
-Seller profile + portfolio + trust/ratings: what a buyer sees before starting trade or chat. [seller_profile_module.md](./seller_profile_module.md), [profile_portfolio_module.md](./profile_portfolio_module.md).
-
----
-
-## 4. AI — human-in-the-loop
-
-AI is a **quiet assistant**, not an agent that owns the relationship.
-
-| Capability | Intent | Doc home |
-|------------|--------|----------|
-| Auto-tag / categorize | Suggest traits, location, price band from text/images; **user confirms** | [media_module.md](./media_module.md), feed create |
-| Feed matchmaking | Rank for-you from behavior + embeddings | feed |
-| Contextual nudges | Suggest next steps in chat/trade UI (tooltips / action chips) — **post-MVP** | chat / trade polish |
-| Description / question hints | Optional copy and buyer checklist hints — **post-MVP** | clients |
-
-**Principles:** no ghostwritten conversations; reduce repetitive tagging/summary clicks; user always approves consequential actions.
-
----
-
-## 5. Map to modules
-
-| Product idea | Module doc |
-|--------------|------------|
-| Identity, trust, blocks, ratings | [user_module.md](./user_module.md), [trust_events.md](./trust_events.md) |
-| Public seller page | [seller_profile_module.md](./seller_profile_module.md) |
-| Portfolio / activity | [profile_portfolio_module.md](./profile_portfolio_module.md) |
-| Offers, needs, trips, for-you, like/bump, comments, bookmarks | [feed_module.md](./feed_module.md), [traits_module.md](./traits_module.md) |
-| Communities | [groups_module.md](./groups_module.md) |
-| Uploads & image vectors | [media_module.md](./media_module.md) |
-| Coarse fingerprint location | [geolocation_module.md](./geolocation_module.md) |
-| Deal lifecycle, **swap / meetup**, location modes, payment prep | [trade_module.md](./trade_module.md) |
-| Meetup PIN/QR | [validation_module.md](./validation_module.md) |
-| Multi-party chat + SSE events | [chat_module.md](./chat_module.md) |
-| Reports / hide | [moderation_module.md](./moderation_module.md) |
-
-Rollout order: [implementation_plan.md](./implementation_plan.md). **MVP includes groups** (membership + group feed in Wave 1; group chat in Wave 3) — not a post-launch add-on.
+Rollout: [implementation_plan.md](./implementation_plan.md).

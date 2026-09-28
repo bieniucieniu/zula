@@ -50,7 +50,7 @@ OAuth-only login (Google, Apple `idToken`). No email OTP challenge flow.
 | `ListPublicActivity` | Public | `GET /api/users/{id}/activity` (empty stub until feed) |
 | `UpdateImplicitTrust` | Admin | `PATCH /api/admin/users/{id}/trust` |
 
-**Internal (not REST):** `RecordPeerRating` — called by validation module.
+**Internal (not REST):** `recordPeerRating`.
 
 `kind=offer` portfolio items rejected until feed ships. `feed_item_id` / `trade_id` columns exist without FKs.
 ---
@@ -109,17 +109,6 @@ Doc: [geolocation_module.md](./geolocation_module.md)
 | `ProposeMeetup` / `ConfirmMeetup` | Auth | `POST …/propose-meetup`, `…/confirm-meetup` |
 
 Doc: [trade_module.md](./trade_module.md)
-
----
-
-## ValidationService 🔜
-
-| RPC | Auth |
-|-----|------|
-| `GenerateHandoffCode` | Auth |
-| `VerifyHandoff` | Auth |
-
-Doc: [validation_module.md](./validation_module.md)
 
 ---
 

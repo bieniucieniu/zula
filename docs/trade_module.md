@@ -1,12 +1,14 @@
-# Guide: Trade Module (Deal Coordination)
+# Guide: Trade Module
 
-**Trade templates** for **barter/swap** and **cash meetups**, plus a **location decision matrix**. Platform coordinates state and handoff.
+**Not part of the starter kit.** See [product_vision.md](./product_vision.md).
+
+Trade state machine and a location mode (`provider` / `client` / `negotiated`).
 
 **Payments:** **not in MVP**. Keep a **payment-ready seam** (`PaymentGateway` port + reserved trade/SSE event names) so Stripe / PayU / BLIK / InPost can plug in later without rewriting the state machine.
 
-**Status:** Doc complete · **Backend:** ✅ A–C (validation PIN deferred) · **Feature:** `features:trade`
+**Status:** Doc complete · **Backend:** ✅ A–C · **Feature:** `features:trade`
 
-**Depends on:** [feed_module.md](./feed_module.md), [user_module.md](./user_module.md) · **Unblocks:** [validation](./validation_module.md), [chat](./chat_module.md), [profile_portfolio](./profile_portfolio_module.md) portfolio-E
+**Depends on:** [feed_module.md](./feed_module.md), [user_module.md](./user_module.md) · **Unblocks:** [chat](./chat_module.md), [profile_portfolio](./profile_portfolio_module.md) portfolio-E
 
 **Master plan:** [implementation_plan.md](./implementation_plan.md) Wave 3 (`trade-A` … `trade-D`) · **Product:** [product_vision.md](./product_vision.md)
 
@@ -22,7 +24,7 @@
 | **Templates** | `swap` (barter), `meetup_cash` (cash meetup coordination) |
 | **Location modes** | `provider` / `client` / `negotiated` — who decides place of fulfillment |
 | **State machine** | Backend-owned transitions |
-| **Trust hook** | Completion → validation → ledger |
+| **Complete** | Either participant marks the trade completed |
 | **Public disclosure** | Opt-in summaries for profiles |
 | **Payment prep** | Port + event hooks only; **no live payment rails in MVP** |
 | **Safety** | Protect both parties’ time/reputation |
@@ -52,7 +54,7 @@ stateDiagram-v2
     proposed --> cancelled: either party
     accepted --> scheduled: meetup confirmed
     accepted --> cancelled
-    scheduled --> completed: validation success
+    scheduled --> completed: participant completes
     scheduled --> cancelled
     scheduled --> disputed: no-show / dispute
     completed --> [*]
@@ -62,7 +64,7 @@ stateDiagram-v2
 
 Feed item status coupling: `active` → `in_trade` → `fulfilled` or back to `active` on cancel.
 
-**Future payment branch (post-MVP, reserved):** after `accepted` / `scheduled`, a payment integration may emit SSE `PAYMENT_SUCCESS` / `PAYMENT_FAILED` without changing core handoff → `completed` via validation. MVP does not implement this branch.
+**Future payment branch (post-MVP, reserved):** after `accepted` / `scheduled`, a payment integration may emit SSE `PAYMENT_SUCCESS` / `PAYMENT_FAILED`. MVP completes the trade without that branch.
 
 Feature layout:
 
@@ -197,7 +199,6 @@ Participants only for read/write. Client-mode addresses never on public feed. [a
 
 ## Related documentation
 
-- [validation_module.md](./validation_module.md) — completes trade
 - [chat_module.md](./chat_module.md) — room per trade + SSE
 - [geolocation_module.md](./geolocation_module.md) — fingerprint tags
 - [profile_portfolio_module.md](./profile_portfolio_module.md) — case studies

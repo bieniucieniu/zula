@@ -95,7 +95,7 @@ Parsed from reply `1A 2B 2A 4A 5A 6B 7A 8A 9A 10A 11A 12A 14B 14A 15A` as:
 - Strip `UserService` implements + Koin `binds`
 - Drop stub methods (`resolveViewerBlock`, empty trust/seller TODOs)
 - Keep profile write API only (WP2)
-- **Docs (same PR):** rewrite `architecture.md` (tree, Koin examples, cross-feature table), `conventions.md` (prefer interfaces → add when 2nd caller), strip/adjust contract mentions in `feed_module.md`, `chat_module.md`, `user_module.md`, `validation_module.md`, `moderation_module.md`, `seller_profile_module.md`, `auth_and_permissions.md`
+- **Docs (same PR):** rewrite `architecture.md` (tree, Koin examples, cross-feature table), `conventions.md` (prefer interfaces → add when 2nd caller), strip/adjust contract mentions in `feed_module.md`, `chat_module.md`, `user_module.md`, `moderation_module.md`, `seller_profile_module.md`, `auth_and_permissions.md`
 - **Docs:** one line in `implementation_plan.md` — scaffolding present; contracts deferred until 2nd caller
 
 **Done when:** no `core/contracts`; docs no longer mandate dead ports; compile green.

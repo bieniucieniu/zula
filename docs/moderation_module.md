@@ -1,6 +1,8 @@
 # Guide: Moderation Module
 
-**Report user/content**, admin review queue, and enforcement — beyond user-initiated **BlockUser** (UserService).
+**Not part of the starter kit.** See [product_vision.md](./product_vision.md).
+
+Report queue and admin enforcement. User blocks stay on UserService.
 
 **Status:** Doc complete · **Backend:** ⬜ (blocks only) · **Feature:** `features:moderation`
 

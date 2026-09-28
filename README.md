@@ -1,45 +1,44 @@
 # zula
 
-Monorepo: Ktor API + React web + Expo native.
+Starter kit for small-company apps.
 
-**Product:** social marketplace for small services, craft batches, and import/resell communities — see [docs/product_vision.md](./docs/product_vision.md).
+Sign-in, a public company profile, and web + mobile shells on one API. Build the company product on this base.
 
-## Structure
+Monorepo: Ktor API (`server/`) · React web (`apps/web/`) · Expo (`apps/native/`) · shared `@zula/api` and `@zula/oauth`.
 
-```text
-zula/
-├── apps/web/     # Vite + React frontend
-├── apps/native/  # Expo
-├── packages/     # @zula/api, @zula/oauth
-├── server/       # Ktor backend
-├── docs/         # Module guides + product vision
-└── gradle/       # Shared Gradle version catalog
-```
+Detail: [docs/product_vision.md](./docs/product_vision.md).
 
-## Building & Running
+## Done
 
-### Server (API)
+- [x] Auth — Google, Apple, session cookies (web), bearer tokens (native), local dev bypass
+- [x] Profile — public page, bio, portfolio, pins
+- [x] Media — image upload and download
+- [x] Web app shell
+- [x] Native sign-in
+- [x] Shared API client
 
-| Task                      | Description                     |
-|---------------------------|---------------------------------|
-| `./gradlew :server:run`   | Run the API server on port 8000 |
-| `./gradlew :server:build` | Build the server JAR            |
-| `./gradlew :server:test`  | Run server tests                |
+## Next
 
-API routes are under `/api`.
+- [ ] Native app past sign-in
+
+Rollout: [docs/implementation_plan.md](./docs/implementation_plan.md).
+
+## Run
 
 ```bash
-cd apps/web && bun run dev
-cd apps/native && bun run dev
+devenv --profile web up      # Postgres + API :8000 + web
+devenv --profile native up   # Postgres + API + Expo
+devenv --profile backend up  # Postgres + API only
 ```
 
-Vite proxies `/api` to the Ktor server.
+API routes live under `/api`. Web proxies `/api` to Ktor.
+
+```bash
+./gradlew :server:run
+bun run web
+bun run native
+```
 
 ## Docs
 
-Start at [docs/README.md](./docs/README.md) → [product vision](./docs/product_vision.md) → [implementation plan](./docs/implementation_plan.md).
-
-## Links
-
-* [Ktor Documentation](https://ktor.io/docs/home.html)
-* [Vite Documentation](https://vite.dev/)
+[docs/README.md](./docs/README.md) → [product vision](./docs/product_vision.md) → [architecture](./docs/architecture.md) → [implementation plan](./docs/implementation_plan.md).

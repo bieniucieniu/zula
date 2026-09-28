@@ -1,6 +1,8 @@
-# Guide: Groups Module (Communities)
+# Guide: Groups Module
 
-**Named communities** for import, resell, craft, and local services — the Facebook sales-group job, inside Zula: shared posts, membership, and multi-party chat.
+**Not part of the starter kit.** See [product_vision.md](./product_vision.md).
+
+Membership, group posts, and a group chat room.
 
 **Status:** Doc complete · **Backend:** ✅ A–C · **Feature:** `features:groups`
 
@@ -16,11 +18,10 @@
 
 | Goal | Detail |
 |------|--------|
-| **Groups** | Create / join / leave communities with slug, title, description, visibility |
+| **Groups** | Create / join / leave with slug, title, description, visibility |
 | **Membership** | Roles: `owner`, `admin`, `member`; invite or open join |
 | **Group feed** | Optional `group_id` on `feed_items` — list by group; same offer/need/trip kinds |
 | **Group chat** | Multi-party room (2+) bound to `group_id` via chat feature |
-| **Product fit** | Import / resell / craft circles — not casual single-item classifieds ([product_vision.md](./product_vision.md)) |
 | **Safety** | Honor `user_blocks`; reports via moderation; owners can remove posts/members |
 
 ---

@@ -63,7 +63,7 @@ There is **no** SPA OAuth callback or finish page. Server callback is Ktor-only 
 | Image upload | `POST /api/media/uploads` (raw body) | Store in MinIO; return `object_key` |
 | Pagination | Pass opaque cursor from previous response | Keyset SQL on UUIDv7 `id` |
 | Realtime (chat / trade) | Open SSE `GET /api/events/stream`; reconnect with `Last-Event-ID` | Fan-out events; JWT on connect |
-| Trade / validation UI | Show QR/PIN, scan; location mode picker | State machine, codes, location rules |
+| Trade UI | Location mode picker, meetup propose/confirm, complete | State machine, location rules |
 | Entity ids | Use ids from API responses only | DB `DEFAULT uuidv7()` + `RETURNING id` |
 
 ---

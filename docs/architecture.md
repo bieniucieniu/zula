@@ -34,7 +34,6 @@ zula/                              # root Gradle project (rootProject.name = "zu
         │   │       ├── chat/
         │   │       ├── media/
         │   │       ├── geolocation/
-        │   │       ├── validation/
         │   │       └── moderation/
         │   └── resources/
         │       └── application.yaml
@@ -137,7 +136,6 @@ flowchart TB
         chat[chat — planned]
         media[media — planned]
         geo[geolocation — planned]
-        val[validation — planned]
         mod[moderation — planned]
     end
 
@@ -157,19 +155,20 @@ flowchart TB
 
 ---
 
+Starter kit is auth, profile, portfolio, and media ([product_vision.md](./product_vision.md)). Feed, groups, trade, and chat packages are not part of the kit.
+
 ## Feature ownership
 
 | Feature | Owns | Does **not** own |
 |---------|------|------------------|
 | **auth** | OAuth callbacks, JWT sessions, provider registry | Profile fields, trust math |
 | **user** | Identity reads, profiles, blocks, portfolio, documents, peer ratings (internal), admin trust bump | Feed items, trades, chat rooms |
-| **feed** *(planned)* | `feed_items`, traits, for-you ranking, author/trait/group lists, likes/bumps, comments, bookmarks | Profile readme, trade state |
-| **groups** *(planned)* | `groups`, membership, group visibility | Feed ranking SQL, chat fan-out |
+| **feed** *(not in the kit)* | `feed_items`, traits, author/trait/group lists | Profile readme, trade state |
+| **groups** *(not in the kit)* | `groups`, membership, group visibility | Feed SQL, chat fan-out |
 | **media** *(planned)* | Presigned uploads, object key validation, async embeddings | Avatar/profile field updates (user validates URL) |
 | **geolocation** *(planned)* | Fingerprint ingest, resolver → `location_tag` | Trade location modes / exact addresses |
-| **trade** *(planned)* | Trade lifecycle, **swap / meetup** templates, location decision matrix, feed lock, payment-ready hooks | Validation codes, chat delivery, live payment rails |
-| **validation** *(planned)* | PIN/QR sessions, handoff verify | Trade state (coordinates with trade) |
-| **chat** *(planned)* | Rooms (trade + later group), messages, SSE event stream | Trade acceptance rules |
+| **trade** *(not in the kit)* | Trade lifecycle, location modes, feed lock | Chat delivery, live payment rails |
+| **chat** *(not in the kit)* | Rooms, messages, SSE event stream | Trade acceptance rules |
 | **moderation** *(planned)* | Reports, admin actions, content hide | User-initiated block (user feature) |
 
 ---
@@ -181,16 +180,15 @@ flowchart TB
 | Product framing | [product_vision.md](./product_vision.md) | — |
 | Sign in, sessions | [user_module.md](./user_module.md) | `features/auth` |
 | Trust & ratings | user + [trust_events.md](./trust_events.md) | `features/user` |
-| Public profile header | [seller_profile_module.md](./seller_profile_module.md) | `features/user` |
-| README, portfolio, pins | [profile_portfolio_module.md](./profile_portfolio_module.md) | `features/user` |
-| Marketplace feed + social (like/bump, comments, bookmarks) | [feed_module.md](./feed_module.md) | `features/feed` |
-| Categories | [traits_module.md](./traits_module.md) | `features/feed` (SQL + filters) |
-| Communities | [groups_module.md](./groups_module.md) | `features/groups` |
+| Public profile | [seller_profile_module.md](./seller_profile_module.md) | `features/user` |
+| Portfolio, pins | [profile_portfolio_module.md](./profile_portfolio_module.md) | `features/user` |
+| Feed package *(not in the kit)* | [feed_module.md](./feed_module.md) | `features/feed` |
+| Trait tree *(not in the kit)* | [traits_module.md](./traits_module.md) | `features/feed` |
+| Groups package *(not in the kit)* | [groups_module.md](./groups_module.md) | `features/groups` |
 | Uploads & AI tags | [media_module.md](./media_module.md) | `features/media` |
 | Coarse fingerprint location | [geolocation_module.md](./geolocation_module.md) | `features/geolocation` |
-| Deals + location modes + payment prep | [trade_module.md](./trade_module.md) | `features/trade` |
-| Meetup verify | [validation_module.md](./validation_module.md) | `features/validation` |
-| Multi-party chat + SSE | [chat_module.md](./chat_module.md) | `features/chat` |
+| Trade package *(not in the kit)* | [trade_module.md](./trade_module.md) | `features/trade` |
+| Chat package *(not in the kit)* | [chat_module.md](./chat_module.md) | `features/chat` |
 | Reports & admin | [moderation_module.md](./moderation_module.md) | `features/moderation` |
 
 ---
@@ -217,7 +215,7 @@ GET /api/reviews/seller/{id}    → reviews tab (user)
 | **Presigned uploads** | media feature | Feed/seller/portfolio pass `object_key` strings |
 | **Markdown bodies** | `documents` table (user helpers) | Feed/trade store `body_document_id` FK |
 | **User blocks** | user feature RPCs | Moderation adds platform actions; chat/feed respect blocks |
-| **Trust ledger writes** | user internal API | Trade/validation call in same transaction |
+| **Trust ledger writes** | user internal API | Trade calls in same transaction |
 | **Pagination cursors** | Shared DTOs in `core/openapi` | See [conventions.md](./conventions.md) |
 
 ---

@@ -146,15 +146,6 @@ Doc: [groups_module.md](./groups_module.md)
 
 ---
 
-## ValidationService *(planned)*
-
-| RPC | Level | Notes |
-|-----|-------|-------|
-| `GenerateHandoffCode` | Auth | Trade participant |
-| `VerifyHandoff` | Auth | Participant |
-
----
-
 ## ChatService *(planned)*
 
 | RPC | Level | Notes |

@@ -10,7 +10,7 @@ GitHub-style profiles: README, pinned work, portfolio, public activity, and app-
 
 **Related:** [architecture.md](./architecture.md) · [schema.md](./schema.md#profile--portfolio-module) · [conventions.md](./conventions.md) · [feed_module.md](./feed_module.md) · [trade_module.md](./trade_module.md)
 
-In Zula there is no separate seller account: any user can buy, sell, or barter. This module defines how a **public profile page** is structured, how long-form text is stored once and reused everywhere, and how it connects to the feed and trade modules.
+This module defines the **public profile page**, how long-form text is stored, and how pins and portfolio items attach to it. See [product_vision.md](./product_vision.md).
 
 ---
 
@@ -251,7 +251,7 @@ Keyset pagination on `(activity_at, id)`.
 
 ### 4.2 Trade public disclosure (when trade module exists)
 
-Never auto-publish full trade details (addresses, PINs, meetup notes).
+Never auto-publish full trade details (addresses, meetup notes).
 
 ```sql
 CREATE TABLE trade_public_disclosures (

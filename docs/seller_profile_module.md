@@ -1,6 +1,6 @@
 # Guide: Building the Seller Profile Module From Zero
 
-Public seller profiles and owner profile editing — **no separate seller account type**.
+Public company profile and owner editing. One account type.
 
 **Status:** Doc complete · **Backend:** 🔶 partial (seller-A, seller-B) · **Feature:** `features:user`
 
@@ -10,7 +10,7 @@ Public seller profiles and owner profile editing — **no separate seller accoun
 
 **Related:** [architecture.md](./architecture.md) · [schema.md](./schema.md#seller-profile-module) · [auth_and_permissions.md](./auth_and_permissions.md) · [profile_portfolio_module.md](./profile_portfolio_module.md) · [feed_module.md](./feed_module.md)
 
-In Zula there is no separate “seller” account type: any user can post needs, offers, or trips (subject to the [product rule](./product_vision.md) against casual single-item classifieds). A **seller profile** is the public view of a `users` row plus `user_profiles`, trust stats, recent reviews, and active listings — what a buyer sees before starting a trade or chat.
+A **profile** is the public view of a `users` row plus `user_profiles`: bio, trust stats, and recent reviews. See [product_vision.md](./product_vision.md).
 
 Conventions: [conventions.md](./conventions.md) (thin clients, keyset pagination).
 

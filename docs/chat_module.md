@@ -1,6 +1,8 @@
-# Guide: Chat Module (Stateful Group Chats)
+# Guide: Chat Module
 
-**Real-time multi-person rooms** (2+ participants). MVP: tied to **trades**. Later: **group**-scoped rooms for communities.
+**Not part of the starter kit.** See [product_vision.md](./product_vision.md).
+
+Multi-person rooms (2+ participants) over SSE. Send via REST.
 
 **Transport:** **SSE** (Server-Sent Events) for inbound delivery — not WebSockets. Clients **send** via REST; server **pushes** via `GET /api/events/stream`.
 

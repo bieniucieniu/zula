@@ -1,6 +1,8 @@
 # Guide: Traits Module
 
-Shared **traits tree** for categorizing feed items (goods, services, travel). Schema ships inside the feed migration; trait **REST routes** are owned by FeedService in `features:feed`.
+**Not part of the starter kit.** See [product_vision.md](./product_vision.md).
+
+Shared traits tree. Schema ships inside the feed migration; trait REST routes are owned by FeedService in `features:feed`.
 
 **Status:** Doc complete · **Backend:** ✅ seed + tree via feed · **Feature:** `features:feed` (traits schema & SQL; no standalone `features:traits` module)
 

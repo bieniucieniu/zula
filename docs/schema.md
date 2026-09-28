@@ -5,7 +5,7 @@
 **Shipped schema:** `0.sqm` (users, profiles, portfolio, media_objects, traits, feed, groups, trades, chat)  
 **Version bookkeeping:** `zula_schema_version` created in Kotlin (`Database.kt`), not in `.sqm`.  
 **Removed:** `auth_challenges` (email OTP leftover) — dropped on migrate if present.  
-**Next:** geolocation / validation / moderation as further `0.sqm` appends (pre-prod) or `1.sqm+` post-prod.
+**Next:** geolocation / moderation as further `0.sqm` appends (pre-prod) or `1.sqm+` post-prod.
 
 **PostgreSQL:** 18+ required (`uuidv7()` is built-in). The server checks `server_version_num >= 180000` at startup.
 
@@ -203,16 +203,6 @@ Trade **location modes** (`provider` / `client` / `negotiated`) live under [trad
 | `trade_locations` | Fulfillment place (post-accept for `client` mode) |
 
 Payment columns / intent ids: **deferred**; MVP keeps `PaymentGateway` port only.
-
----
-
-## Validation module *(planned — Wave 3)*
-
-*Doc: [validation_module.md](./validation_module.md)* · migration: `000007_validation.sql`
-
-| Table | Purpose |
-|-------|---------|
-| `validation_sessions` | Hashed codes bound to `trade_id` |
 
 ---
 

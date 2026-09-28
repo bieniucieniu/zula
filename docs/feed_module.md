@@ -1,6 +1,8 @@
 # Guide: Building the Feed Module From Zero
 
-Listings for **needs**, **offers** (services and product **batches**), and **trip** availabilities — trait filters and personalized ranking via embeddings.
+**Not part of the starter kit.** See [product_vision.md](./product_vision.md).
+
+Item list with trait filters. Likes, comments, and bookmarks are not product.
 
 **Status:** Doc complete · **Backend:** ✅ MVP · **Feature:** `features:feed`
 
@@ -23,8 +25,6 @@ Conventions: thin clients, backend-owned business rules, SQLDelight, REST via Kt
 | **Filtered feeds** | By trait, by author, later by **group** |
 | **Writes** | `POST /api/feed/items`, `GET /api/feed/items/{id}` |
 | **Kinds** | `offer` (services / batches), `need` (buyer demand), `trip` (travel/availability) |
-| **Social (MVP)** | `like` / **bump** (like boosts ranking), public **comments**, private **bookmarks** |
-| **Product rule** | Not a casual single-item classifieds board — see [product_vision.md](./product_vision.md) |
 | **No N+1** | Fixed ~4–5 SQL round-trips per page regardless of `limit` |
 | **Controllable ranking** | Hard SQL filters first; vectors re-rank inside a bounded candidate set |
 

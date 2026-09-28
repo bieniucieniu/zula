@@ -1,8 +1,8 @@
 # Guide: Geolocation Module
 
-**Coarse travel/location tags** from network fingerprint shifts — **no continuous GPS** on server.
+**Not part of the starter kit.** See [product_vision.md](./product_vision.md).
 
-**Complements** trade **location decision matrix** (`provider` / `client` / `negotiated`) in [trade_module.md](./trade_module.md): fingerprints = discovery/ranking; matrix = who picks fulfillment place.
+Coarse location tags from network fingerprint shifts. No continuous GPS on the server.
 
 **Status:** Doc complete · **Backend:** ⬜ · **Feature:** `features:geolocation`
 
