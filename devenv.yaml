@@ -9,10 +9,6 @@ allow_unfree: true
 # If you're not willing to allow unsupported packages:
 # allow_unsupported_system: false
 
-# If you're willing to use a package that's vulnerable
-permitted_insecure_packages:
-  - "minio-2025-10-15T17-29-55Z"
-
 # If you have more than one devenv you can merge them
 #imports:
 # - ./backend

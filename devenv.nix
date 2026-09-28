@@ -33,8 +33,7 @@ in
     pkgs.curl
     pkgs.jq
     pkgs.bun
-    pkgs.minio
-    pkgs.minio-client
+    pkgs.seaweedfs
   ]
   # Docker CLI from Nix on Linux only. macOS: use Docker Desktop on PATH
   # (Nix docker client fights Desktop / wrong socket).
@@ -86,57 +85,56 @@ in
             enable = true;
             jdk.package = pkgs.zulu25;
           };
-          processes.minio = {
-            exec = ''
-              set -eu
-              export MINIO_ROOT_USER="''${S3_ACCESS_KEY:-zula}"
-              export MINIO_ROOT_PASSWORD="''${S3_SECRET_KEY:-zulazula}"
-              mkdir -p "''${DEVENV_STATE}/minio/data"
-              exec ${pkgs.minio}/bin/minio server "''${DEVENV_STATE}/minio/data" \
-                --address 127.0.0.1:9000 \
-                --console-address 127.0.0.1:9001
-            '';
-            ready = {
-              http.get = {
-                port = 9000;
-                path = "/minio/health/live";
-              };
-            };
-          };
-          processes.minio-init = {
-            after = [ "devenv:processes:minio" ];
+          processes.seaweedfs = {
             exec = ''
               set -eu
               access="''${S3_ACCESS_KEY:-zula}"
               secret="''${S3_SECRET_KEY:-zulazula}"
-              bucket="''${S3_BUCKET:-zula}"
-              export MC_HOST_local="http://''${access}:''${secret}@127.0.0.1:9000"
-              for i in $(seq 1 60); do
-                if ${pkgs.curl}/bin/curl -sf http://127.0.0.1:9000/minio/health/live >/dev/null; then
-                  break
-                fi
-                sleep 0.5
-              done
-              ${pkgs.minio-client}/bin/mc mb -p "local/''${bucket}" || true
-              ${pkgs.minio-client}/bin/mc anonymous set download "local/''${bucket}/uploads" || true
-              cat > /tmp/zula-minio-cors.json <<'EOF'
-              [
-                {
-                  "AllowedOrigins": ["*"],
-                  "AllowedMethods": ["GET", "PUT", "HEAD"],
-                  "AllowedHeaders": ["*"],
-                  "ExposeHeaders": ["ETag"]
-                }
-              ]
+              state="''${DEVENV_STATE}/seaweedfs"
+              mkdir -p "$state/data"
+              cat > "$state/s3.json" <<EOF
+              {
+                "identities": [
+                  {
+                    "name": "zula",
+                    "credentials": [
+                      {
+                        "accessKey": "$access",
+                        "secretKey": "$secret"
+                      }
+                    ],
+                    "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+                  }
+                ]
+              }
               EOF
-              ${pkgs.minio-client}/bin/mc cors set "local/''${bucket}" /tmp/zula-minio-cors.json || true
-              echo "minio-init: bucket=''${bucket} ready"
+              exec ${pkgs.seaweedfs}/bin/weed server \
+                -dir="$state/data" \
+                -ip.bind=127.0.0.1 \
+                -s3 \
+                -s3.port=8333 \
+                -s3.config="$state/s3.json"
+            '';
+            ready = {
+              http.get = {
+                port = 9333;
+                path = "/cluster/status";
+              };
+            };
+          };
+          processes.seaweedfs-init = {
+            after = [ "devenv:processes:seaweedfs" ];
+            exec = ''
+              set -eu
+              bucket="''${S3_BUCKET:-zula}"
+              echo "s3.bucket.create -name ''${bucket}" | ${pkgs.seaweedfs}/bin/weed shell -master=127.0.0.1:9333
+              echo "seaweedfs-init: bucket=''${bucket} ready"
             '';
           };
           processes.server = {
             after = [
               "devenv:processes:postgres"
-              "devenv:processes:minio-init@completed"
+              "devenv:processes:seaweedfs-init@completed"
             ];
             exec = "${root}/gradlew :server:run";
             ready = {
@@ -251,18 +249,18 @@ in
     echo "  secrets: secretspec provider=${toString (config.secretspec.provider or "unset")} profile=${
       toString (config.secretspec.profile or "unset")
     }"
-    echo "  deps:    devenv --profile backend up   # postgres + minio + ktor"
+    echo "  deps:    devenv --profile backend up   # postgres + seaweedfs + ktor"
     echo "  schema:  devenv --profile schema up    # backend + sync OpenAPI client + build packages"
     echo "  web:     devenv --profile web up        # schema + vite"
     echo "  native:  devenv --profile native up     # schema + expo"
-    echo "  docker:  bun run deps:docker            # postgres + minio (no devenv)"
+    echo "  docker:  bun run deps:docker            # postgres + seaweedfs (no devenv)"
     echo "  all:     devenv --profile all up        # web + native"
     echo "  sync:    sync-schema                   # orval + format + build packages (server must be up)"
     echo "  api:     gen-api                        # orval + biome format (server must be up)"
     echo "  db:      psql                          # interactive (needs devenv up)"
     echo "  jdbc:    $DATABASE_JDBC_URL"
     echo "  app:     $APP_URL"
-    echo "  minio:   $S3_PUBLIC_URL (console :9001, bucket $S3_BUCKET)"
+    echo "  s3:      $S3_PUBLIC_URL (bucket $S3_BUCKET)"
     echo "  devauth: $AUTH_DEV_BYPASS_EMAIL (listed on GET /api/auth/providers when secret set)"
     if lan_ip="$("${root}/scripts/lan-ip.sh" 2>/dev/null)"; then
       echo "  lan:     $lan_ip  # native uses http://$lan_ip:8000/api unless EXPO_PUBLIC_API_URL set"

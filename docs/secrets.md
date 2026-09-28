@@ -117,12 +117,12 @@ Example stub: [deploy/k8s/jwt-keys-secret.example.yaml](../deploy/k8s/jwt-keys-s
 
 Verify-only pods (e.g. read replicas that validate JWT but never issue) can mount **only** `JWT_PUBLIC_KEY_PEM` and omit the private key.
 
-### S3 / MinIO
+### S3 / SeaweedFS
 
 | Variable | Purpose |
 |----------|---------|
-| `S3_ENDPOINT` | API host the **backend** uses (e.g. `http://minio:9000` in-cluster) |
-| `S3_PUBLIC_URL` | Browser-reachable base for presigned PUT + image URLs (e.g. `https://s3.kurwidolek.com/zula`) |
-| `S3_ACCESS_KEY` / `S3_SECRET_KEY` | Must match the MinIO root user (Infisical). Fallbacks: `AWS_ACCESS_KEY_ID`, `MINIO_ROOT_USER` |
+| `S3_ENDPOINT` | API host the **backend** uses (e.g. `http://seaweedfs-s3:8333` in-cluster) |
+| `S3_PUBLIC_URL` | Public S3 base. Media bytes are served via `/api/media/objects` |
+| `S3_ACCESS_KEY` / `S3_SECRET_KEY` | Must match the SeaweedFS S3 identity. On the cluster, `S3Credentials` adopts these fields from Secret `zula` |
 
-If uploads fail with *Access Key Id does not exist*, the secret keys in Infisical do not match the MinIO deployment — rotate them together.
+If uploads fail with *Access Key Id does not exist*, Secret `zula` does not match the identity the operator registered — rotate them together.
