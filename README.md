@@ -7,6 +7,7 @@ Sign-in, a public company profile, and web + mobile shells on one API. Build the
 Monorepo: Ktor API (`server/`) · React web (`apps/web/`) · Expo (`apps/native/`) · shared `@zula/api` and `@zula/oauth`.
 
 Detail: [docs/product_vision.md](./docs/product_vision.md).
+Deployment: [bieniucieniu/infra](https://github.com/bieniucieniu/infra/tree/main/clusters/rpi/apps/zula)
 
 ## Done
 
