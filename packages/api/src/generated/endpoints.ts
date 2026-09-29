@@ -2206,19 +2206,13 @@ export const listPortfolioItems = async (
   params?: ListPortfolioItemsParams,
   options?: Parameters<typeof customInstance>[1]
 ): Promise<listPortfolioItemsResponseSuccess> => {
-  return customInstance<listPortfolioItemsResponseSuccess>(
-    getListPortfolioItemsUrl(id, params),
-    {
-      ...options,
-      method: "GET",
-    }
-  )
+  return customInstance<listPortfolioItemsResponseSuccess>(getListPortfolioItemsUrl(id, params), {
+    ...options,
+    method: "GET",
+  })
 }
 
-export const getListPortfolioItemsQueryKey = (
-  id: string,
-  params?: ListPortfolioItemsParams
-) => {
+export const getListPortfolioItemsQueryKey = (id: string, params?: ListPortfolioItemsParams) => {
   return [`/api/users/${id}/portfolio`, ...(params ? [params] : [])] as const
 }
 

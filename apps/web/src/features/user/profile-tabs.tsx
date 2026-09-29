@@ -16,11 +16,7 @@ type ProfileTabsProps = {
   canManagePortfolio?: boolean
 }
 
-export function ProfileContentTabs({
-  profile,
-  id,
-  canManagePortfolio = false,
-}: ProfileTabsProps) {
+export function ProfileContentTabs({ profile, id, canManagePortfolio = false }: ProfileTabsProps) {
   const portfolioQuery = useListPortfolioItems(id)
   const portfolioItems: PortfolioItem[] = portfolioQuery.data?.data.items ?? []
   const listingsQuery = useListFeedByAuthor(profile.userId)

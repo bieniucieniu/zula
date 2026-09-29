@@ -111,11 +111,7 @@ function SellerPage() {
 
       {actionError ? <p className="text-sm text-destructive">{actionError}</p> : null}
 
-      <ProfileContentTabs
-        profile={profile}
-        id={id}
-        canManagePortfolio={isSelf}
-      />
+      <ProfileContentTabs profile={profile} id={id} canManagePortfolio={isSelf} />
     </ProfileShell>
   )
 }
